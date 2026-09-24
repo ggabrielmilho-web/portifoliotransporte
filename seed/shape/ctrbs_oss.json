@@ -1,0 +1,555 @@
+{
+  "tabela": "ctrbs_oss",
+  "dataset": "main",
+  "referencia_dax": "'public ctrbs_oss'",
+  "coletado_em": "2026-09-22T09:48:45",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 5224,
+  "janela": {
+    "coluna": "emissao",
+    "de": "2025-12-31T02:16:00",
+    "ate": "2026-09-22T09:07:00"
+  },
+  "n_colunas": 70,
+  "colunas": {
+    "ctrb": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 11,
+      "len_max": 11,
+      "formato": [
+        "AAA999999-9"
+      ]
+    },
+    "tipo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 13,
+      "len_max": 13,
+      "formato": [
+        "AAAAAAAAAAAAA"
+      ]
+    },
+    "emissao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "cidade_uf_origem": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 24,
+      "formato": [
+        "AAA AAAAAAAA AA AAAAA/AA",
+        "AAAAA/AA",
+        "AAAAAAA AAAAAA/AA",
+        "AAAAAAA/AA"
+      ]
+    },
+    "unidade_destino": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "cidade_uf_destino": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 23,
+      "formato": [
+        "AAA AAAA AAA AAAAAA/AA",
+        "AAAA AAA AAAAA/AA",
+        "AAAA AAAAA/AA",
+        "AAAA AAAAAAAA/AA"
+      ]
+    },
+    "placa_cavalo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "propriedade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "AAAAA"
+      ]
+    },
+    "cnpj_cpf_proprietario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "proprietario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 22,
+      "len_max": 22
+    },
+    "placa_carreta": {
+      "tipo": "str",
+      "nulo_pct": 40,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "cpf_motorista": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 11,
+      "len_max": 11
+    },
+    "motorista": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 18,
+      "len_max": 31
+    },
+    "tabela_antt": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "valor_a_pagar": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        5
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "saldo_ccf": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "adiantamento_ccf": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "sest_senat": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "irrf": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "prev_social": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "inss": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "total_retencoes": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "valor_liquido": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        5
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "adiantamento": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "a_receber": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        5
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "pedagio": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "outros": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "vale_pedagio": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "nro_vale_pedagio": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "ciot": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "fornecedor_ciot": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "saldo_ccf_atual": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        7,
+        7
+      ],
+      "tem_negativo": true,
+      "tem_decimal": true
+    },
+    "conta_bancaria": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 3,
+      "len_max": 3
+    },
+    "observacao": {
+      "tipo": "str",
+      "nulo_pct": 20,
+      "sensivel": true,
+      "len_min": 5,
+      "len_max": 83
+    },
+    "passar_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "passar_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "distancia_km": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "fornecedor_combustivel_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 22,
+      "len_max": 23,
+      "formato": [
+        "9999-99-99A99:99:99.99",
+        "9999-99-99A99:99:99.999"
+      ]
+    },
+    "Gera Custo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "Tipo Operação": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "AAAAA"
+      ]
+    },
+    "usuario_emissao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "origem_arquivo": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "placa_carreta_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cpf_motorista_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "motorista_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "previsao_chegada": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "chegada": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "tipo_carga": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "natureza_carga": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "alto_desempenho": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "retorno_vazio": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "manifesto": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "receita_para_frota": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "combustiveis_e_lubrificantes": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "refeicoes_hospedagem": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "diversos": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "total_adiantamento": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "diaria": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "adiantamento_fornecedor": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "premio_pontualidade": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "total_ctrb": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "pedagio_fornecedor": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "combustivel_fornecedor_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "combustivel_fornecedor_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "combustivel_fornecedor_3": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "outros_fornecedor": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "peso_manifesto": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "frete_manifesto": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "total_eixos": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    }
+  },
+  "vocabulario": {
+    "tabela_antt": {
+      "distintos": ">80",
+      "valores": null
+    }
+  }
+}

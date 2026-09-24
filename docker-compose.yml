@@ -1,0 +1,84 @@
+version: "3.7"
+
+services:
+  app:
+    image: ghcr.io/ggabrielmilho-web/portifoliotransporte:latest
+    networks:
+      - carvalhonet
+    environment:
+      # ── Modo vitrine ──────────────────────────────────────────────────
+      # DEMO=true faz o execute_dax() responder pelas fixtures de seed/fixtures
+      # em vez do Power BI. É a única chave que troca a fonte de dados.
+      - DEMO=true
+      - SECRET_KEY=NCbezU!#DQ5nOOSzwJkV9Lqhb2Qym+Br!vvvjNyGOki0
+      - TZ=America/Sao_Paulo
+
+      # ── Banco ─────────────────────────────────────────────────────────
+      # Mesmo Postgres dos outros stacks, banco PRÓPRIO. Precisa existir
+      # antes do primeiro boot (ver instruções abaixo).
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=vitrine_demo
+      - DB_USER=postgres
+      - DB_PASSWORD=e66b9f4f90e91023ab4a23476e8a8bde
+
+      # ── Identidade da transportadora fictícia ─────────────────────────
+      # FROTA_PATTERN não é marca, é REGRA: é o dono das placas que separa
+      # Frota de Agregado e de Terceiro. Trocar aqui muda a classificação.
+      - FROTA_NOME=NORTEVIA TRANSPORTES LTDA
+      - FROTA_PATTERN=NORTEVIA
+      - FORNECEDOR_RASTREADOR=TELEMETRIA
+
+      # ── Chat financeiro da DRE (GPT-4.1-mini, ~US$ 0,001/pergunta) ─────
+      - OPENAI_API_KEY=COLE_AQUI_A_SUA_CHAVE
+
+      # ── Rastreamento ──────────────────────────────────────────────────
+      # MODO_SIMULADO=true: as posições vêm de embarques_simulacao (a trilha
+      # gerada), não da API de GPS. Sem isto o worker tenta falar com o
+      # rastreador real e o mapa fica parado.
+      - MODO_SIMULADO=true
+      - START_WORKER=true
+
+      # ── Robô do manifesto ─────────────────────────────────────────────
+      - EMBARQUES_AUTO=true
+      - EMBARQUES_AUTO_DEFASAGEM=0
+      - EMBARQUES_AUTO_JANELA_DIAS=5
+      - EMBARQUES_CONTINUACAO=true
+      - EMBARQUES_ATEMPORAL=true
+      - EMBARQUES_FITA_JANELA_DIAS=120
+
+      # ── Conferência CIOT ──────────────────────────────────────────────
+      - CIOT_DESDE=2026-06-01
+
+      # ── Inventário de CO₂e ────────────────────────────────────────────
+      # SIMULADO=1 não chama a rede. O painel lê o rótulo 'simulado', que é
+      # sob o qual o job grava — os dois lados precisam concordar ou a aba
+      # abre vazia com a tabela cheia.
+      - VERDA_SIMULADO=1
+      - VERDA_AMBIENTE=producao
+      - VERDA_PAINEL_AMBIENTE=simulado
+      - VERDA_URL_PRODUCAO=https://carbono.local
+
+      # ── Power BI: não é usado em DEMO, mas o código lê no boot ─────────
+      - POWERBI_TENANT_ID=demo
+      - POWERBI_CLIENT_ID=demo
+      - POWERBI_CLIENT_SECRET=demo
+      - POWERBI_GROUP_ID=demo
+      - POWERBI_DATASET_ID=demo-main
+      - POWERBI_DRE_DATASET_ID=demo-dre
+
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.portfoliotransporte.rule=Host(`portfoliotransporte.carvalhoia.com`)
+        - traefik.http.routers.portfoliotransporte.entrypoints=websecure
+        - traefik.http.routers.portfoliotransporte.tls.certresolver=letsencryptresolver
+        - traefik.http.services.portfoliotransporte.loadbalancer.server.port=5000
+        - traefik.docker.network=carvalhonet
+
+networks:
+  carvalhonet:
+    external: true

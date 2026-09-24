@@ -1,0 +1,400 @@
+{
+  "tabela": "Auditoria Receita",
+  "dataset": "main",
+  "referencia_dax": "'Auditoria Receita'",
+  "coletado_em": "2026-09-22T09:48:15",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 5224,
+  "janela": {
+    "coluna": "data_ref_ctrc",
+    "de": "2025-12-17T00:00:00",
+    "ate": "2026-09-22T00:00:00"
+  },
+  "n_colunas": 37,
+  "colunas": {
+    "CTRB": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 11,
+      "len_max": 11,
+      "formato": [
+        "AAA999999-9"
+      ]
+    },
+    "Tipo Operacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 10,
+      "formato": [
+        "AAAAAAAA",
+        "AAAAAAAAAA"
+      ]
+    },
+    "Gera Custo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "data_ref_ctrc": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "CTRC": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 11,
+      "len_max": 11,
+      "formato": [
+        "AAA999999-9"
+      ]
+    },
+    "Manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 11,
+      "len_max": 11,
+      "formato": [
+        "AAA999999-9"
+      ]
+    },
+    "Todos CTRCs da Viagem": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 11,
+      "len_max": 11,
+      "formato": [
+        "AAA999999-9"
+      ]
+    },
+    "valor_frete_sem_icms": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        5,
+        5
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "receita_rateada": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        5,
+        5
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "valor_a_pagar": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "pedagio": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "distancia_km": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "vale_pedagio": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "saldo_ccf": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "manifesto_rateado": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "motorista": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 12,
+      "len_max": 34
+    },
+    "placa_cavalo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9A99"
+      ]
+    },
+    "placa_carreta": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "frete_motorista_total": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "digitos_int": [
+        4,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "resultado": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "margem": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "cnpj_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "cliente_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 30,
+      "len_max": 30
+    },
+    "cidade_uf_origem": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 13,
+      "len_max": 13,
+      "formato": [
+        "AAAAAAAAAA/AA"
+      ]
+    },
+    "cidade_uf_destino": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 8,
+      "formato": [
+        "AAAAA/AA"
+      ]
+    },
+    "cliente_tarifa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 7,
+      "len_max": 7
+    },
+    "frete_tabela_liquido": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "frete_tabela_gris": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "frete_tabela_adval": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "frete_tabela_adicional_entrega": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "frete_tabela": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "diferenca_frete": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "status_auditoria_frete": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 15,
+      "len_max": 15,
+      "formato": [
+        "AAAA AAA AAAAAA"
+      ]
+    },
+    "frete_tabela_pedagio": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "cidade_uf_origem_tarifa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 13,
+      "len_max": 13,
+      "formato": [
+        "AAAAAAAAAA/AA"
+      ]
+    },
+    "cidade_uf_destino_tarifa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 13,
+      "len_max": 13,
+      "formato": [
+        "AAAAAAAAAA/AA"
+      ]
+    },
+    "outros": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    }
+  },
+  "vocabulario": {
+    "Tipo Operacao": {
+      "distintos": 3,
+      "valores": [
+        "AGREGADO",
+        "CARRETEIRO",
+        "FROTA"
+      ]
+    },
+    "Gera Custo": {
+      "distintos": 2,
+      "valores": [
+        "NAO",
+        "SIM"
+      ]
+    },
+    "status_auditoria_frete": {
+      "distintos": 7,
+      "valores": [
+        "CLIENTE SEM TARIFA",
+        "COBRADO A MAIOR",
+        "COBRADO A MENOR",
+        "CTRC SEM DADOS FISCAIS",
+        "MULTI-DESTINO - VALIDAR MANUALMENTE",
+        "OK",
+        "ROTA SEM TARIFA"
+      ]
+    }
+  }
+}

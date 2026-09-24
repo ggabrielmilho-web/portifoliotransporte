@@ -1,0 +1,229 @@
+{
+  "tabela": "abastecimentos_valecard",
+  "dataset": "main",
+  "referencia_dax": "'public abastecimentos_valecard'",
+  "coletado_em": "2026-09-22T09:49:05",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 1438,
+  "janela": {
+    "coluna": "dch_data",
+    "de": "2026-01-01T00:00:00",
+    "ate": "2026-12-05T00:00:00"
+  },
+  "n_colunas": 27,
+  "colunas": {
+    "placa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "numero_cartao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "dch_data": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "matricula": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "motorista": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 12,
+      "len_max": 34
+    },
+    "numero_frota": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "tipo_frota": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "descricao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "fabricante": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "terminal": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "estabelecimento": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cidade": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "uf": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "produto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 37,
+      "len_max": 37,
+      "formato": [
+        "AAAA AAAAAA A A99 AAAA AAAAAAAAA AAAA"
+      ]
+    },
+    "nsd_distancia": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "ncd_consumo": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "unidade": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "nsd_hodometro": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "ncd_quantidade": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "mcd_valor_unitario": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        1
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "mcd_valor_total": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "cupom_fiscal": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "centro_resultado": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "filial": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "centro_custo": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "numero_tag_nfc": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 23,
+      "len_max": 23,
+      "formato": [
+        "9999-99-99A99:99:99.999"
+      ]
+    }
+  },
+  "vocabulario": {
+    "produto": {
+      "distintos": 7,
+      "valores": [
+        "ARLA 32",
+        "ARLA-32",
+        "DIESEL COMUM",
+        "DIESEL S-10",
+        "DIESEL S-50",
+        "DIESEL S10 ADITIVADO",
+        "OLEO DIESEL B S10 ADIT PETROBRAS GRID"
+      ]
+    },
+    "uf": {
+      "distintos": 19,
+      "valores": [
+        "AL",
+        "BA",
+        "CE",
+        "ES",
+        "GO",
+        "MA",
+        "MG",
+        "MT",
+        "PA",
+        "PB",
+        "PE",
+        "PI",
+        "PR",
+        "RJ",
+        "SC",
+        "SE",
+        "SP",
+        "TO"
+      ]
+    }
+  }
+}

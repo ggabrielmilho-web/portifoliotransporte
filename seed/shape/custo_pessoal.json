@@ -1,0 +1,401 @@
+{
+  "tabela": "custo_pessoal",
+  "dataset": "main",
+  "referencia_dax": "'public custo_pessoal'",
+  "coletado_em": "2026-09-22T09:49:12",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 133,
+  "n_colunas": 34,
+  "colunas": {
+    "id": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "competencia": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "9999-99"
+      ]
+    },
+    "emp": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 5,
+      "formato": [
+        "AA",
+        "Aaaaa"
+      ]
+    },
+    "nome": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 18,
+      "len_max": 34
+    },
+    "unidade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "area": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 8,
+      "formato": [
+        "Aaaaaaaa"
+      ]
+    },
+    "centro_custo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 11,
+      "len_max": 11,
+      "formato": [
+        "Aaaaaaaaaaa"
+      ]
+    },
+    "funcao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 27,
+      "formato": [
+        "Aaaaaaaaa",
+        "Aaaaaaaaa Aaaaaaaaaa",
+        "Aaaaaaaaa aa Aaaaaaaa Aaaaa"
+      ]
+    },
+    "salario_fixo": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "he": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "dsr": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "ad_not": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "h_esp": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "ad_cargo_confianca": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "salario_liq": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "plr_ajuste_sal": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "inss": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "fgts": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "decimo_terceiro": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "ferias_mais_terco": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "inss_decimo_terceiro": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "inss_ferias_mais_terco": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "fgts_decimo_terceiro": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "fgts_ferias_mais_terco": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "diarias": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "alimentacao_dif": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "vale_transp": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "premio": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "c_medico": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "c_odontologico": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "outros": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "reajuste_diaria_alimentacao": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "total_mes": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        5
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "inserted_at": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 22,
+      "len_max": 23,
+      "formato": [
+        "9999-99-99A99:99:99.99",
+        "9999-99-99A99:99:99.999"
+      ]
+    }
+  },
+  "vocabulario": {
+    "funcao": {
+      "distintos": 3,
+      "valores": [
+        "Motorista",
+        "Motorista Carreteiro",
+        "Motorista de Caminhao Truck"
+      ]
+    },
+    "competencia": {
+      "distintos": 8,
+      "valores": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ]
+    }
+  }
+}

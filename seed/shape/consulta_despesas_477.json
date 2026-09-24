@@ -1,0 +1,786 @@
+{
+  "tabela": "consulta_despesas_477",
+  "dataset": "dre",
+  "referencia_dax": "'public consulta_despesas_477'",
+  "coletado_em": "2026-09-22T09:51:28",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 153784,
+  "n_colunas": 62,
+  "colunas": {
+    "empresa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "9"
+      ]
+    },
+    "numlancto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "99999"
+      ]
+    },
+    "parcela": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "99"
+      ]
+    },
+    "evento": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 4,
+      "formato": [
+        "9999"
+      ]
+    },
+    "descr_evento": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 15,
+      "len_max": 15,
+      "formato": [
+        "AAAAAA AAAAAAAA"
+      ]
+    },
+    "cnpj_fornecedor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "nome_fornecedor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 15,
+      "len_max": 15
+    },
+    "chave_pix_fornecedor": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "municipio_fornecedor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 8,
+      "len_max": 8
+    },
+    "uf_fornecedor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "bco_agencia_conta_fornecedor": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "cnpj_favorecido": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "nome_favorecido": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "especialidade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "AAAAA"
+      ]
+    },
+    "rntrc": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cta_ctb_deb": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 15,
+      "len_max": 15,
+      "formato": [
+        "9.99.99.99.9999"
+      ]
+    },
+    "cta_ctb_cred": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 15,
+      "len_max": 15,
+      "formato": [
+        "9.99.99.99.9999"
+      ]
+    },
+    "nfiscal": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "9999999"
+      ]
+    },
+    "chave_nfiscal": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "valor_total_produtos": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "vlr_nota": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "vlr_parcela": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "juros": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "descontos": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "vlr_final": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "inclusao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "login": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "aaaaaaa"
+      ]
+    },
+    "vencimen": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "emissao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "data_pgto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "aprovacao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "contabil": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 19,
+      "len_max": 19
+    },
+    "uni": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "sit_des": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 4,
+      "formato": [
+        "AAAA"
+      ]
+    },
+    "arq_remessa": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "arq": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cred_pis_cofins": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cod_bar_bloqueto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "999"
+      ]
+    },
+    "cfop": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 4,
+      "formato": [
+        "9999"
+      ]
+    },
+    "grupo_evento": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 13,
+      "len_max": 13,
+      "formato": [
+        "9 AAAAAAAAAAA"
+      ]
+    },
+    "mes_competencia": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "99/99"
+      ]
+    },
+    "grupo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 10,
+      "len_max": 10,
+      "formato": [
+        "Aaaaaaaaaa"
+      ]
+    },
+    "subgrupo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 17,
+      "len_max": 17,
+      "formato": [
+        "Aaaaaaa Aaaaaaaaa"
+      ]
+    },
+    "fixo_variavel": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 8,
+      "formato": [
+        "Aaaaaaaa"
+      ]
+    },
+    "custo_despesa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "Aaaaaaa"
+      ]
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 22,
+      "len_max": 22,
+      "formato": [
+        "9999-99-99A99:99:99.99"
+      ]
+    },
+    "periodo_relatorio": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "REF": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "9999/99"
+      ]
+    },
+    "classificacao_dre": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 10,
+      "len_max": 10,
+      "formato": [
+        "Aaaaaaaaaa"
+      ]
+    },
+    "historico_despesa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 34,
+      "len_max": 34
+    },
+    "liq_empresa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "9"
+      ]
+    },
+    "liq_numlancto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "99999"
+      ]
+    },
+    "liq_parcela": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "99"
+      ]
+    },
+    "liq_ban": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "9"
+      ]
+    },
+    "liq_agen": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 4,
+      "formato": [
+        "9999"
+      ]
+    },
+    "liq_ctacorrent": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 6,
+      "len_max": 6,
+      "formato": [
+        "999999"
+      ]
+    },
+    "liq_formaliquid": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 8,
+      "formato": [
+        "AAAAAAAA"
+      ]
+    },
+    "liq_valor": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "liq_data_bompara": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "liq_data_extrato": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "liq_situacao_conciliacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 10,
+      "len_max": 10,
+      "formato": [
+        "AAAAAAAAAA"
+      ]
+    },
+    "liq_usu_liquid": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "aaaaaaa"
+      ]
+    }
+  },
+  "vocabulario": {
+    "evento": {
+      "distintos": 98,
+      "valores": [
+        "2000",
+        "2020",
+        "2021",
+        "2022",
+        "2038",
+        "5099",
+        "5100",
+        "5101",
+        "5102",
+        "5103",
+        "5106",
+        "5107",
+        "5108",
+        "5109",
+        "5115",
+        "5118",
+        "5119",
+        "5146",
+        "5147",
+        "5148",
+        "5149",
+        "5150",
+        "5151",
+        "5152",
+        "5153",
+        "5154",
+        "5155",
+        "5199",
+        "5202",
+        "5203",
+        "5210",
+        "5213",
+        "5216",
+        "5217",
+        "5218",
+        "5219",
+        "5220",
+        "5221",
+        "5225",
+        "5228",
+        "5232",
+        "5235",
+        "5241",
+        "5243",
+        "5244",
+        "5245",
+        "5246",
+        "5247",
+        "5248",
+        "5256",
+        "5257",
+        "5301",
+        "5302",
+        "5304",
+        "5305",
+        "5306",
+        "5307",
+        "5309",
+        "5312",
+        "5313",
+        "5314",
+        "5317",
+        "5322",
+        "5401",
+        "5402",
+        "5403",
+        "5405",
+        "5407",
+        "5409",
+        "5410",
+        "5411",
+        "5412",
+        "5413",
+        "5415",
+        "5416",
+        "5424",
+        "5425",
+        "5500",
+        "5501",
+        "5502",
+        "5503",
+        "5504",
+        "5505",
+        "5506",
+        "5507",
+        "5508",
+        "5509",
+        "5510",
+        "5511",
+        "5512",
+        "5513",
+        "5515",
+        "5516",
+        "5517",
+        "5518",
+        "5999",
+        "6000",
+        "9000"
+      ]
+    },
+    "descr_evento": {
+      "distintos": 98,
+      "valores": [
+        "13O SALARIOS",
+        "ACERTO CONTA FORNECEDOR",
+        "ADIANTAMENTO SALARIAL - ADMINISTRATIVO/ APOIO",
+        "ADIANTAMENTO SALARIAL - APOIO OPERACIONAL",
+        "ADIANTAMENTO SALARIAL OPERACIONAL",
+        "ADIANTAMENTO SALARIOS",
+        "AGUA E ESGOTO",
+        "ALIMENTACAO",
+        "ALUGUEL DO IMOVEL",
+        "ATIVO IMOBILIZADO - IMOVEIS",
+        "ATIVO IMOBILIZADO- VEICULOS",
+        "BRINDES DOACOES CONFRATERNIZACOES",
+        "CAPITAL DE GIRO",
+        "CARGA E DESCARGA C/ TERCEIROS",
+        "COFINS",
+        "COMBUSTIVEIS E LUBRIFICANTES",
+        "COMISSAO AGENTE",
+        "CORREIOS E TELEGRAFOS",
+        "CSLL",
+        "DESPACHANTE",
+        "DESPESA COMERCIAL - VIAGENS E RELATORIO DESPESA",
+        "DESPESAS COM HIGIENE E LIMPEZA",
+        "DESPESAS CONTABEIS",
+        "DESPESAS JURIDICAS - INDENIZAACAOES TRABALHISTAS",
+        "DESPESAS PJ - APOIO ADMINISTRATIVO E COMERCIAL",
+        "DESPESAS SINDICAIS",
+        "DIARIAS",
+        "EMPRESTIMOS",
+        "ENERGIA ELETRICA",
+        "ESTACIONAMENTOS",
+        "FERIAS",
+        "FGTS",
+        "FRETE COLETA/ENTREGA DE VEICULOS TERCEIROS",
+        "FRETE FLUVIAL",
+        "FRETE TRANSFERENCIA C/ AGREGADOS",
+        "FRETE TRANSFERENCIA C/ TERCEIROS",
+        "GERENCIAMENTO DE RISCO",
+        "ICMS",
+        "INDENIZACAO DE MERCADORIAS - ONUS DE CONTRATO",
+        "INFRACOES DE TRANSITO",
+        "INSS",
+        "INVESTIMENTO - CONSORCIO",
+        "INVESTIMENTO- CDC",
+        "INVESTIMENTO- FINAME",
+        "IOF",
+        "IPTU",
+        "IPVA",
+        "IR",
+        "IRRF- AUTONOMOS - CLT",
+        "ISS",
+        "JUROS E ENCARGOS",
+        "LICENCAS- SUATRANS - ANVISA- BOMBEIRO",
+        "LICENCIAMENTO DE VEICULOS",
+        "LOCACAO DE CARRETA",
+        "MANUTENCAO DE MAQUINAS E EQUIPAMENTOS",
+        "MANUTENCAO E CONSERVACAO DE VEICULOS",
+        "MANUTENCAO E CONSERVACAO DO IMOVEL",
+        "MATERIAL DE ESCRITORIO",
+        "MULTAS E INFRACOES JUNTO AOS ORGAOS FEDERAIS MUNIC",
+        "OUTRAS DESPESAS OPERACIONAIS",
+        "OUTROS SERVICOS PJ",
+        "PECAS E ACESSORIOS",
+        "PECAS MANUTENCAO CARRETA",
+        "PECAS MANUTENCAO CAVALO",
+        "PEDAGIOS",
+        "PENSAO ALIMENTICIA",
+        "PIS",
+        "PLANO DE SAUDE",
+        "PNEUS E CAMARAS",
+        "PRO-LABORE",
+        "RECAPAGEM DE PNEUS",
+        "RESCISOES",
+        "RETENCAO PIS/COFINS/CSLL",
+        "RETIRADA CLEIVON",
+        "RETIRADA PATRICIA",
+        "RETIRADA SOCIOS",
+        "RPA- RECIBO DE PAGAMENTO AUTONOMO",
+        "SALARIO MENSAL - APOIO OPERACIONAL",
+        "SALARIO MENSAL - OPERACIONAL",
+        "SALARIOS",
+        "SALARIOS ADMINISTRATIVOS - APOIO",
+        "SAUDE OCUPACIONAL - EXAMES LTCAT PPRA PCMSO",
+        "SEGURANCA DO TRABALHO - BRIGADA - EPIS - UNIFORME",
+        "SEGURANCA E VIGILANCIA PATRIMONIAL",
+        "SEGURO DE CARGAS",
+        "SEGURO DE IMOVEIS",
+        "SEGURO DE VEICULOS",
+        "SEGURO DE VIDA",
+        "SERVICO MANUTENCAO CAVALOS",
+        "SERVICOS MANUTENCAO CARRETA",
+        "SOFTWARE E LICENCAS",
+        "TARIFA - PEF CTRB",
+        "TARIFA BANCARIA",
+        "TAXAS PREFEITURA - TAXA INCENDIO RENOVACAO",
+        "TELEFONIA E COMUNICACAO DE DADOS",
+        "TREINAMENTO DESENVOLVIMENTO BENEFICIOS",
+        "VALE REFEICAO",
+        "VALE TRANSPORTE"
+      ]
+    },
+    "sit_des": {
+      "distintos": 3,
+      "valores": [
+        "LIQU",
+        "MTZ",
+        "PEND"
+      ]
+    }
+  }
+}

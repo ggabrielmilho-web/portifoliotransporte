@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de cargas — Nortevia</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23f0a830'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='68' font-weight='900' text-anchor='middle' fill='%2316171d'%3ER%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link rel="stylesheet" href="/theme.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .dashboard { padding: 20px; max-width: 1700px; margin: 0 auto; animation: fadeUp 0.4s ease; }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+  .top-bar h1 {
+    font-size: 1.35rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .meta { font-size: 0.78rem; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+  .btn-sm {
+    padding: 8px 18px; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+    font-size: 0.82rem; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+    text-decoration: none; display: inline-block;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .export-btn {
+    padding: 8px 18px; background: var(--green); color: var(--bg);
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 0.82rem;
+    border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.15s;
+    text-decoration: none; display: inline-block;
+  }
+  .export-btn:hover { opacity: 0.85; }
+
+  .filtros-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+  }
+  .filtros-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px 12px;
+  }
+  .ff label { display: block; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ff input, .ff select {
+    width: 100%; padding: 7px 10px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem;
+  }
+  .ff input:focus, .ff select:focus { outline: none; border-color: var(--accent); }
+  .ff input[type="date"] { color-scheme: dark; }
+
+  .filtros-acoes { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .barra-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+
+  .table-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-scroll { overflow-x: auto; max-height: calc(100vh - 320px); overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; }
+  thead th {
+    position: sticky; top: 0; background: var(--surface2);
+    padding: 10px 12px; text-align: left;
+    font-weight: 600; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim); border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none; z-index: 2;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th.asc::after { content: ' ▲'; color: var(--accent); font-size: 0.6rem; }
+  thead th.desc::after { content: ' ▼'; color: var(--accent); font-size: 0.6rem; }
+  tbody tr { transition: background 0.12s; }
+  tbody tr:hover { background: rgba(240,168,48,0.04); }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.012); }
+  tbody tr.destacar { background: rgba(240,168,48,0.12) !important; }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text); max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+  td.acoes { white-space: nowrap; }
+  td.acoes button { margin-right: 4px; padding: 4px 8px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 0.78rem; }
+  td.acoes button:hover { border-color: var(--accent); color: var(--accent); }
+
+  .badge { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+  .badge-Aberta   { background: rgba(240,168,48,0.15); color: var(--accent); }
+  .badge-Em-rota  { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .badge-No-destino { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .badge-Desengatada { background: rgba(250,204,21,0.15); color: #f0a830; }
+  .badge-Entregue { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge-Cancelada{ background: rgba(248,113,113,0.15); color: var(--red); }
+  /* Perna vazia concluida: rotulo proprio sobre o status 'Entregue', que nao muda
+     (secao 0 do handoff). Mesmo criterio da 21.18 — rotulo, nunca status. */
+  .badge-Vazia    { background: rgba(148,163,184,0.15); color: var(--text-dim); }
+  /* §24 — mesmo conjunto parou no hub, manifesto novo, seguiu: terminal, nao conta entrega */
+  .badge-Continuada { background: rgba(148,163,184,0.15); color: var(--text-dim); }
+  /* a ligacao A -> B (continua_em): quem manda no significado do status e o ponteiro */
+  .lig { font-size: 0.72rem; color: var(--text-dim); text-decoration: none; margin-left: 4px; white-space: nowrap; }
+  .lig:hover { color: var(--accent); }
+
+  .info-vazio { padding: 40px; text-align: center; color: var(--text-dim); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px; max-width: 700px; width: 100%;
+    max-height: 88vh; overflow-y: auto;
+  }
+  .modal h2 {
+    font-size: 1.1rem; margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .modal .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .modal .field label { font-size: 0.75rem; color: var(--text-dim); }
+  .modal .field input, .modal .field select, .modal .field textarea {
+    padding: 8px 11px; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; font-size: 0.86rem;
+  }
+  .modal .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal .acoes { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+  .btn-primary {
+    padding: 9px 22px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: var(--bg); font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+    font-size: 0.86rem; border: none; border-radius: 8px; cursor: pointer;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+
+  .log-item {
+    padding: 10px 12px; border-left: 2px solid var(--accent);
+    background: var(--surface2); margin-bottom: 8px; border-radius: 6px;
+    font-size: 0.85rem;
+  }
+  .log-item .head { color: var(--text-dim); font-size: 0.75rem; margin-bottom: 4px; }
+  .log-item .body { font-family: 'Space Mono', monospace; font-size: 0.8rem; }
+  .log-item .body .ant { color: var(--red); text-decoration: line-through; opacity: 0.7; }
+  .log-item .body .nov { color: var(--green); }
+</style>
+</head>
+<body>
+<span data-nav-menu data-nav-active="embarques"></span>
+
+
+<div class="dashboard">
+  <div class="top-bar">
+    <div>
+      <h1>Relatório de cargas</h1>
+      <span class="meta" id="userInfo"></span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <a href="/embarques" class="btn-sm">← Voltar</a>
+      <a href="/embarques/novo" class="btn-sm">➕ Nova carga</a>
+      <a href="/logout" class="btn-sm">Sair</a>
+    </div>
+  </div>
+
+  <div class="filtros-card">
+    <div class="filtros-grid">
+      <div class="ff"><label>De</label><input type="date" id="fStart"></div>
+      <div class="ff"><label>Até</label><input type="date" id="fEnd"></div>
+      <div class="ff"><label>Tipo de data</label>
+        <select id="fDataCampo">
+          <option value="carregamento">Carregamento</option>
+          <option value="previsao">Previsão entrega</option>
+          <option value="agendamento">Agendamento</option>
+        </select>
+      </div>
+      <div class="ff"><label>Tipo de operação</label>
+        <select id="fTipo">
+          <option value="">Todos</option>
+          <option value="Frota">Frota</option>
+          <option value="Agregado">Agregado</option>
+          <option value="Terceiro">Terceiro</option>
+        </select>
+      </div>
+      <div class="ff"><label>Status</label>
+        <select id="fStatus">
+          <option value="">Todos</option>
+          <option value="Aberta">Aberta</option>
+          <option value="Em rota">Em rota</option>
+          <option value="No destino">No destino</option>
+          <option value="Desengatada">Desengatada · carregada</option>
+          <option value="Entregue">Entregue</option>
+          <option value="Cancelada">Cancelada</option>
+        </select>
+      </div>
+      <div class="ff"><label>Tipo de viagem</label>
+        <select id="fViagem">
+          <option value="">Todas</option>
+          <option value="0">Carregada</option>
+          <option value="1">Vazia</option>
+        </select>
+      </div>
+      <div class="ff"><label>Cliente</label>
+        <select id="fCliente"><option value="">Todos</option></select>
+      </div>
+      <div class="ff"><label>Embarcador</label>
+        <select id="fEmbarcador"><option value="">Todos</option></select>
+      </div>
+      <div class="ff"><label>Motorista (contém)</label><input type="text" id="fMotorista" placeholder="Nome..."></div>
+      <div class="ff"><label>Origem UF</label>
+        <select id="fOrigemUF"><option value="">Todas</option></select>
+      </div>
+      <div class="ff"><label>Destino UF</label>
+        <select id="fDestinoUF"><option value="">Todas</option></select>
+      </div>
+      <div class="ff" style="grid-column: span 2;"><label>Busca livre (Nº, placa, cliente, motorista)</label><input type="text" id="fQ" placeholder="Digite e clique aplicar..."></div>
+    </div>
+    <div class="filtros-acoes">
+      <button class="btn-sm" onclick="aplicarFiltros()">🔍 Aplicar</button>
+      <button class="btn-sm" onclick="limparFiltros()">✕ Limpar</button>
+    </div>
+  </div>
+
+  <div class="barra-acoes">
+    <div class="meta" id="contagem">—</div>
+    <a id="btnCsv" href="#" class="export-btn" onclick="exportarCsv(event)">↓ Exportar CSV</a>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-scroll">
+      <table id="tabelaCargas">
+        <thead>
+          <tr>
+            <th onclick="ordenar('numero')">Nº</th>
+            <th onclick="ordenar('data_carregamento')" class="desc">Data</th>
+            <th onclick="ordenar('status')">Status</th>
+            <th onclick="ordenar('tipo_operacao')">Tipo</th>
+            <th onclick="ordenar('cliente_nome')">Cliente</th>
+            <th>Origem → Destinos</th>
+            <th onclick="ordenar('motorista_nome')">Motorista</th>
+            <th>Cavalo</th>
+            <th>Carreta(s)</th>
+            <th onclick="ordenar('previsao_entrega')">Agendamento</th>
+            <th onclick="ordenar('criado_por_nome')">Embarcador</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="12" class="info-vazio">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal">
+    <h2 id="modalEditTitulo">Editar carga</h2>
+    <div class="row-2">
+      <div class="field">
+        <label>Status</label>
+        <select id="edStatus">
+          <option value="Aberta">Aberta</option>
+          <option value="Em rota">Em rota</option>
+          <option value="No destino">No destino</option>
+          <option value="Entregue">Entregue</option>
+          <option value="Cancelada">Cancelada</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tipo de operação</label>
+        <select id="edTipo">
+          <option value="Frota">Frota</option>
+          <option value="Agregado">Agregado</option>
+          <option value="Terceiro">Terceiro</option>
+        </select>
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>Data carregamento</label><input type="date" id="edDataCar"></div>
+      <div class="field"><label>Previsão entrega</label><input type="date" id="edPrevisao"></div>
+    </div>
+    <div class="field"><label>Observações</label><textarea id="edObs" rows="3"></textarea></div>
+    <div id="edFeedback"></div>
+    <div class="acoes">
+      <a id="linkEdicaoCompleta" href="#" class="btn-sm" target="_blank" title="Abre página completa para editar todos os campos">✏ Edição completa →</a>
+      <div style="flex:1;"></div>
+      <button class="btn-sm" onclick="fecharModal('modalEdit')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarEdicao()">💾 Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Histórico -->
+<div class="modal-overlay" id="modalHist">
+  <div class="modal">
+    <h2 id="modalHistTitulo">Histórico de edições</h2>
+    <div id="histLista"><div class="info-vazio">Carregando...</div></div>
+    <div class="acoes">
+      <button class="btn-sm" onclick="fecharModal('modalHist')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Desengate -->
+<div class="modal-overlay" id="modalDesengate">
+  <div class="modal">
+    <h2 id="modalDesengateTitulo">Desengatar carreta</h2>
+    <p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 14px;">
+      A carreta carregada continua no destino aguardando descarga. O <strong>cavalo e o motorista são liberados</strong> para uma nova carga.
+      A carga será finalizada automaticamente quando a carreta sair do destino (ou manualmente em “Finalizar descarga”).
+    </p>
+    <div class="field">
+      <label>Cavalo que vai finalizar a descarga <span style="color:var(--text-dim);">(opcional)</span></label>
+      <input type="text" id="dgCavalo" list="dlDgCavalos" placeholder="Placa, se já souber" style="text-transform:uppercase;">
+      <datalist id="dlDgCavalos"></datalist>
+    </div>
+    <div class="field">
+      <label>Motorista que vai finalizar a descarga <span style="color:var(--text-dim);">(opcional)</span></label>
+      <input type="text" id="dgMotorista" list="dlDgMotoristas" placeholder="Nome ou CPF, se já souber">
+      <datalist id="dlDgMotoristas"></datalist>
+    </div>
+    <div class="field">
+      <label>Observação <span style="color:var(--text-dim);">(opcional)</span></label>
+      <input type="text" id="dgObs" placeholder="Anotação para o histórico">
+    </div>
+    <div class="acoes">
+      <button class="btn-sm" onclick="fecharModal('modalDesengate')">Cancelar</button>
+      <button class="btn-sm" style="border-color:#f0a830;color:#f0a830;" id="dgConfirmar" onclick="confirmarDesengate()">🔌 Confirmar desengate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Finalizar descarga -->
+<div class="modal-overlay" id="modalFinalizar">
+  <div class="modal">
+    <h2 id="modalFinalizarTitulo">Finalizar descarga</h2>
+    <p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 14px;">
+      A carga será marcada como <strong>Entregue</strong>. Registre quem efetivamente fez a descarga
+      (se já preenchido no desengate, vem aqui e pode ser ajustado).
+    </p>
+    <div class="field">
+      <label>Cavalo que fez a descarga <span style="color:var(--red);">*</span></label>
+      <input type="text" id="fzCavalo" list="dlDgCavalos" placeholder="Placa" style="text-transform:uppercase;">
+    </div>
+    <div class="field">
+      <label>Motorista que fez a descarga <span style="color:var(--red);">*</span></label>
+      <input type="text" id="fzMotorista" list="dlDgMotoristas" placeholder="Nome ou CPF">
+    </div>
+    <div id="fzErro" style="color:var(--red);font-size:0.82rem;min-height:1.1em;"></div>
+    <div class="acoes">
+      <button class="btn-sm" onclick="fecharModal('modalFinalizar')">Cancelar</button>
+      <button class="btn-sm" style="border-color:var(--green);color:var(--green);" id="fzConfirmar" onclick="confirmarFinalizar()">🏁 Finalizar descarga</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const UFs = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
+
+  let CARGAS = [];
+  let ORDEM = { campo: 'data_carregamento', dir: 'desc' };
+  let CARGA_EDIT = null;
+  const URL = new URLSearchParams(window.location.search);
+  const DESTACAR_ID = URL.get('destacar');
+
+  function fmtData(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('T')[0].split('-');
+    return d + '/' + m + '/' + y;
+  }
+  function fmtDateTime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function badge(status) {
+    const cls = 'badge-' + (status || '').replace(/ /g, '-');
+    return `<span class="badge ${cls}">${status || '—'}</span>`;
+  }
+
+  function tempoCurto(iso) {
+    if (!iso) return '';
+    const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (s < 60) return s + 's';
+    if (s < 3600) return Math.floor(s/60) + 'min';
+    if (s < 86400) return Math.floor(s/3600) + 'h';
+    return Math.floor(s/86400) + 'd';
+  }
+
+  function indicadoresStatus(c) {
+    // A perna vazia nao entrega nada — ela termina. O status interno segue 'Entregue'
+    // (a coluna Cliente ja diz "Vazia"; aqui o badge responde em que pe esta).
+    let html = (c.viagem_vazia && c.status === 'Entregue')
+      ? '<span class="badge badge-Vazia" title="Viagem vazia concluída (status interno: Entregue)">Viagem vazia</span>'
+      : badge(c.status);
+    if (c.no_local_desde && c.status === 'Em rota') {
+      html += ` <span style="cursor:help;" title="Na cidade da descarga há ${tempoCurto(c.no_local_desde)}">📦</span>`;
+    }
+    if (c.status === 'Desengatada') {
+      const partes = [];
+      if (c.desengatada_em) partes.push('Desengatada há ' + tempoCurto(c.desengatada_em));
+      if (c.desengate_local === 'patio') partes.push('Carreta carregada parada no PÁTIO (longe do destino), esperando cavalo');
+      if (c.descarga_cavalo_placa) partes.push('Cavalo p/ descarga: ' + c.descarga_cavalo_placa);
+      if (c.descarga_motorista_nome) partes.push('Motorista p/ descarga: ' + c.descarga_motorista_nome);
+      const tip = partes.length ? partes.join('\n') : 'Carreta carregada parada no destino; cavalo+motorista liberados';
+      html += ` <span style="cursor:help;" title="${tip.replace(/"/g,'&quot;')}">🔌</span>`;
+    }
+    // §24 — a ligacao entre cargas. "→ C-B": esta carga acabou aqui e a mercadoria seguiu em B
+    // (desengate: outro cavalo levou; continuacao: mesmo conjunto com manifesto novo; reemissao).
+    // "← C-A": esta e a carga que veio de A. So B conta como entrega.
+    if (c.continua_em && c.continua_em_numero) {
+      html += ` <a class="lig" href="/embarques/cargas/${c.continua_em}/mapa" target="_blank" title="A mercadoria seguiu nesta carga — é ela que entrega">→ ${c.continua_em_numero}</a>`;
+    }
+    if (c.continuacao_de_id && c.continuacao_de) {
+      html += ` <a class="lig" href="/embarques/cargas/${c.continuacao_de_id}/mapa" target="_blank" title="Continuação da carga anterior (desengate / manifesto novo)">← ${c.continuacao_de}</a>`;
+    }
+    if (c.entregue_auto && c.status === 'Entregue') {
+      html += ` <span style="color:var(--yellow);font-size:0.85em;cursor:help;" title="Entrega detectada automaticamente">⚡</span>`;
+    }
+    if (c.saida_auto && c.status === 'Em rota') {
+      html += ` <span style="color:var(--yellow);font-size:0.85em;cursor:help;" title="Saída da origem detectada automaticamente">⚡</span>`;
+    }
+    // Atraso: algum destino com agendamento vencido e carga ainda ativa (flag do backend)
+    if (c.tem_agendamento_vencido) {
+      html += ` <span style="color:var(--red);font-size:0.82em;cursor:help;" title="Agendamento vencido e carga ainda ativa (Aberta/Em rota)">⚠️ atrasada</span>`;
+    }
+    // Ociosidade: parada na descarga com folga > 24h pro agendamento final — só p/ carga ativa
+    if (c.no_local_desde && c.agendamento_final && (c.status === 'Em rota' || c.status === 'No destino')) {
+      const folgaDias = Math.floor((new Date(c.agendamento_final) - Date.now()) / 86400000);
+      if (folgaDias >= 1) {
+        html += ` <span style="color:var(--text-dim);font-size:0.82em;cursor:help;" title="Parada na cidade da descarga; agendamento só em ${folgaDias} dia(s) — possível ociosidade do veículo">💤 ${folgaDias}d</span>`;
+      }
+    }
+    // Subrótulo de 'Aberta': separa "ainda não saiu" de "a placa nunca esteve na origem".
+    // A seção 16.5 do handoff mediu que os dois moram no mesmo balde e pedem ações opostas —
+    // um não precisa de nada, o outro é carreta errada no documento. O STATUS não muda.
+    // O rótulo "placa longe" fica DESLIGADO na vitrine: ele aponta divergência
+    // entre documento e GPS, que é diagnóstico interno de quem opera o sistema —
+    // numa apresentação lê como defeito do produto, não como o produto achando
+    // defeito no dado. A régua continua no backend; só não se mostra.
+    if (false && c.aberta_situacao === 'placa_longe') {
+      html += '';
+    } else if (c.aberta_situacao === 'na_origem') {
+      html += ` <span style="color:var(--muted,#9b9da8);font-size:0.82em;cursor:help;" title="A carga está Aberta e a carreta está na origem: ainda não saiu. Normal — não precisa de ação.">⏳ na origem</span>`;
+    }
+    // Rastreio defasado: carreta sem posição há +X dias numa carga ativa (não fecha sozinha)
+    if (c.rastreio_defasado) {
+      const dias = c.rastreio_carreta_idade_h != null ? Math.floor(c.rastreio_carreta_idade_h / 24) : null;
+      const quanto = dias != null ? ` há ${dias}d` : '';
+      html += ` <span style="color:var(--yellow,#f0a830);font-size:0.82em;cursor:help;" title="Carreta sem posição GPS${quanto} — a carga não fecha sozinha; confira/finalize manual (ou foi desengate)">⚠️ rastreio</span>`;
+    }
+    return html;
+  }
+
+  // Chegada realista (600 km/dia = 25 km/h) rateado — espelha eta_realista() do backend
+  function etaRealistaCliente(c) {
+    const dist = c.distancia_planejada_km;
+    const partida = c.data_saida_real || c.data_carregamento;
+    if (!dist || !partida) return null;
+    const base = new Date(partida);
+    if (isNaN(base)) return null;
+    const horas = dist / 25;   // 600 km/dia ÷ 24h = 25 km/h, rateado (sem arredondar)
+    return new Date(base.getTime() + horas * 3600000);
+  }
+
+  // Célula "Agendamento": agendamento_final → previsão → ETA, com tooltip das 3 datas
+  function colunaAgendamento(c) {
+    const ag = c.agendamento_final, prev = c.previsao_entrega, eta = etaRealistaCliente(c);
+    let principal = '—';
+    if (ag) principal = fmtDateTime(ag);
+    else if (prev) principal = fmtData(prev);
+    else if (eta) principal = fmtDateTime(eta.toISOString());
+    const tip = [
+      `📅 Agendamento: ${ag ? fmtDateTime(ag) : '—'}`,
+      `💭 Embarcador: ${prev ? fmtData(prev) : '—'}`,
+      `🤖 Chegada realista: ${eta ? fmtDateTime(eta.toISOString()) : '—'}`,
+    ].join('\n');
+    let multi = '';
+    const dests = c.agendamentos_destinos || [];
+    if (dests.length > 1) {
+      const det = dests.map(d => `${d.ordem}. ${d.cidade}/${d.uf}: ${d.data_agendamento ? fmtDateTime(d.data_agendamento) : 'sem agendamento'}`).join('\n');
+      multi = ` <span style="cursor:help;color:var(--text-dim);font-size:0.72rem;" title="${det.replace(/"/g,'&quot;')}">📍 ${dests.length}</span>`;
+    }
+    return `<span style="cursor:help;" title="${tip.replace(/"/g,'&quot;')}">${principal}</span>${multi}`;
+  }
+
+  async function loadMe() {
+    try {
+      const r = await fetch('/api/me', { credentials: 'same-origin' });
+      const j = await r.json();
+      if (j.ok) document.getElementById('userInfo').textContent = '👤 ' + j.nome;
+    } catch (e) {}
+  }
+
+  function popularUFsFiltros() {
+    for (const sel of ['fOrigemUF', 'fDestinoUF']) {
+      const e = document.getElementById(sel);
+      for (const u of UFs) {
+        const o = document.createElement('option');
+        o.value = u; o.textContent = u;
+        e.appendChild(o);
+      }
+    }
+  }
+
+  async function loadClientesFiltro() {
+    try {
+      const r = await fetch('/api/embarques/clientes', { credentials: 'same-origin' });
+      const j = await r.json();
+      if (j.ok) {
+        const sel = document.getElementById('fCliente');
+        for (const c of j.data) {
+          const o = document.createElement('option');
+          o.value = c.id; o.textContent = c.nome;
+          sel.appendChild(o);
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function loadEmbarcadoresFiltro() {
+    try {
+      const r = await fetch('/api/embarques/embarcadores', { credentials: 'same-origin' });
+      const j = await r.json();
+      if (j.ok) {
+        const sel = document.getElementById('fEmbarcador');
+        for (const u of j.data) {
+          const o = document.createElement('option');
+          o.value = u.nome; o.textContent = u.n ? `${u.nome} (${u.n})` : u.nome;
+          sel.appendChild(o);
+        }
+      }
+    } catch (e) {}
+  }
+
+  function montaQuery() {
+    const params = new URLSearchParams();
+    const map = {
+      fStart: 'start', fEnd: 'end',
+      fDataCampo: 'data_campo', fTipo: 'tipo_operacao', fStatus: 'status',
+      fViagem: 'viagem_vazia',
+      fCliente: 'cliente_id', fEmbarcador: 'embarcador',
+      fMotorista: 'motorista', fOrigemUF: 'origem_uf', fDestinoUF: 'destino_uf',
+      fQ: 'q'
+    };
+    for (const id in map) {
+      const v = document.getElementById(id).value;
+      if (v) params.set(map[id], v);
+    }
+    return params;
+  }
+
+  async function aplicarFiltros() {
+    document.getElementById('tbody').innerHTML = '<tr><td colspan="12" class="info-vazio">Carregando...</td></tr>';
+    const params = montaQuery();
+    try {
+      const r = await fetch('/api/embarques/cargas?' + params.toString(), { credentials: 'same-origin' });
+      const j = await r.json();
+      if (j.ok) {
+        CARGAS = j.data;
+        renderTabela();
+        document.getElementById('contagem').textContent = `${j.count} ${j.count === 1 ? 'carga' : 'cargas'}`;
+        // CSV link
+        document.getElementById('btnCsv').href = '/api/embarques/cargas/csv?' + params.toString();
+      } else {
+        document.getElementById('tbody').innerHTML = `<tr><td colspan="12" class="info-vazio">Erro: ${j.error}</td></tr>`;
+      }
+    } catch (e) {
+      document.getElementById('tbody').innerHTML = `<tr><td colspan="12" class="info-vazio">Erro de rede: ${e.message}</td></tr>`;
+    }
+  }
+
+  function limparFiltros() {
+    for (const id of ['fStart','fEnd','fTipo','fStatus','fViagem','fCliente','fEmbarcador','fMotorista','fOrigemUF','fDestinoUF','fQ']) {
+      document.getElementById(id).value = '';
+    }
+    document.getElementById('fDataCampo').value = 'carregamento';
+    aplicarFiltros();
+  }
+
+  function ordenar(campo) {
+    if (ORDEM.campo === campo) {
+      ORDEM.dir = ORDEM.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      ORDEM.campo = campo;
+      ORDEM.dir = 'asc';
+    }
+    // Atualiza classes nos th
+    document.querySelectorAll('thead th').forEach(th => { th.classList.remove('asc', 'desc'); });
+    const ths = document.querySelectorAll('thead th');
+    const idx = ['numero','data_carregamento','status','tipo_operacao','cliente_nome','','motorista_nome','','','previsao_entrega','criado_por_nome',''].indexOf(campo);
+    if (idx >= 0 && ths[idx]) ths[idx].classList.add(ORDEM.dir);
+    renderTabela();
+  }
+
+  function renderTabela() {
+    const arr = [...CARGAS].sort((a, b) => {
+      const va = a[ORDEM.campo]; const vb = b[ORDEM.campo];
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1; if (vb == null) return -1;
+      if (va < vb) return ORDEM.dir === 'asc' ? -1 : 1;
+      if (va > vb) return ORDEM.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    const tb = document.getElementById('tbody');
+    if (arr.length === 0) {
+      tb.innerHTML = '<tr><td colspan="12" class="info-vazio">Nenhuma carga encontrada com os filtros aplicados.</td></tr>';
+      return;
+    }
+    tb.innerHTML = arr.map(c => {
+      const carretas = [c.carreta1_placa, c.carreta2_placa].filter(Boolean).join(' + ') || '—';
+      const destacar = (DESTACAR_ID && String(c.id) === DESTACAR_ID) ? 'destacar' : '';
+      const btnEditar = c.pode_editar
+        ? `<button title="Editar" onclick="abrirEdit(${c.id})">✏</button>`
+        : `<button title="Apenas quem lançou ou admin pode editar" disabled style="opacity:0.3;cursor:not-allowed;">✏</button>`;
+      let btnDesengate = '';
+      if (c.pode_editar && (c.status === 'Em rota' || c.status === 'No destino')) {
+        btnDesengate = `<button title="Desengatar carreta (libera cavalo+motorista)" onclick="abrirDesengate(${c.id}, '${(c.numero || '').replace(/'/g,'')}')">🔌</button>`;
+      } else if (c.pode_editar && c.status === 'Desengatada') {
+        btnDesengate = `<button title="Finalizar descarga (marca Entregue)" onclick="finalizarDescarga(${c.id}, '${(c.numero || '').replace(/'/g,'')}')">🏁</button>`;
+      }
+      return `<tr class="${destacar}">
+        <td><strong>${c.numero || '—'}</strong></td>
+        <td>${fmtData(c.data_carregamento)}</td>
+        <td>${indicadoresStatus(c)}</td>
+        <td>${c.tipo_operacao || '—'}</td>
+        <td title="${c.cliente_nome || ''}">${c.viagem_vazia ? '<span style="color:var(--text-dim);">🚚 Vazia</span>' : (c.cliente_nome || '—')}</td>
+        <td title="${(c.origem_cidade||'')+'/'+(c.origem_uf||'')+' → '+(c.destinos||'')+(c.rota_resumo ? ' (via '+c.rota_resumo+')' : '')}">${(c.origem_cidade||'')+'/'+(c.origem_uf||'')} → ${c.destinos || '—'}${c.rota_resumo ? ` <span style="cursor:help;color:var(--accent2);font-size:0.72rem;" title="Cidades de rota: ${c.rota_resumo}">🧭 via</span>` : ''}</td>
+        <td title="${c.motorista_nome || ''}">${c.motorista_nome || '—'}</td>
+        <td>${c.cavalo_placa || '—'} <span style="color:var(--text-dim);font-size:0.72rem;">(${c.cavalo_tipo || '?'})</span></td>
+        <td>${carretas}</td>
+        <td>${colunaAgendamento(c)}</td>
+        <td title="${c.coleta_origem ? 'ordem de coleta ' + c.coleta_origem + ' (' + c.coleta_via + ')' : 'sem ordem de coleta ligada'}">${c.embarcador ? c.embarcador : (c.criado_por_nome || '—')}${c.embarcador ? '' : ''}</td>
+        <td class="acoes">
+          ${btnEditar}
+          ${btnDesengate}
+          <button title="Histórico" onclick="abrirHist(${c.id}, '${c.numero || ''}')">🕐</button>
+          <a href="/embarques/cargas/${c.id}/mapa" target="_blank" title="Ver mapa" style="text-decoration:none;"><button style="cursor:pointer;">🗺️</button></a>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function exportarCsv(e) {
+    // Link já está atualizado; só deixa o navegador baixar
+  }
+
+  // ── Modal Editar ──
+  async function abrirEdit(id) {
+    try {
+      const r = await fetch(`/api/embarques/cargas/${id}`, { credentials: 'same-origin' });
+      const j = await r.json();
+      if (!j.ok) { alert('Erro: ' + j.error); return; }
+      CARGA_EDIT = j.data;
+      document.getElementById('modalEditTitulo').textContent = `Editar carga ${CARGA_EDIT.numero}`;
+      document.getElementById('linkEdicaoCompleta').href = `/embarques/${CARGA_EDIT.id}/editar`;
+      document.getElementById('edStatus').value = CARGA_EDIT.status || 'Aberta';
+      document.getElementById('edTipo').value = CARGA_EDIT.tipo_operacao || '';
+      document.getElementById('edDataCar').value = (CARGA_EDIT.data_carregamento || '').slice(0,10);
+      document.getElementById('edPrevisao').value = (CARGA_EDIT.previsao_entrega || '').slice(0,10);
+      document.getElementById('edObs').value = CARGA_EDIT.observacoes || '';
+      document.getElementById('edFeedback').innerHTML = '';
+      document.getElementById('modalEdit').classList.add('active');
+    } catch (e) {
+      alert('Erro: ' + e.message);
+    }
+  }
+
+  async function salvarEdicao() {
+    if (!CARGA_EDIT) return;
+    const payload = {
+      status: document.getElementById('edStatus').value,
+      tipo_operacao: document.getElementById('edTipo').value,
+      data_carregamento: document.getElementById('edDataCar').value || null,
+      previsao_entrega: document.getElementById('edPrevisao').value || null,
+      observacoes: document.getElementById('edObs').value.trim() || null,
+    };
+    try {
+      const r = await fetch(`/api/embarques/cargas/${CARGA_EDIT.id}`, {
+        method: 'PATCH', credentials: 'same-origin',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const j = await r.json();
+      if (!j.ok) {
+        document.getElementById('edFeedback').innerHTML = `<div style="color:var(--red);font-size:0.85rem;margin-top:8px;">Erro: ${j.error}</div>`;
+        return;
+      }
+      document.getElementById('edFeedback').innerHTML = `<div style="color:var(--green);font-size:0.85rem;margin-top:8px;">✓ ${j.alteracoes} alteração(ões) salva(s).</div>`;
+      setTimeout(() => {
+        fecharModal('modalEdit');
+        aplicarFiltros();
+      }, 700);
+    } catch (e) {
+      document.getElementById('edFeedback').innerHTML = `<div style="color:var(--red);font-size:0.85rem;margin-top:8px;">Erro de rede</div>`;
+    }
+  }
+
+  // ── Modal Histórico ──
+  async function abrirHist(id, numero) {
+    document.getElementById('modalHistTitulo').textContent = `Histórico — ${numero}`;
+    document.getElementById('histLista').innerHTML = '<div class="info-vazio">Carregando...</div>';
+    document.getElementById('modalHist').classList.add('active');
+    try {
+      const r = await fetch(`/api/embarques/cargas/${id}/log`, { credentials: 'same-origin' });
+      const j = await r.json();
+      if (!j.ok) { document.getElementById('histLista').innerHTML = `<div class="info-vazio">Erro: ${j.error}</div>`; return; }
+      if (j.count === 0) { document.getElementById('histLista').innerHTML = '<div class="info-vazio">Sem edições registradas ainda.</div>'; return; }
+      document.getElementById('histLista').innerHTML = j.data.map(l => `
+        <div class="log-item">
+          <div class="head">${fmtDateTime(l.editado_em)} — ${l.usuario_nome || 'sistema'}</div>
+          <div class="body">${l.campo}: <span class="ant">${l.valor_anterior ?? '∅'}</span> → <span class="nov">${l.valor_novo ?? '∅'}</span></div>
+        </div>
+      `).join('');
+    } catch (e) {
+      document.getElementById('histLista').innerHTML = `<div class="info-vazio">Erro de rede</div>`;
+    }
+  }
+
+  // ── Desengate de carreta carregada ──
+  let DESENGATE_ID = null;
+  let DG_DATALISTS_CARREGADOS = false;
+
+  function maskCpfDg(cpf) {
+    const d = (cpf || '').replace(/\D/g, '');
+    if (d.length !== 11) return cpf || '';
+    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+  }
+
+  // Mesma fonte do cadastro de embarque (BI, cache 5min no servidor).
+  // Carrega 1× sob demanda (na 1ª abertura do modal) e reaproveita.
+  async function carregarDatalistsDesengate() {
+    if (DG_DATALISTS_CARREGADOS) return;
+    DG_DATALISTS_CARREGADOS = true;  // evita corrida em aberturas rápidas
+    try {
+      const [rm, rv] = await Promise.all([
+        fetch('/api/embarques/motoristas', { credentials: 'same-origin' }),
+        fetch('/api/embarques/veiculos', { credentials: 'same-origin' }),
+      ]);
+      const jm = await rm.json(), jv = await rv.json();
+      if (jm.ok) {
+        document.getElementById('dlDgMotoristas').innerHTML =
+          jm.data.map(m => `<option value="${m.nome} — ${maskCpfDg(m.cpf)}">`).join('');
+      }
+      if (jv.ok) {
+        const cavalos = jv.data.filter(v => v.tipo === 'Cavalo' || v.tipo === 'Truck');
+        document.getElementById('dlDgCavalos').innerHTML =
+          cavalos.map(v => `<option value="${v.placa}">${v.tipo} — ${v.marca_modelo || ''} — ${v.proprietario || ''}</option>`).join('');
+      }
+    } catch (e) {
+      DG_DATALISTS_CARREGADOS = false;  // permite tentar de novo na próxima abertura
+    }
+  }
+
+  function abrirDesengate(id, numero) {
+    DESENGATE_ID = id;
+    document.getElementById('modalDesengateTitulo').textContent = `Desengatar carreta — ${numero}`;
+    document.getElementById('dgCavalo').value = '';
+    document.getElementById('dgMotorista').value = '';
+    document.getElementById('dgObs').value = '';
+    document.getElementById('dgConfirmar').disabled = false;
+    document.getElementById('modalDesengate').classList.add('active');
+    carregarDatalistsDesengate();  // fire-and-forget; reaproveita em aberturas seguintes
+  }
+  async function confirmarDesengate() {
+    if (!DESENGATE_ID) return;
+    const btn = document.getElementById('dgConfirmar');
+    btn.disabled = true;
+    try {
+      // Datalist do motorista vem como "Nome — CPF"; grava só o nome (recomendação a).
+      const motoristaSel = document.getElementById('dgMotorista').value.trim().split(' — ')[0].trim();
+      const r = await fetch(`/api/embarques/cargas/${DESENGATE_ID}/desengatar`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          descarga_cavalo_placa: document.getElementById('dgCavalo').value.trim(),
+          descarga_motorista_nome: motoristaSel,
+          observacao: document.getElementById('dgObs').value.trim(),
+        }),
+      });
+      const j = await r.json();
+      if (!j.ok) { alert('Erro: ' + j.error); btn.disabled = false; return; }
+      fecharModal('modalDesengate');
+      aplicarFiltros();
+    } catch (e) {
+      alert('Erro de rede'); btn.disabled = false;
+    }
+  }
+  let FINALIZAR_ID = null;
+  function finalizarDescarga(id, numero) {
+    FINALIZAR_ID = id;
+    const c = CARGAS.find(x => x.id === id) || {};
+    document.getElementById('modalFinalizarTitulo').textContent = `Finalizar descarga — ${numero}`;
+    // Pré-preenche com o que foi informado no desengate (a pessoa pode ajustar)
+    document.getElementById('fzCavalo').value = c.descarga_cavalo_placa || '';
+    document.getElementById('fzMotorista').value = c.descarga_motorista_nome || '';
+    document.getElementById('fzErro').textContent = '';
+    document.getElementById('fzConfirmar').disabled = false;
+    document.getElementById('modalFinalizar').classList.add('active');
+    carregarDatalistsDesengate();
+  }
+  async function confirmarFinalizar() {
+    if (!FINALIZAR_ID) return;
+    const cavalo = document.getElementById('fzCavalo').value.trim();
+    const motorista = document.getElementById('fzMotorista').value.trim().split(' — ')[0].trim();
+    const err = document.getElementById('fzErro');
+    if (!cavalo || !motorista) {
+      err.textContent = 'Informe o cavalo e o motorista que fizeram a descarga.';
+      return;
+    }
+    err.textContent = '';
+    const btn = document.getElementById('fzConfirmar');
+    btn.disabled = true;
+    try {
+      const r = await fetch(`/api/rastreamento/cargas/${FINALIZAR_ID}/confirmar-entrega`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descarga_cavalo_placa: cavalo, descarga_motorista_nome: motorista }),
+      });
+      const j = await r.json();
+      if (!j.ok) { err.textContent = 'Erro: ' + j.error; btn.disabled = false; return; }
+      fecharModal('modalFinalizar');
+      aplicarFiltros();
+    } catch (e) {
+      err.textContent = 'Erro de rede'; btn.disabled = false;
+    }
+  }
+
+  function fecharModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+  document.addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) {
+      e.target.classList.remove('active');
+    }
+  });
+
+  // Pré-aplica filtros vindos da URL (ex.: cards da landing → ?status=Em rota)
+  function aplicarFiltrosDaURL() {
+    const p = new URLSearchParams(window.location.search);
+    const map = {
+      start: 'fStart', end: 'fEnd', data_campo: 'fDataCampo', tipo_operacao: 'fTipo',
+      status: 'fStatus', viagem_vazia: 'fViagem', cliente_id: 'fCliente',
+      embarcador: 'fEmbarcador', motorista: 'fMotorista',
+      origem_uf: 'fOrigemUF', destino_uf: 'fDestinoUF', q: 'fQ',
+    };
+    for (const key in map) {
+      const v = p.get(key);
+      if (v !== null) { const el = document.getElementById(map[key]); if (el) el.value = v; }
+    }
+  }
+
+  // Init
+  loadMe();
+  popularUFsFiltros();
+  loadClientesFiltro();
+  loadEmbarcadoresFiltro();
+  aplicarFiltrosDaURL();
+  aplicarFiltros();
+</script>
+  <script src="/nav-perms.js"></script>
+</body>
+</html>

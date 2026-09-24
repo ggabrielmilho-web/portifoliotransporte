@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Nortevia</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23f0a830'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='68' font-weight='900' text-anchor='middle' fill='%2316171d'%3ER%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link rel="stylesheet" href="/theme.css">
+<style>
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 32px 24px; animation: fadeUp 0.4s ease; }
+
+  /* Top bar */
+  .top-bar {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
+  }
+
+  .top-bar h1 {
+    font-size: 1.3rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 0.82rem;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .btn-outline {
+    background: var(--surface2);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-success {
+    background: var(--green);
+    color: var(--bg);
+    border-color: var(--green);
+    font-weight: 600;
+  }
+  .btn-success:hover { opacity: 0.85; }
+  .btn-success:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-danger {
+    background: rgba(248,113,113,0.12);
+    color: var(--red);
+    border-color: rgba(248,113,113,0.3);
+  }
+  .btn-danger:hover { background: rgba(248,113,113,0.22); }
+
+  .btn-warning {
+    background: rgba(251,146,60,0.12);
+    color: var(--orange);
+    border-color: rgba(251,146,60,0.3);
+    font-size: 0.75rem;
+    padding: 5px 12px;
+  }
+  .btn-warning:hover { background: rgba(251,146,60,0.22); }
+
+  .btn-sm-danger {
+    background: rgba(248,113,113,0.1);
+    color: var(--red);
+    border-color: rgba(248,113,113,0.25);
+    font-size: 0.75rem;
+    padding: 5px 12px;
+  }
+  .btn-sm-danger:hover { background: rgba(248,113,113,0.22); }
+
+  .btn-sm-green {
+    background: rgba(52,211,153,0.1);
+    color: var(--green);
+    border-color: rgba(52,211,153,0.25);
+    font-size: 0.75rem;
+    padding: 5px 12px;
+  }
+  .btn-sm-green:hover { background: rgba(52,211,153,0.22); }
+
+  /* Section card */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .section-header h2 {
+    font-size: 0.9rem; font-weight: 600; color: var(--text);
+  }
+
+  .section-body { padding: 20px; }
+
+  /* Form */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem; font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 5px;
+  }
+
+  .field input, .field select {
+    width: 100%; padding: 9px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.86rem;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus, .field select:focus {
+    outline: none; border-color: var(--accent);
+  }
+
+  .field select option { background: var(--surface2); }
+
+  .form-feedback {
+    font-size: 0.8rem;
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: none;
+  }
+
+  .form-feedback.success { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
+  .form-feedback.error   { background: rgba(248,113,113,0.1); color: var(--red);   border: 1px solid rgba(248,113,113,0.25); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  tbody tr { transition: background 0.1s; }
+  tbody tr:hover { background: rgba(240,168,48,0.04); }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.012); }
+  tbody tr:nth-child(even):hover { background: rgba(240,168,48,0.04); }
+
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+  .badge {
+    display: inline-block; padding: 2px 10px;
+    border-radius: 4px; font-size: 0.7rem; font-weight: 600;
+  }
+
+  .badge-admin  { background: rgba(45,212,191,0.15); color: var(--accent2); }
+  .badge-viewer { background: rgba(240,168,48,0.12); color: var(--accent); }
+  .badge-on     { background: rgba(52,211,153,0.12); color: var(--green); }
+  .badge-off    { background: rgba(248,113,113,0.12); color: var(--red); }
+  .badge-tipo   { background: rgba(251,191,36,0.12); color: var(--yellow); margin: 2px 2px 2px 0; }
+
+  /* Checkboxes de tipo */
+  .tipo-checks { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+  .tipo-checks label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; color: var(--text);
+    cursor: pointer; user-select: none;
+  }
+  .tipo-checks input[type="checkbox"] {
+    width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;
+  }
+
+  /* Edição inline de tipos */
+  .tipos-cell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .edit-tipos-btn {
+    background: none; border: none;
+    color: var(--text-dim); font-size: 0.75rem;
+    cursor: pointer; padding: 2px 4px;
+    border-radius: 4px; transition: color 0.15s;
+  }
+  .edit-tipos-btn:hover { color: var(--accent); }
+
+  .tipos-editor {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    align-items: center; margin-top: 6px;
+  }
+  .tipos-editor label { font-size: 0.8rem; color: var(--text); display: flex; gap: 5px; align-items: center; cursor: pointer; }
+  .tipos-editor input[type="checkbox"] { accent-color: var(--accent); }
+
+  .actions { display: flex; gap: 6px; }
+
+  .empty-row td {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 24px;
+  }
+</style>
+</head>
+<body>
+<span data-nav-menu data-nav-active="admin"></span>
+
+
+<div class="page">
+  <div class="top-bar">
+    <h1>Gerenciamento de Usuários</h1>
+    <div style="display:flex;gap:8px;">
+      <a href="/" style="text-decoration:none;"><button class="btn btn-outline">← Dashboard</button></a>
+      <a href="/embarques" style="text-decoration:none;"><button class="btn btn-outline">🚚 Embarques</button></a>
+      <a href="/embarques/mapa" style="text-decoration:none;"><button class="btn btn-outline">🗺️ Mapa</button></a>
+      <a href="/logout" style="text-decoration:none;"><button class="btn btn-outline">Sair</button></a>
+    </div>
+  </div>
+
+  <!-- ── NOVO USUÁRIO ── -->
+  <div class="section">
+    <div class="section-header">
+      <h2>➕ Novo Usuário</h2>
+    </div>
+    <div class="section-body">
+      <div class="form-grid">
+        <div class="field">
+          <label>Nome completo</label>
+          <input type="text" id="newNome" placeholder="João Silva">
+        </div>
+        <div class="field">
+          <label>E-mail</label>
+          <input type="email" id="newEmail" placeholder="nome@empresa.com.br">
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="newSenha" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="field">
+          <label>Perfil</label>
+          <select id="newRole">
+            <option value="viewer">Viewer — só visualiza</option>
+            <option value="admin">Admin — gerencia usuários</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Tipos de operação visíveis</label>
+        <div class="tipo-checks">
+          <label><input type="checkbox" id="tipoCarreteiro" value="Carreteiro" checked> Carreteiro</label>
+          <label><input type="checkbox" id="tipoAgregado"   value="Agregado"   checked> Agregado</label>
+          <label><input type="checkbox" id="tipoFrota"      value="Frota"      checked> Frota</label>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px;" id="abasField">
+        <label>Abas visíveis</label>
+        <div class="tipo-checks" id="newPaginas">
+          <label><input type="checkbox" class="pagina-check" value="auditoria" checked> Auditoria</label>
+          <label><input type="checkbox" class="pagina-check" value="tarifas" checked> Tarifas</label>
+          <label><input type="checkbox" class="pagina-check" value="embarques" checked> Embarques + Mapa</label>
+          <label><input type="checkbox" class="pagina-check" value="pgr"> PGR (velocidade)</label>
+          <label><input type="checkbox" class="pagina-check" value="jornada"> Jornada (RH)</label>
+          <label><input type="checkbox" class="pagina-check" value="ciot"> CIOT (conferência)</label>
+          <label><input type="checkbox" class="pagina-check" value="reuniao"> Reunião</label>
+          <label><input type="checkbox" class="pagina-check" value="dre"> DRE</label>
+          <label><input type="checkbox" class="pagina-check" value="despesas"> Despesas</label>
+          <label><input type="checkbox" class="pagina-check" value="conhecimentos"> Conhecimentos</label>
+          <label><input type="checkbox" class="pagina-check" value="faturamento"> Faturamento</label>
+          <label><input type="checkbox" class="pagina-check" value="veiculos"> Veículos</label>
+          <label><input type="checkbox" class="pagina-check" value="carbono"> Carbono (CO₂e)</label>
+          <label><input type="checkbox" class="pagina-check" value="contratos"> Contratos TAC</label>
+          <label><input type="checkbox" class="pagina-check" value="contabil"> Contábil</label>
+        </div>
+        <small id="abasNota" style="color:var(--text-dim);font-size:0.72rem;display:none;">Admin enxerga todas as abas automaticamente.</small>
+      </div>
+      <button class="btn btn-success" id="btnCriar" onclick="criarUsuario()">Criar Usuário</button>
+      <div class="form-feedback" id="formFeedback"></div>
+    </div>
+  </div>
+
+  <!-- ── LISTA DE USUÁRIOS ── -->
+  <div class="section">
+    <div class="section-header">
+      <h2>👥 Usuários Cadastrados</h2>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Perfil</th>
+            <th>Tipos Visíveis</th>
+            <th>Abas Visíveis</th>
+            <th>Status</th>
+            <th>Cadastrado em</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <tr class="empty-row"><td colspan="8">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── RASTREAMENTO ── -->
+  <div class="section">
+    <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>🛰️ Rastreamento</h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="rastrSync()">↻ Sincronizar veículos do rastreador</button>
+        <button class="btn btn-outline" onclick="rastrLoad()">↻ Atualizar</button>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="rastrHealth" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;margin-bottom:18px;">
+        <div style="background:#272a34;border:1px solid #34363f;border-radius:8px;padding:12px 14px;">
+          <div style="font-size:0.7rem;color:#9b9da8;text-transform:uppercase;font-weight:600;">Worker</div>
+          <div style="font-size:1.1rem;font-weight:700;margin-top:4px;" id="hWorker">—</div>
+        </div>
+        <div style="background:#272a34;border:1px solid #34363f;border-radius:8px;padding:12px 14px;">
+          <div style="font-size:0.7rem;color:#9b9da8;text-transform:uppercase;font-weight:600;">Modo</div>
+          <div style="font-size:1.1rem;font-weight:700;margin-top:4px;" id="hModo">—</div>
+        </div>
+        <div style="background:#272a34;border:1px solid #34363f;border-radius:8px;padding:12px 14px;">
+          <div style="font-size:0.7rem;color:#9b9da8;text-transform:uppercase;font-weight:600;">Última sync</div>
+          <div style="font-size:1.1rem;font-weight:700;margin-top:4px;font-family:'Space Mono',monospace;" id="hSync">—</div>
+        </div>
+        <div style="background:#272a34;border:1px solid #34363f;border-radius:8px;padding:12px 14px;">
+          <div style="font-size:0.7rem;color:#9b9da8;text-transform:uppercase;font-weight:600;">Chamadas (60s)</div>
+          <div style="font-size:1.1rem;font-weight:700;margin-top:4px;font-family:'Space Mono',monospace;" id="hChamadas">—</div>
+        </div>
+        <div style="background:#272a34;border:1px solid #34363f;border-radius:8px;padding:12px 14px;">
+          <div style="font-size:0.7rem;color:#9b9da8;text-transform:uppercase;font-weight:600;">ORS 24h</div>
+          <div style="font-size:1.1rem;font-weight:700;margin-top:4px;font-family:'Space Mono',monospace;" id="hOrs">—</div>
+        </div>
+        <div style="background:#272a34;border:1px solid #34363f;border-radius:8px;padding:12px 14px;">
+          <div style="font-size:0.7rem;color:#9b9da8;text-transform:uppercase;font-weight:600;">Erros 24h</div>
+          <div style="font-size:1.1rem;font-weight:700;margin-top:4px;font-family:'Space Mono',monospace;" id="hErros">—</div>
+        </div>
+      </div>
+
+      <div style="font-size:0.85rem;color:#9b9da8;text-transform:uppercase;font-weight:600;margin-bottom:8px;">📋 Log de chamadas (últimas 100)</div>
+      <div style="overflow:auto;max-height:340px;border:1px solid #34363f;border-radius:8px;">
+        <table style="font-size:0.78rem;">
+          <thead>
+            <tr>
+              <th style="white-space:nowrap;">Quando</th>
+              <th>Provider</th>
+              <th>Endpoint</th>
+              <th>Status</th>
+              <th>Duração</th>
+              <th>Erro</th>
+            </tr>
+          </thead>
+          <tbody id="rastrLogBody"><tr><td colspan="6" style="padding:20px;text-align:center;color:#9b9da8;">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let users = [];
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadUsers();
+  rastrLoad();
+  setInterval(rastrLoad, 30000);
+  // Abas são irrelevantes para admin (bypass) — mostra nota e desabilita os checks.
+  const selRole = document.getElementById('newRole');
+  const aplicarRole = () => {
+    const ehAdmin = selRole.value === 'admin';
+    document.getElementById('abasNota').style.display = ehAdmin ? 'block' : 'none';
+    document.querySelectorAll('#newPaginas .pagina-check').forEach(c => {
+      c.disabled = ehAdmin;
+      c.closest('label').style.opacity = ehAdmin ? '0.4' : '1';
+    });
+  };
+  selRole.addEventListener('change', aplicarRole);
+  aplicarRole();
+});
+
+// ── Rastreamento ───────────────────────────────────────
+function fmtTempo(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const s = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (s < 60) return 'há ' + s + 's';
+  if (s < 3600) return 'há ' + Math.floor(s/60) + 'min';
+  if (s < 86400) return 'há ' + Math.floor(s/3600) + 'h';
+  return 'há ' + Math.floor(s/86400) + 'd';
+}
+
+async function rastrLoad() {
+  try {
+    const r1 = await fetch('/api/rastreamento/health', { credentials: 'same-origin' });
+    const h = await r1.json();
+    if (h.ok) {
+      document.getElementById('hWorker').innerHTML = h.worker_running
+        ? '<span style="color:#34d399;">● rodando</span>'
+        : '<span style="color:#f87171;">● parado</span>';
+      document.getElementById('hModo').innerHTML = h.modo_simulado
+        ? '<span style="color:#fbbf24;">SIMULADO</span>'
+        : '<span style="color:#34d399;">REAL</span>';
+      document.getElementById('hSync').textContent = fmtTempo(h.ultima_sync);
+      document.getElementById('hChamadas').textContent = h.chamadas_60s || 0;
+      document.getElementById('hOrs').textContent = h.ors_chamadas_24h || 0;
+      document.getElementById('hErros').textContent = h.erros_24h || 0;
+    }
+
+    const r2 = await fetch('/api/rastreamento/log', { credentials: 'same-origin' });
+    const l = await r2.json();
+    if (l.ok) {
+      const tb = document.getElementById('rastrLogBody');
+      if (l.data.length === 0) {
+        tb.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:#9b9da8;">Sem chamadas registradas</td></tr>';
+        return;
+      }
+      tb.innerHTML = l.data.slice(0, 100).map(row => {
+        const tempo = new Date(row.chamado_em).toLocaleTimeString('pt-BR');
+        const provCor = row.provider === 'GPS' ? '#f0a830' : row.provider === 'ORS' ? '#2dd4bf' : '#fbbf24';
+        const statusCor = (row.status_http >= 200 && row.status_http < 300) ? '#34d399' : '#f87171';
+        const erro = row.erro_msg ? `<span title="${row.erro_msg.replace(/"/g,'&quot;')}" style="color:#f87171;">${row.erro_codigo || 'ERRO'}</span>` : '';
+        return `<tr>
+          <td style="white-space:nowrap;font-family:'Space Mono',monospace;">${tempo}</td>
+          <td><span style="color:${provCor};font-weight:600;">${row.provider}</span></td>
+          <td style="font-family:'Space Mono',monospace;">${row.endpoint || '—'}</td>
+          <td style="color:${statusCor};font-family:'Space Mono',monospace;">${row.status_http}</td>
+          <td style="font-family:'Space Mono',monospace;">${row.duracao_ms || 0}ms</td>
+          <td>${erro}</td>
+        </tr>`;
+      }).join('');
+    }
+  } catch (e) {
+    console.error('rastrLoad falhou', e);
+  }
+}
+
+async function rastrSync() {
+  if (!confirm('Forçar sincronização de veículos com o rastreador?')) return;
+  try {
+    const r = await fetch('/api/rastreamento/sync-veiculos', { method: 'POST', credentials: 'same-origin' });
+    const d = await r.json();
+    if (!d.ok) { alert('Erro: ' + d.error); return; }
+    alert(`Sync OK!\nTotal: ${d.total}\nNovos: ${d.novos}\nAtualizados: ${d.atualizados}`);
+    rastrLoad();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+async function loadUsers() {
+  try {
+    const resp = await fetch('/api/admin/users', { credentials: 'same-origin' });
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error);
+    users = json.users;
+    renderTable();
+  } catch (e) {
+    document.getElementById('userTableBody').innerHTML =
+      `<tr class="empty-row"><td colspan="6">Erro ao carregar: ${e.message}</td></tr>`;
+  }
+}
+
+const TODOS_TIPOS = ['Carreteiro', 'Agregado', 'Frota'];
+const TODAS_PAGINAS = [
+  { key: 'auditoria', label: 'Auditoria' },
+  { key: 'tarifas', label: 'Tarifas' },
+  { key: 'embarques', label: 'Embarques' },
+  { key: 'pgr', label: 'PGR (velocidade)' },
+  { key: 'jornada', label: 'Jornada (RH)' },
+  { key: 'ciot', label: 'CIOT (conferência)' },
+  { key: 'reuniao', label: 'Reunião' },
+  { key: 'dre', label: 'DRE' },
+  { key: 'despesas', label: 'Despesas' },
+  { key: 'conhecimentos', label: 'Conhecimentos' },
+  { key: 'faturamento', label: 'Faturamento' },
+  { key: 'veiculos', label: 'Veículos' },
+  { key: 'carbono', label: 'Carbono (CO₂e)' },
+  { key: 'contratos', label: 'Contratos TAC' },
+  { key: 'contabil', label: 'Contábil' },
+];
+// Esta lista e a de checkboxes do formulário de criação têm de cobrir
+// PAGINAS_VALIDAS do server.py — aba que falta aqui vira aba que NINGUÉM consegue
+// receber, porque só o admin passa pelo bypass. A Carbono ficou de fora assim.
+const PAGINA_LABEL = Object.fromEntries(TODAS_PAGINAS.map(p => [p.key, p.label]));
+
+function renderTable() {
+  const tbody = document.getElementById('userTableBody');
+  if (!users.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Nenhum usuário cadastrado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u => {
+    const tipos = u.tipos_permitidos || [];
+    const tiposBadges = tipos.map(t => `<span class="badge badge-tipo">${t}</span>`).join('') || '<span style="color:var(--text-dim);font-size:0.75rem;">Nenhum</span>';
+    const editBtn = `<button class="edit-tipos-btn" onclick="openTiposEditor(${u.id})" title="Editar tipos">✏</button>`;
+    const isAdmin = u.role === 'admin';
+    const paginas = u.paginas_permitidas || [];
+    const abasBadges = isAdmin
+      ? '<span style="color:var(--text-dim);font-size:0.75rem;">Todas (admin)</span>'
+      : (paginas.map(p => `<span class="badge badge-tipo">${PAGINA_LABEL[p] || p}</span>`).join('') || '<span style="color:var(--text-dim);font-size:0.75rem;">Nenhuma</span>');
+    const abasEdit = isAdmin ? '' : `<button class="edit-tipos-btn" onclick="openPaginasEditor(${u.id})" title="Editar abas">✏</button>`;
+    return `
+    <tr id="row-${u.id}">
+      <td>${u.nome}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:0.75rem;">${u.email}</td>
+      <td><span class="badge badge-${u.role}">${u.role === 'admin' ? 'Admin' : 'Viewer'}</span></td>
+      <td>
+        <div class="tipos-cell" id="tipos-cell-${u.id}">
+          ${tiposBadges} ${editBtn}
+        </div>
+      </td>
+      <td>
+        <div class="tipos-cell" id="paginas-cell-${u.id}">
+          ${abasBadges} ${abasEdit}
+        </div>
+      </td>
+      <td><span class="badge ${u.ativo ? 'badge-on' : 'badge-off'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+      <td style="color:var(--text-dim);font-size:0.75rem;">${u.criado_em}</td>
+      <td>
+        <div class="actions">
+          <button class="btn btn-outline" style="font-size:0.75rem;padding:5px 12px;" onclick="abrirEditarAcesso(${u.id})">✏ Editar acesso</button>
+          ${u.ativo
+            ? `<button class="btn btn-warning" onclick="toggleUser(${u.id}, false)">Desativar</button>`
+            : `<button class="btn btn-sm-green" onclick="toggleUser(${u.id}, true)">Ativar</button>`
+          }
+          <button class="btn btn-sm-danger" onclick="deleteUser(${u.id}, '${u.nome}')">Excluir</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openTiposEditor(uid) {
+  const user = users.find(u => u.id === uid);
+  if (!user) return;
+  const cell = document.getElementById(`tipos-cell-${uid}`);
+  const tipos = user.tipos_permitidos || [];
+
+  cell.innerHTML = `
+    <div class="tipos-editor">
+      ${TODOS_TIPOS.map(t => `
+        <label>
+          <input type="checkbox" value="${t}" ${tipos.includes(t) ? 'checked' : ''}> ${t}
+        </label>`).join('')}
+      <button class="btn btn-sm-green" style="font-size:0.72rem;padding:4px 10px;" onclick="saveTipos(${uid})">Salvar</button>
+      <button class="edit-tipos-btn" onclick="renderTable()">✕</button>
+    </div>`;
+}
+
+async function saveTipos(uid) {
+  const cell = document.getElementById(`tipos-cell-${uid}`);
+  const checks = cell.querySelectorAll('input[type=checkbox]:checked');
+  const tipos = [...checks].map(c => c.value);
+
+  if (!tipos.length) { alert('Selecione ao menos um tipo.'); return; }
+
+  try {
+    const resp = await fetch(`/api/admin/users/${uid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ tipos_permitidos: tipos })
+    });
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error);
+    await loadUsers();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+function openPaginasEditor(uid) {
+  const user = users.find(u => u.id === uid);
+  if (!user) return;
+  const cell = document.getElementById(`paginas-cell-${uid}`);
+  const paginas = user.paginas_permitidas || [];
+
+  cell.innerHTML = `
+    <div class="tipos-editor">
+      ${TODAS_PAGINAS.map(p => `
+        <label>
+          <input type="checkbox" value="${p.key}" ${paginas.includes(p.key) ? 'checked' : ''}> ${p.label}
+        </label>`).join('')}
+      <button class="btn btn-sm-green" style="font-size:0.72rem;padding:4px 10px;" onclick="savePaginas(${uid})">Salvar</button>
+      <button class="edit-tipos-btn" onclick="renderTable()">✕</button>
+    </div>`;
+}
+
+async function savePaginas(uid) {
+  const cell = document.getElementById(`paginas-cell-${uid}`);
+  const checks = cell.querySelectorAll('input[type=checkbox]:checked');
+  const paginas = [...checks].map(c => c.value);
+
+  try {
+    const resp = await fetch(`/api/admin/users/${uid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ paginas_permitidas: paginas })
+    });
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error);
+    await loadUsers();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+async function criarUsuario() {
+  const btn  = document.getElementById('btnCriar');
+  const nome  = document.getElementById('newNome').value.trim();
+  const email = document.getElementById('newEmail').value.trim();
+  const senha = document.getElementById('newSenha').value;
+  const role  = document.getElementById('newRole').value;
+  const tipos_permitidos = ['tipoCarreteiro','tipoAgregado','tipoFrota']
+    .filter(id => document.getElementById(id).checked)
+    .map(id => document.getElementById(id).value);
+  const paginas_permitidas = [...document.querySelectorAll('#newPaginas .pagina-check:checked')]
+    .map(c => c.value);
+
+  hideFeedback();
+
+  if (!nome || !email || !senha) { showFeedback('Preencha todos os campos.', false); return; }
+  if (senha.length < 6) { showFeedback('Senha deve ter no mínimo 6 caracteres.', false); return; }
+  if (!tipos_permitidos.length) { showFeedback('Selecione ao menos um tipo de operação.', false); return; }
+  if (role !== 'admin' && !paginas_permitidas.length) { showFeedback('Selecione ao menos uma aba visível.', false); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Criando...';
+
+  try {
+    const resp = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ nome, email, senha, role, tipos_permitidos, paginas_permitidas })
+    });
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error);
+
+    showFeedback(`Usuário "${nome}" criado com sucesso!`, true);
+    document.getElementById('newNome').value  = '';
+    document.getElementById('newEmail').value = '';
+    document.getElementById('newSenha').value = '';
+    document.getElementById('newRole').value  = 'viewer';
+    await loadUsers();
+  } catch (e) {
+    showFeedback(e.message, false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Criar Usuário';
+  }
+}
+
+async function toggleUser(id, ativo) {
+  try {
+    const resp = await fetch(`/api/admin/users/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ ativo })
+    });
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error);
+    await loadUsers();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+async function deleteUser(id, nome) {
+  if (!confirm(`Excluir "${nome}" permanentemente?`)) return;
+  try {
+    const resp = await fetch(`/api/admin/users/${id}`, {
+      method: 'DELETE',
+      credentials: 'same-origin'
+    });
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error);
+    await loadUsers();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+function showFeedback(msg, ok) {
+  const el = document.getElementById('formFeedback');
+  el.textContent = msg;
+  el.className = 'form-feedback ' + (ok ? 'success' : 'error');
+  el.style.display = 'block';
+}
+
+function hideFeedback() {
+  document.getElementById('formFeedback').style.display = 'none';
+}
+
+// ── Editar acesso (modal) ──
+let EDIT_ACESSO_UID = null;
+function abrirEditarAcesso(uid) {
+  const u = users.find(x => x.id === uid);
+  if (!u) return;
+  EDIT_ACESSO_UID = uid;
+  const isAdmin = u.role === 'admin';
+  const paginas = u.paginas_permitidas || [];
+  const tipos = u.tipos_permitidos || [];
+  document.getElementById('eaTitulo').textContent = `Editar acesso — ${u.nome}`;
+  document.getElementById('eaEmail').textContent = u.email;
+  document.getElementById('eaAbas').innerHTML = TODAS_PAGINAS.map(p =>
+    `<label><input type="checkbox" class="ea-aba" value="${p.key}" ${paginas.includes(p.key) ? 'checked' : ''} ${isAdmin ? 'disabled' : ''}> ${p.label}</label>`).join('');
+  document.getElementById('eaTipos').innerHTML = TODOS_TIPOS.map(t =>
+    `<label><input type="checkbox" class="ea-tipo" value="${t}" ${tipos.includes(t) ? 'checked' : ''}> ${t}</label>`).join('');
+  document.getElementById('eaNotaAdmin').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('eaFeedback').textContent = '';
+  document.getElementById('modalEditAcesso').style.display = 'flex';
+}
+function fecharEditarAcesso() {
+  document.getElementById('modalEditAcesso').style.display = 'none';
+  EDIT_ACESSO_UID = null;
+}
+async function patchUser(uid, body) {
+  const r = await fetch(`/api/admin/users/${uid}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin', body: JSON.stringify(body)
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error);
+}
+async function salvarEditarAcesso() {
+  if (!EDIT_ACESSO_UID) return;
+  const uid = EDIT_ACESSO_UID;
+  const u = users.find(x => x.id === uid);
+  const isAdmin = u && u.role === 'admin';
+  const tipos = [...document.querySelectorAll('#eaTipos .ea-tipo:checked')].map(c => c.value);
+  if (!tipos.length) { document.getElementById('eaFeedback').textContent = 'Selecione ao menos um tipo.'; return; }
+  const btn = document.getElementById('eaSalvar');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    await patchUser(uid, { tipos_permitidos: tipos });
+    if (!isAdmin) {
+      const abas = [...document.querySelectorAll('#eaAbas .ea-aba:checked')].map(c => c.value);
+      await patchUser(uid, { paginas_permitidas: abas });
+    }
+    fecharEditarAcesso();
+    await loadUsers();
+  } catch (e) {
+    document.getElementById('eaFeedback').textContent = 'Erro: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+</script>
+
+<!-- Modal: Editar acesso do usuário -->
+<div id="modalEditAcesso" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;">
+    <h2 id="eaTitulo" style="font-size:1.05rem;margin-bottom:4px;color:var(--accent);">Editar acesso</h2>
+    <div id="eaEmail" style="font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--text-dim);margin-bottom:18px;"></div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Abas visíveis</label>
+      <div class="tipo-checks" id="eaAbas"></div>
+      <small id="eaNotaAdmin" style="display:none;color:var(--text-dim);font-size:0.72rem;">Admin enxerga todas as abas automaticamente.</small>
+    </div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Tipos de operação visíveis</label>
+      <div class="tipo-checks" id="eaTipos"></div>
+    </div>
+    <div id="eaFeedback" style="color:var(--red);font-size:0.8rem;margin-bottom:8px;min-height:1em;"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-outline" onclick="fecharEditarAcesso()">Cancelar</button>
+      <button class="btn btn-success" id="eaSalvar" onclick="salvarEditarAcesso()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+  <script src="/nav-perms.js"></script>
+</body>
+</html>

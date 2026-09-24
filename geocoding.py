@@ -1,0 +1,331 @@
+"""
+Helpers de geocoding e cálculo de distância.
+- km_entre: Haversine (linha reta sobre a esfera da Terra)
+- normalizar_cidade: UPPERCASE + sem acento (chave de match)
+- geocoder_municipio: busca centroide IBGE em municipios_ibge
+"""
+
+import os
+import unicodedata
+from math import radians, sin, cos, asin, sqrt
+from datetime import datetime, timedelta, time as _time, date as _date
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
+
+RECONSTRUCAO_MAX_DIAS = int(os.getenv('RASTREAMENTO_RECONSTRUCAO_DIAS', '15'))
+MARGEM_FUSO_H = 12     # absorve skew de fuso no piso da janela
+BBOX_GRAUS = 0.3       # ~33 km em torno do centroide da origem
+
+
+def _get_db():
+    return psycopg2.connect(
+        host=os.getenv('DB_HOST', 'localhost'),
+        port=os.getenv('DB_PORT', '5432'),
+        dbname=os.getenv('DB_NAME', 'postgres'),
+        user=os.getenv('DB_USER', 'postgres'),
+        password=os.getenv('DB_PASSWORD', ''),
+    )
+
+
+def km_entre(lat1, lng1, lat2, lng2):
+    """Distância em km entre duas coordenadas (Haversine)."""
+    if None in (lat1, lng1, lat2, lng2):
+        return None
+    R = 6371
+    lat1, lng1, lat2, lng2 = map(radians, [float(lat1), float(lng1), float(lat2), float(lng2)])
+    dlat = lat2 - lat1
+    dlng = lng2 - lng1
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlng / 2) ** 2
+    return 2 * R * asin(sqrt(a))
+
+
+def _blocos_na_origem(coords, origem_lat, origem_lng, raio_km):
+    """Blocos contíguos de índices dentro do raio da origem. Cada bloco é (ini, fim)."""
+    blocos, atual = [], None
+    for i, (la, ln) in enumerate(coords):
+        d = None if (la is None or ln is None) else km_entre(origem_lat, origem_lng, la, ln)
+        dentro = d is not None and d <= raio_km
+        if dentro:
+            atual = (atual[0], i) if atual else (i, i)
+        elif atual:
+            blocos.append(atual)
+            atual = None
+    if atual:
+        blocos.append(atual)
+    return blocos
+
+
+def _bloco_de_carregamento(coords, origem_lat, origem_lng, raio_km,
+                           velocidades, instantes, ate, parado_kmh, parada_min):
+    """Índice do bloco onde o veículo CARREGOU, ou None se não der para dizer.
+
+    Regra: o ÚLTIMO bloco com PARADA SUSTENTADA que começa até `ate` (a saída registrada).
+    Cada palavra dessa frase custou uma medição — ver a docstring de `indice_saida_origem`.
+    """
+    if not velocidades or not instantes or len(velocidades) != len(coords):
+        return None
+    bons = []
+    for ini, fim in _blocos_na_origem(coords, origem_lat, origem_lng, raio_km):
+        if ate is not None and instantes[ini] is not None and instantes[ini] > ate:
+            continue                      # bloco começa depois da saída: não é carregamento
+        # maior parada contígua dentro do bloco
+        maior, desde = 0.0, None
+        for i in range(ini, fim + 1):
+            v, t = velocidades[i], instantes[i]
+            if t is None:
+                continue
+            if v is None or float(v) <= parado_kmh:
+                if desde is None:
+                    desde = t
+                maior = max(maior, (t - desde).total_seconds() / 60.0)
+            else:
+                desde = None
+        if maior >= parada_min:
+            bons.append((ini, fim))
+    return bons[-1] if bons else None
+
+
+def indice_saida_origem(coords, origem_lat, origem_lng, raio_km=30,
+                        velocidades=None, instantes=None, ate=None,
+                        parado_kmh=3, parada_min=60):
+    """Índice da saída da origem — recorta o trecho PRÉ-origem (caminhão rodando/chegando
+    antes do lançamento), para a linha e o KPI começarem no pátio.
+
+    ── Com `velocidades` e `instantes` (o caminho bom, desde 09/09/26) ────────────────────
+    A âncora é o **ÚLTIMO bloco com PARADA SUSTENTADA que começa até `ate`** (a saída
+    registrada). Cada palavra foi medida sobre agosto/setembro:
+
+    * **parada sustentada**, não "algum ponto parado": o bloco errado da C-2026-000630 tem
+      UM ping a ≤3 km/h — um pedágio. Blocos errados têm 0 a 5 min de parada; blocos de
+      carregamento têm 167 a 4.471 min. O vão é de duas ordens de grandeza, então o limiar
+      de 60 min não é delicado.
+    * **até `ate`**: sem esse teto a regra quebra a C-2026-000376, cujo bloco com parada
+      longa começa DOIS DIAS depois da saída (é o caminhão voltando e estacionando 48 h).
+      Ancorar ali cortaria a viagem inteira.
+    * **último**, não primeiro, porque há dois formatos e os dois resolvem certo: quando o
+      veículo só manobrou pela região (C-539, C-502, C-464 afastaram-se 32 a 47 km entre os
+      blocos) o último bloco é onde ele de fato partiu; quando ele SAIU e VOLTOU (a C-630
+      foi a 125 km e retornou), o último bloco é o carregamento desta viagem e o primeiro
+      era a partida da viagem ANTERIOR.
+
+    Medido: conserta 12 cargas, muda 0 das demais, e 4 caem no comportamento antigo — que
+    são exatamente aquelas onde o teto protege.
+
+    ── Sem velocidade/instante (compatibilidade) ─────────────────────────────────────────
+    Cai na regra original: o ponto mais próximo do pátio dentro do PRIMEIRO bloco. Ela
+    existia para que a viagem que VOLTA pra base (origem→destino→origem) não tivesse o
+    recorte puxado pro ponto da volta, o que zerava o trajeto/KPI. Continua valendo como
+    piso quando não há dado para decidir melhor.
+
+    `coords`: lista de (lat, lng) na ordem cronológica.
+    Sem origem (None) ou nenhum ponto dentro do raio → 0 (não recorta; degrada sem surpresa).
+    """
+    if origem_lat is None or origem_lng is None or not coords:
+        return 0
+
+    bloco = _bloco_de_carregamento(coords, origem_lat, origem_lng, raio_km,
+                                   velocidades, instantes, ate, parado_kmh, parada_min)
+    if bloco is not None:
+        start, _fim_bloco = bloco
+    else:
+        # 1) Primeira entrada na origem (1º ponto dentro do raio)
+        start = None
+        for i, (la, ln) in enumerate(coords):
+            if la is None or ln is None:
+                continue
+            d = km_entre(origem_lat, origem_lng, la, ln)
+            if d is not None and d <= raio_km:
+                start = i
+                break
+        if start is None:
+            return 0  # nunca passou perto da origem → não recorta (degrada como hoje)
+    # 2) Bloco contíguo dentro do raio a partir de `start`; escolhe o ponto mais perto
+    #    do pátio NESSE bloco inicial (encerra ao sair do raio; tolera ponto inválido).
+    melhor_i, melhor_d = start, None
+    for i in range(start, len(coords)):
+        la, ln = coords[i]
+        if la is None or ln is None:
+            continue
+        d = km_entre(origem_lat, origem_lng, la, ln)
+        if d is None or d > raio_km:
+            break  # saiu da origem → fim do bloco inicial
+        if melhor_d is None or d < melhor_d:
+            melhor_d, melhor_i = d, i
+    return melhor_i
+
+
+def indice_chegada_destino(pontos, dest_lat, dest_lng, raio_km=20.0,
+                           parado_kmh=3, parado_min=60):
+    """Índice do ponto de CHEGADA no destino, decidido por POSIÇÃO (nunca pelo nome da
+    cidade, que o 3S erra a 100+ km). Mesma escada de regras do gêmeo em
+    server.py:_indice_chegada_destino (que opera sobre o trajeto já serializado do mapa):
+      1) primeiro ponto dentro do raio que INICIA uma parada de >= parado_min,
+         permanecendo dentro do raio → o local da descarga;
+      2) senão, o ponto de MAIOR APROXIMAÇÃO dentro do raio (descarga rápida < 1h, ou
+         buraco de GPS bem em cima da entrega).
+
+    `pontos`: lista de (lat, lng, velocidade, data) em ordem cronológica.
+    Retorna None se nenhum ponto entrou no raio — o caller então não corta nada.
+    """
+    if dest_lat is None or dest_lng is None or not pontos:
+        return None
+    dest_lat, dest_lng = float(dest_lat), float(dest_lng)
+    dentro = []          # (índice, distância_km)
+    for i, p in enumerate(pontos):
+        la, ln = p[0], p[1]
+        if la is None or ln is None:
+            continue
+        d = km_entre(float(la), float(ln), dest_lat, dest_lng)
+        if d is not None and d <= raio_km:
+            dentro.append((i, d))
+    if not dentro:
+        return None
+    dentro_set = {i for i, _ in dentro}
+    n = len(pontos)
+
+    def _vel(p):
+        return p[2] or 0
+
+    # Regra 1: primeira parada de >= parado_min dentro do raio.
+    for i, _d in dentro:
+        if _vel(pontos[i]) > parado_kmh:
+            continue
+        t0 = pontos[i][3]
+        if t0 is None:
+            continue
+        j = i
+        while j < n and j in dentro_set and _vel(pontos[j]) <= parado_kmh:
+            tj = pontos[j][3]
+            if tj is not None and (tj - t0).total_seconds() >= parado_min * 60:
+                return i    # onde ele parou (início da parada)
+            j += 1
+    # Regra 2: maior aproximação do destino dentro do raio.
+    return min(dentro, key=lambda x: x[1])[0]
+
+
+def normalizar_cidade(s):
+    """UPPERCASE + sem acento + trim. Compara 'São Paulo' == 'SAO PAULO'."""
+    if not s:
+        return ''
+    nfkd = unicodedata.normalize('NFKD', str(s))
+    sem_acento = ''.join(c for c in nfkd if not unicodedata.combining(c))
+    return sem_acento.upper().strip()
+
+
+def geocoder_municipio(cidade, uf, conn=None):
+    """Busca centroide do município em municipios_ibge.
+    Retorna (lat, lng) ou (None, None) se não achar.
+    Aceita conn externa pra reusar conexão em loops.
+    """
+    if not cidade or not uf:
+        return (None, None)
+    cidade_norm = normalizar_cidade(cidade)
+    uf_norm = uf.upper().strip()[:2]
+
+    fechar = False
+    if conn is None:
+        conn = _get_db()
+        fechar = True
+
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT latitude, longitude FROM municipios_ibge WHERE cidade_normalizada=%s AND uf=%s",
+        (cidade_norm, uf_norm)
+    )
+    r = cur.fetchone()
+    cur.close()
+    if fechar:
+        conn.close()
+
+    if r:
+        return (float(r[0]), float(r[1]))
+    return (None, None)
+
+
+def cidade_por_coord(lat, lng, conn=None):
+    """Município mais próximo na municipios_ibge (bbox + menor distância).
+    Retorna (cidade, uf) ou None. Útil pra resolver a cidade quando o 3S não manda."""
+    if lat is None or lng is None:
+        return None
+    lat, lng = float(lat), float(lng)
+    fechar = False
+    if conn is None:
+        conn = _get_db(); fechar = True
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT cidade, uf, latitude, longitude FROM municipios_ibge "
+        "WHERE latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s",
+        (lat - 0.5, lat + 0.5, lng - 0.5, lng + 0.5)
+    )
+    rows = cur.fetchall()
+    cur.close()
+    if fechar:
+        conn.close()
+    melhor, melhor_d = None, None
+    for cidade, uf, la, ln in rows:
+        d = km_entre(lat, lng, float(la), float(ln))
+        if d is not None and (melhor_d is None or d < melhor_d):
+            melhor_d, melhor = d, (cidade, uf)
+    return melhor
+
+
+def detectar_inicio_viagem(placa, origem_cidade, origem_uf, data_carregamento, conn,
+                           origem_lat=None, origem_lng=None, max_dias=RECONSTRUCAO_MAX_DIAS):
+    """Detecta a SAÍDA da origem (último ponto na cidade de origem) no histórico do veículo.
+    Match por (cidade, uf) por nome OU por bbox em torno do centroide da origem — o bbox
+    cobre 'cidade' vazia e CD na periferia, sem geoquery por ponto. Roda 1x por carga
+    (o worker persiste). Retorna datetime (saída) ou None (caller usa fallback)."""
+    if not placa:
+        return None
+    placa = placa.strip().upper()
+    agora = datetime.utcnow()
+    # Piso: data_carregamento@00:00 (com margem de fuso), limitado pelo teto de max_dias
+    bound = agora - timedelta(days=max_dias)
+    if data_carregamento:
+        dc = data_carregamento
+        if isinstance(dc, _date) and not isinstance(dc, datetime):
+            dc = datetime.combine(dc, _time())
+        dc = dc - timedelta(hours=MARGEM_FUSO_H)
+        if dc > bound:
+            bound = dc
+
+    # Centroide da origem (pro bbox): usa o passado ou geocoda pelo nome
+    if origem_lat is None or origem_lng is None:
+        origem_lat, origem_lng = geocoder_municipio(origem_cidade, origem_uf, conn=conn)
+
+    cond, params = [], []
+    if origem_cidade and origem_uf:
+        cond.append("(UPPER(cidade) LIKE %s AND uf = %s)")
+        params += [f"%{origem_cidade.upper()}%", origem_uf.upper()]
+    if origem_lat is not None and origem_lng is not None:
+        cond.append("(latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s)")
+        params += [float(origem_lat) - BBOX_GRAUS, float(origem_lat) + BBOX_GRAUS,
+                   float(origem_lng) - BBOX_GRAUS, float(origem_lng) + BBOX_GRAUS]
+    if not cond:
+        return None
+
+    cur = conn.cursor()
+    # ANY(grafias): a posição é gravada na grafia CRUA da 3S (parte da frota vem
+    # na grafia antiga) e `placa` pode chegar em Mercosul — sem isso a saída da
+    # origem nunca era detectada e a carga ficava presa em 'Aberta'.
+    import placas as _placas
+    cur.execute(
+        f"""SELECT data_posicao FROM embarques_posicoes_historico
+            WHERE placa = ANY(%s) AND data_posicao BETWEEN %s AND %s AND ({' OR '.join(cond)})
+            ORDER BY data_posicao DESC LIMIT 1""",
+        [_placas.grafias(placa), bound, agora] + params
+    )
+    r = cur.fetchone()
+    cur.close()
+    return r[0] if r else None
+
+
+if __name__ == '__main__':
+    # Sanity check
+    print('Vitória/ES:', geocoder_municipio('Vitória', 'ES'))
+    print('Uberlândia/MG:', geocoder_municipio('Uberlândia', 'MG'))
+    print('SAO PAULO/SP:', geocoder_municipio('SAO PAULO', 'SP'))
+    d = km_entre(-18.91, -48.27, -20.31, -40.31)
+    print(f'Uberlândia → Vitória (linha reta): {d:.1f} km')

@@ -1,0 +1,798 @@
+"""
+Inicializa o banco de dados para o sistema de autenticação da Tabela Auditoria.
+Rode UMA VEZ antes de subir o servidor:  python init_db.py
+(Pode rodar novamente sem problemas — não apaga dados existentes)
+"""
+
+import os
+import psycopg2
+from werkzeug.security import generate_password_hash
+from dotenv import load_dotenv
+
+load_dotenv()
+
+conn = psycopg2.connect(
+    host=os.getenv('DB_HOST', 'localhost'),
+    port=os.getenv('DB_PORT', '5432'),
+    dbname=os.getenv('DB_NAME', 'postgres'),
+    user=os.getenv('DB_USER', 'postgres'),
+    password=os.getenv('DB_PASSWORD', ''),
+)
+cur = conn.cursor()
+
+# Criar tabela de usuários
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS auditoria_users (
+        id              SERIAL PRIMARY KEY,
+        nome            VARCHAR(255) NOT NULL,
+        email           VARCHAR(255) UNIQUE NOT NULL,
+        password_hash   VARCHAR(255) NOT NULL,
+        role            VARCHAR(20) DEFAULT 'viewer',
+        ativo           BOOLEAN DEFAULT true,
+        tipos_permitidos TEXT[] DEFAULT ARRAY['Carreteiro','Agregado','Frota'],
+        paginas_permitidas TEXT[] DEFAULT ARRAY['auditoria','tarifas','embarques'],
+        criado_em       TIMESTAMP DEFAULT NOW()
+    );
+""")
+
+# Adiciona coluna caso a tabela já existia sem ela (idempotente)
+cur.execute("""
+    ALTER TABLE auditoria_users
+    ADD COLUMN IF NOT EXISTS tipos_permitidos TEXT[] DEFAULT ARRAY['Carreteiro','Agregado','Frota'];
+""")
+# Permissão de acesso por aba (idempotente). Default = abas que todo usuário já via.
+cur.execute("""
+    ALTER TABLE auditoria_users
+    ADD COLUMN IF NOT EXISTS paginas_permitidas TEXT[] DEFAULT ARRAY['auditoria','tarifas','embarques'];
+""")
+
+# Inserir admin padrão (ignora se já existir)
+admin_email = 'admin@vitrine.demo'
+admin_senha = 'admin123'
+cur.execute("SELECT id FROM auditoria_users WHERE email = %s", (admin_email,))
+if not cur.fetchone():
+    cur.execute(
+        """INSERT INTO auditoria_users (nome, email, password_hash, role, tipos_permitidos)
+           VALUES (%s, %s, %s, 'admin', ARRAY['Carreteiro','Agregado','Frota'])""",
+        ('Administrador', admin_email, generate_password_hash(admin_senha))
+    )
+    print(f"\n✅ Admin criado com sucesso!")
+    print(f"   Email: {admin_email}")
+    print(f"   Senha: {admin_senha}")
+    print(f"   ⚠️  Troque a senha após o primeiro login!\n")
+else:
+    print(f"\n✅ Tabela já existe. Admin '{admin_email}' já cadastrado.\n")
+
+# ════════════════════════════════════════════════════════════════════════════
+# EMBARQUES — Módulo operacional de lançamento de cargas
+# ════════════════════════════════════════════════════════════════════════════
+
+# Cargas — snapshot completo de motorista/veículos como TEXTO p/ preservar histórico
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_cargas (
+        id                       SERIAL PRIMARY KEY,
+        numero                   VARCHAR(20) UNIQUE,
+        tipo_operacao            VARCHAR(20) NOT NULL,
+        status                   VARCHAR(20) NOT NULL DEFAULT 'Aberta',
+
+        cliente_id               INTEGER REFERENCES clientes(id),
+        cliente_nome             VARCHAR(180) NOT NULL,
+
+        origem_cidade            VARCHAR(120) NOT NULL,
+        origem_uf                CHAR(2) NOT NULL,
+
+        motorista_nome           VARCHAR(180) NOT NULL,
+        motorista_cpf            VARCHAR(20) NOT NULL,
+        motorista_telefone       VARCHAR(40),
+
+        cavalo_placa             VARCHAR(10) NOT NULL,
+        cavalo_tipo              VARCHAR(15) NOT NULL,
+        cavalo_marca_modelo      VARCHAR(120),
+        cavalo_carroceria        VARCHAR(80),
+        cavalo_proprietario      VARCHAR(180),
+        cavalo_eh_frota          BOOLEAN DEFAULT FALSE,
+
+        carreta1_placa           VARCHAR(10),
+        carreta1_marca_modelo    VARCHAR(120),
+        carreta1_carroceria      VARCHAR(80),
+        carreta1_proprietario    VARCHAR(180),
+        carreta1_eh_frota        BOOLEAN DEFAULT FALSE,
+
+        carreta2_placa           VARCHAR(10),
+        carreta2_marca_modelo    VARCHAR(120),
+        carreta2_carroceria      VARCHAR(80),
+        carreta2_proprietario    VARCHAR(180),
+        carreta2_eh_frota        BOOLEAN DEFAULT FALSE,
+
+        data_carregamento        DATE NOT NULL,
+        previsao_entrega         DATE,
+        data_conclusao           TIMESTAMP,
+
+        observacoes              TEXT,
+
+        criado_em                TIMESTAMP DEFAULT NOW(),
+        criado_por_id            INTEGER REFERENCES auditoria_users(id),
+        criado_por_nome          VARCHAR(180),
+        atualizado_em            TIMESTAMP
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_cargas_data      ON embarques_cargas (data_carregamento DESC);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_cargas_status    ON embarques_cargas (status);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_cargas_cliente   ON embarques_cargas (cliente_id);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_cargas_motorista ON embarques_cargas (motorista_nome);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_cargas_tipo      ON embarques_cargas (tipo_operacao);")
+
+# Destinos múltiplos por carga
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_cargas_destinos (
+        id         SERIAL PRIMARY KEY,
+        carga_id   INTEGER NOT NULL REFERENCES embarques_cargas(id) ON DELETE CASCADE,
+        ordem      SMALLINT NOT NULL DEFAULT 1,
+        cidade     VARCHAR(120) NOT NULL,
+        uf         CHAR(2) NOT NULL,
+        UNIQUE (carga_id, ordem)
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_destinos_carga ON embarques_cargas_destinos (carga_id);")
+
+# Log de edição — 1 linha por campo alterado
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_cargas_log (
+        id              SERIAL PRIMARY KEY,
+        carga_id        INTEGER NOT NULL REFERENCES embarques_cargas(id) ON DELETE CASCADE,
+        usuario_id      INTEGER REFERENCES auditoria_users(id),
+        usuario_nome    VARCHAR(180),
+        editado_em      TIMESTAMP DEFAULT NOW(),
+        campo           VARCHAR(60) NOT NULL,
+        valor_anterior  TEXT,
+        valor_novo      TEXT
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_cargas_log_carga ON embarques_cargas_log (carga_id, editado_em DESC);")
+
+# ── Contábil: de-para evento → conta contábil ──────────────────────────────
+# APPEND-ONLY de propósito. Cada salvamento é uma linha nova; nada é UPDATE nem
+# DELETE. Três motivos:
+#
+# 1. `eventos_479` é substituição total a cada carga — se o SSW desativar um
+#    evento, a linha some de lá. A vinculação não pode sumir junto, senão um
+#    fechamento anterior perde a conta que usou.
+# 2. O histórico É a tabela. Não precisa de log paralelo que pode divergir.
+# 3. Dá para responder "qual era a conta em setembro" — é o que protege mês já
+#    fechado de mudar sozinho quando ela corrigir um cadastro em outubro.
+#
+# `descricao` é snapshot, mesmo idioma de embarques_cargas: o evento pode sumir
+# da origem e a linha tem que continuar legível.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS contabil_evento_conta (
+        id                   SERIAL PRIMARY KEY,
+        evento               VARCHAR(10) NOT NULL,
+        descricao            VARCHAR(200),
+        conta_debito         VARCHAR(30),
+        conta_credito        VARCHAR(30),
+        -- As flags da contadora. Ficam aqui, e não em código, porque são
+        -- decisão dela: trocar um evento de SIM para NÃO é UPDATE de linha,
+        -- não deploy. O motor lê o valor; não conhece a lista de eventos.
+        tem_nota             BOOLEAN,
+        contabiliza_despesa  VARCHAR(10),   -- SIM | NAO | PARCIAL
+        contabiliza_provisao VARCHAR(10),   -- SIM | NAO
+        aproveita_credito    BOOLEAN,
+        importar_fiscal      BOOLEAN,
+        validar_simples      BOOLEAN,
+        grupo_importacao     VARCHAR(60),
+        observacao           TEXT,
+        usuario_id           INTEGER REFERENCES auditoria_users(id),
+        usuario_nome         VARCHAR(180),
+        criado_em            TIMESTAMP DEFAULT NOW()
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_contabil_evento_conta "
+            "ON contabil_evento_conta (evento, criado_em DESC);")
+
+# Colunas acrescentadas depois da primeira versão da tabela (ambiente que já
+# rodou o init antes não recria a tabela, então precisa do ALTER).
+for _col, _tipo in [
+    ('tem_nota', 'BOOLEAN'), ('contabiliza_despesa', 'VARCHAR(10)'),
+    ('contabiliza_provisao', 'VARCHAR(10)'), ('aproveita_credito', 'BOOLEAN'),
+    ('importar_fiscal', 'BOOLEAN'), ('validar_simples', 'BOOLEAN'),
+    ('grupo_importacao', 'VARCHAR(60)'),
+]:
+    cur.execute(f"ALTER TABLE contabil_evento_conta "
+                f"ADD COLUMN IF NOT EXISTS {_col} {_tipo};")
+
+# Contas fixas do processo: as 13 do 456 e o default de fornecedor. Saiu do
+# dict do server.py porque abrir conta bancária não pode exigir deploy — e
+# duas (TRIBANCO, CAIXA PAMBANK) já estão pendentes de criação no plano.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS contabil_conta_fixa (
+        chave         VARCHAR(60) PRIMARY KEY,
+        classificacao VARCHAR(30),
+        descricao     VARCHAR(200),
+        observacao    TEXT,
+        usuario_nome  VARCHAR(180),
+        atualizado_em TIMESTAMP DEFAULT NOW()
+    );
+""")
+
+# Semente com o que já foi mapeado. ON CONFLICT DO NOTHING: quem já editou pela
+# tela não tem a edição sobrescrita por um init rodado de novo.
+#
+# Três contas fogem de 1.1.1.02 de propósito, e o motivo foi deduzido do
+# comportamento do movimento no 456, não lido de cadastro:
+#   BB GARANTIDA  — 6 lançamentos, todos saque de limite p/ a conta corrente do
+#                   BB. É conta garantida = empréstimo, logo passivo.
+#   D.D SOLAR     — 210 lançamentos transferindo o produto do desconto p/ o
+#                   Bradesco. DD = duplicatas descontadas, conta redutora.
+# E duas não existem no plano: TRIBANCO é conta bancária de verdade (entra por
+# FAT/ACN, sai por transferência) e CAIXA PAMBANK é instituição de pagamento
+# (4.418 lançamentos CPG pagando frete/pedágio). Ficam em branco de propósito —
+# é a pendência que aparece em destaque na tela.
+_CONTAS_FIXAS = [
+    ('FORNECEDOR_PADRAO',            '2.1.3.01.001',
+     'Contrapartida de crédito quando CONTABILIZA PROVISÃO = SIM',
+     'Confirmar com a contadora: a classificação tem 2 códigos reduzidos '
+     '(166 FORNECEDOR SC e 506 FORNECEDORES DIVERSOS)'),
+    ('BANCO:1/2591/106712',          '1.1.1.02.001', 'BB COBRANCA', None),
+    ('BANCO:1/2591/60494',           '1.1.1.02.015', 'BB APARECIDA DE GOIANIA', None),
+    ('BANCO:1/2591/1067129',         '2.1.1.08.001', 'BB GARANTIDA',
+     'PASSIVO — conta garantida, não disponibilidade'),
+    ('BANCO:21/59/3696171',          '1.1.1.02.007', 'BANESTES CONTA CORRENTE', None),
+    ('BANCO:33/3342/13005930',       '1.1.1.02.005', 'SANTANDER COBRANCA', None),
+    ('BANCO:237/2735/8653',          '1.1.1.02.003', 'BRADESCO COBRANCA', None),
+    ('BANCO:341/7734/6798',          '1.1.1.02.012', 'ITAU MOVIM FINANCEIRA (ag 7734)', None),
+    ('BANCO:341/7784/6798',          '1.1.1.02.004', 'ITAU MOVIM FINANCEIRA 2 (ag 7784)', None),
+    ('BANCO:422/13100/584531',       '1.1.1.02.006', 'SAFRA COBRANCA', None),
+    ('BANCO:756/4264/145026',        '1.1.1.02.016', 'SICOOB NCOBRANCA', None),
+    ('BANCO:999/55555/555555555',    '1.1.2.01.117', 'CAIXA D.D SOLAR CAPITAL',
+     'REDUTORA DE CLIENTES — duplicatas descontadas, não disponibilidade'),
+    ('BANCO:634/1/1063380',          None,           'TRIBANCO',
+     'Conta bancária de verdade, ausente do plano. Criar em 1.1.1.02.'),
+    ('BANCO:999/99999/9999999999',   None,           'CAIXA PAMBANK FRETE PEDAGIO',
+     'Instituição de pagamento, não banco. Ausente do plano — criar.'),
+]
+for _ch, _cl, _de, _ob in _CONTAS_FIXAS:
+    cur.execute(
+        "INSERT INTO contabil_conta_fixa (chave, classificacao, descricao, observacao, "
+        "usuario_nome) VALUES (%s,%s,%s,%s,'semente do init_db') "
+        "ON CONFLICT (chave) DO NOTHING",
+        (_ch, _cl, _de, _ob))
+
+# Plano de contas da contabilidade (PERSETO). Referência: alimenta o campo de
+# escolha da tela, para que conta inexistente não entre por digitação.
+# Populado por seed_plano_contas.py a partir do arquivo que a contadora manda.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS contabil_plano_contas (
+        classificacao   VARCHAR(30) PRIMARY KEY,
+        codigo_reduzido INTEGER,
+        descricao       VARCHAR(200) NOT NULL,
+        niveis          SMALLINT,
+        analitica       BOOLEAN,
+        grupo           VARCHAR(2),
+        atualizado_em   TIMESTAMP DEFAULT NOW()
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_plano_contas_grupo "
+            "ON contabil_plano_contas (grupo, classificacao);")
+
+# Dedup case-insensitive da tabela clientes existente (para cadastro manual)
+cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_clientes_nome_ci ON clientes (LOWER(TRIM(nome)));")
+
+print("✅ Tabelas de Embarques (cargas, destinos, log) prontas.\n")
+
+# ════════════════════════════════════════════════════════════════════════════
+# RASTREAMENTO — Integração 3S Tecnologia + OpenRouteService + Simulação
+# ════════════════════════════════════════════════════════════════════════════
+
+# Token da 3S persistido (sobrevive a restart)
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_3s_token (
+        id              SMALLINT PRIMARY KEY DEFAULT 1,
+        token           TEXT NOT NULL,
+        expiration      TIMESTAMP NOT NULL,
+        atualizado_em   TIMESTAMP DEFAULT NOW(),
+        CHECK (id = 1)
+    );
+""")
+
+# Mapeamento placa → idVeiculo da 3S (real ou simulado)
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_veiculos_rastreio (
+        id              SERIAL PRIMARY KEY,
+        placa           VARCHAR(10) UNIQUE NOT NULL,
+        id_veiculo_3s   BIGINT UNIQUE NOT NULL,
+        id_equipamento  BIGINT,
+        frota           VARCHAR(50),
+        modelo          VARCHAR(120),
+        tipo            VARCHAR(30),
+        sincronizado_em TIMESTAMP DEFAULT NOW()
+    );
+""")
+
+# Última posição por placa (UPSERT pelo worker)
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_posicoes_atuais (
+        placa           VARCHAR(10) PRIMARY KEY,
+        id_veiculo_3s   BIGINT NOT NULL,
+        data_posicao    TIMESTAMP NOT NULL,
+        latitude        NUMERIC(10,7) NOT NULL,
+        longitude       NUMERIC(10,7) NOT NULL,
+        velocidade      INTEGER,
+        ignicao         BOOLEAN,
+        direcao         VARCHAR(20),
+        uf              CHAR(2),
+        cidade          VARCHAR(120),
+        bairro          VARCHAR(120),
+        endereco        VARCHAR(200),
+        bloqueio        BOOLEAN,
+        odometer        BIGINT,
+        atualizado_em   TIMESTAMP DEFAULT NOW()
+    );
+""")
+
+# Timeline de posições (INSERT a cada ciclo, dedup placa+data)
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_posicoes_historico (
+        id              BIGSERIAL PRIMARY KEY,
+        placa           VARCHAR(10) NOT NULL,
+        id_veiculo_3s   BIGINT NOT NULL,
+        data_posicao    TIMESTAMP NOT NULL,
+        latitude        NUMERIC(10,7) NOT NULL,
+        longitude       NUMERIC(10,7) NOT NULL,
+        velocidade      INTEGER,
+        ignicao         BOOLEAN,
+        uf              CHAR(2),
+        cidade          VARCHAR(120),
+        endereco        VARCHAR(200),
+        odometer        INTEGER,
+        UNIQUE (placa, data_posicao)
+    );
+""")
+# Bases que já existiam antes do backfill: acrescenta as duas colunas novas.
+# endereco = nome da rodovia (o /HistoricoPosicao entrega, o PGR usa no trecho);
+# odometer = base do km/L por GPS.
+# ── Colunas que existiam só em produção ──────────────────────────────────────
+# Estas oito foram acrescentadas por ALTER no servidor (a fonte da chegada e os
+# campos que a ordem de coleta preenche) e nunca voltaram para cá. O `server.py`
+# as LÊ, então um banco criado do zero por este script subia quebrado: a
+# listagem de cargas dava 500 em `c.no_local_fonte`. Descoberto ao montar a
+# vitrine em base nova — que é exatamente o que um deploy limpo faria.
+for _tab, _col, _tipo in [
+    ('embarques_cargas', 'no_local_fonte',    'VARCHAR(20)'),
+    ('embarques_cargas', 'coleta_origem',     'VARCHAR(40)'),
+    ('embarques_cargas', 'coleta_via',        'VARCHAR(40)'),
+    ('embarques_cargas', 'embarcador',        'VARCHAR(180)'),
+    ('embarques_cargas', 'origem_cnpj',       'VARCHAR(20)'),
+    ('embarques_cargas', 'destino_cnpj',      'VARCHAR(20)'),
+    ('embarques_cargas', 'origem_endereco',   'VARCHAR(220)'),
+    ('embarques_cargas', 'destino_endereco',  'VARCHAR(220)'),
+]:
+    cur.execute(f'ALTER TABLE {_tab} ADD COLUMN IF NOT EXISTS {_col} {_tipo};')
+
+cur.execute("ALTER TABLE embarques_posicoes_historico ADD COLUMN IF NOT EXISTS endereco VARCHAR(200);")
+cur.execute("ALTER TABLE embarques_posicoes_historico ADD COLUMN IF NOT EXISTS odometer INTEGER;")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pos_hist_placa_data ON embarques_posicoes_historico (placa, data_posicao);")
+# Purga da retenção varre por data_posicao sozinha (sem placa) — sem este índice
+# vira seq scan numa tabela que o backfill diário leva à casa do milhão.
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pos_hist_data ON embarques_posicoes_historico (data_posicao);")
+
+# KPIs consolidados por carga (sobrevive à limpeza de posições)
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_cargas_rastreio_kpi (
+        carga_id            INTEGER PRIMARY KEY REFERENCES embarques_cargas(id) ON DELETE CASCADE,
+        placa               VARCHAR(10) NOT NULL,
+        distancia_metros    BIGINT,
+        velocidade_max      INTEGER,
+        velocidade_media    NUMERIC(5,1),
+        tempo_movimento_seg BIGINT,
+        tempo_parado_seg    BIGINT,
+        consolidado_em      TIMESTAMP DEFAULT NOW(),
+        consolidado_final   BOOLEAN DEFAULT FALSE
+    );
+""")
+
+# Centroide IBGE dos municípios
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS municipios_ibge (
+        cidade_normalizada  VARCHAR(120) NOT NULL,
+        uf                  CHAR(2) NOT NULL,
+        cidade              VARCHAR(120) NOT NULL,
+        latitude            NUMERIC(10,7) NOT NULL,
+        longitude           NUMERIC(10,7) NOT NULL,
+        PRIMARY KEY (cidade_normalizada, uf)
+    );
+""")
+
+# Log de chamadas a APIs externas (3S, ORS, SIM)
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_3s_log (
+        id          BIGSERIAL PRIMARY KEY,
+        chamado_em  TIMESTAMP DEFAULT NOW(),
+        provider    VARCHAR(10) NOT NULL DEFAULT '3S',
+        endpoint    VARCHAR(80) NOT NULL,
+        duracao_ms  INTEGER,
+        status_http INTEGER,
+        erro_codigo VARCHAR(20),
+        erro_msg    TEXT
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_3s_log_data ON embarques_3s_log (chamado_em DESC);")
+
+# Tabela de simulação — fonte de dados quando MODO_SIMULADO=true
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_simulacao (
+        id              BIGSERIAL PRIMARY KEY,
+        placa           VARCHAR(10) NOT NULL,
+        id_veiculo_3s   BIGINT NOT NULL,
+        data_posicao    TIMESTAMP NOT NULL DEFAULT NOW(),
+        latitude        NUMERIC(10,7) NOT NULL,
+        longitude       NUMERIC(10,7) NOT NULL,
+        velocidade      INTEGER DEFAULT 0,
+        ignicao         BOOLEAN DEFAULT TRUE,
+        direcao         VARCHAR(20),
+        uf              CHAR(2) NOT NULL,
+        cidade          VARCHAR(120) NOT NULL,
+        bairro          VARCHAR(120),
+        endereco        VARCHAR(200),
+        bloqueio        BOOLEAN DEFAULT FALSE,
+        odometer        BIGINT
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_sim_placa_data ON embarques_simulacao (placa, data_posicao DESC);")
+
+# Colunas adicionais em embarques_cargas
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS origem_latitude NUMERIC(10,7);")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS origem_longitude NUMERIC(10,7);")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS data_saida_real TIMESTAMP;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS saida_auto BOOLEAN DEFAULT FALSE;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS no_local_desde TIMESTAMP;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS entregue_auto BOOLEAN DEFAULT FALSE;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS rota_planejada_polyline TEXT;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS distancia_planejada_km NUMERIC(7,1);")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS duracao_estimada_min INTEGER;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS rota_recalculada_em TIMESTAMP;")
+
+# Colunas adicionais em embarques_cargas_destinos
+cur.execute("ALTER TABLE embarques_cargas_destinos ADD COLUMN IF NOT EXISTS latitude NUMERIC(10,7);")
+cur.execute("ALTER TABLE embarques_cargas_destinos ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,7);")
+
+print("✅ Tabelas de Rastreamento (token, veiculos_rastreio, posicoes, kpi, municipios, log, simulacao) prontas.\n")
+
+# ════════════════════════════════════════════════════════════════════════════
+# AGENDAMENTO POR DESTINO (Fase 3) — compromisso de prazo + entrega por destino
+# ════════════════════════════════════════════════════════════════════════════
+
+# Início real da viagem (saída da origem), detectado pelo GPS e persistido 1x (Fase 3.1)
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS inicio_viagem TIMESTAMP;")
+
+# Compromisso firmado com o cliente recebedor (TIMESTAMP naive em UTC)
+cur.execute("ALTER TABLE embarques_cargas_destinos ADD COLUMN IF NOT EXISTS data_agendamento TIMESTAMP;")
+# Marcação manual de entrega por destino (Sprint 4 — opcional, DDL antecipada)
+cur.execute("ALTER TABLE embarques_cargas_destinos ADD COLUMN IF NOT EXISTS entregue_em TIMESTAMP;")
+cur.execute("ALTER TABLE embarques_cargas_destinos ADD COLUMN IF NOT EXISTS entregue_por_id INTEGER REFERENCES auditoria_users(id);")
+cur.execute("ALTER TABLE embarques_cargas_destinos ADD COLUMN IF NOT EXISTS entregue_por_nome VARCHAR(180);")
+
+print("✅ Colunas de agendamento por destino (data_agendamento, entregue_em) prontas.\n")
+
+# ════════════════════════════════════════════════════════════════════════════
+# VIAGEM VAZIA + CIDADES DE ROTA (waypoints)
+# ════════════════════════════════════════════════════════════════════════════
+
+# Flag de viagem vazia (caminhão rodando sem carga) — p/ mapear o vazio
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS viagem_vazia BOOLEAN NOT NULL DEFAULT FALSE;")
+# Viagem vazia não tem cliente → cliente_nome precisa aceitar NULL
+cur.execute("ALTER TABLE embarques_cargas ALTER COLUMN cliente_nome DROP NOT NULL;")
+
+# Cidades de rota (pontos de passagem p/ moldar o caminho — NÃO são entrega)
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_cargas_rota (
+        id         SERIAL PRIMARY KEY,
+        carga_id   INTEGER NOT NULL REFERENCES embarques_cargas(id) ON DELETE CASCADE,
+        ordem      SMALLINT NOT NULL DEFAULT 1,
+        cidade     VARCHAR(120) NOT NULL,
+        uf         CHAR(2) NOT NULL,
+        latitude   NUMERIC(10,7),
+        longitude  NUMERIC(10,7),
+        UNIQUE (carga_id, ordem)
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_rota_carga ON embarques_cargas_rota (carga_id);")
+
+print("✅ Viagem vazia + cidades de rota prontas.\n")
+
+# ════════════════════════════════════════════════════════════════════════════
+# DESENGATE DE CARRETA CARREGADA (drop-and-hook)
+# ════════════════════════════════════════════════════════════════════════════
+# Status novo 'Desengatada': cavalo+motorista liberados, carreta carregada segue
+# no destino aguardando/em descarga. (status é VARCHAR sem CHECK — valor é livre.)
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS desengatada_em TIMESTAMP;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS desengatada_por_id INTEGER REFERENCES auditoria_users(id);")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS desengatada_por_nome VARCHAR(180);")
+# Substituto (opcional) que vai terminar a descarga — registro/histórico
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS descarga_motorista_nome VARCHAR(180);")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS descarga_cavalo_placa VARCHAR(10);")
+
+print("✅ Desengate de carreta carregada (status Desengatada) pronto.\n")
+
+# ============================================================================
+# LANCAMENTO AUTOMATICO DE EMBARQUES (robo do manifesto SSW)
+# ============================================================================
+# O robo le `public manifestos` do SSW e abre a carga sozinho. Estas colunas
+# existem para tres coisas, nesta ordem de importancia:
+#
+# 1. `manifesto_origem` + indice UNICO = idempotencia. O job varre uma janela de
+#    dias (nao so ontem), porque 2,4% dos CTRBs saem em D+1 e a carga so fica
+#    completa na rodada seguinte. Sem o indice, cada varredura duplicaria.
+# 2. `criada_por_robo` separa as duas fontes. E o que permite ao robo nunca
+#    encostar em carga que o operacional lancou a mao -- e ao operacional saber
+#    o que veio do SSW sem ninguem ter digitado.
+# 3. `encerrada_motivo` impede que fechamento por REGRA se confunda com entrega
+#    provada por GPS. Fica 'Entregue' (e o status que as telas entendem) mas com
+#    entregue_auto=FALSE e o motivo gravado. Valores que o robo grava hoje:
+#    manifesto_novo | sequencia_viagem. Linhas antigas ainda carregam
+#    baixa_ctrb e timeout -- regras removidas em 03/09/26 porque fechavam
+#    carga que ainda estava rodando (ver fechar_pendentes em embarques_auto.py).
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS manifesto_origem VARCHAR(30);")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS ctrb_origem VARCHAR(20);")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS criada_por_robo BOOLEAN DEFAULT FALSE;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS auto_incompleta BOOLEAN DEFAULT FALSE;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS encerrada_motivo VARCHAR(30);")
+# §24 (11/09/26) — continuação/desengate de pátio: A aponta para a carga em que a mercadoria
+# seguiu (`continua_em`); `desengate_local` separa carreta largada no destino (comportamento
+# antigo) de carreta largada no pátio (o worker não a rastreia; só o documento encerra).
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS continua_em INTEGER;")
+cur.execute("ALTER TABLE embarques_cargas ADD COLUMN IF NOT EXISTS desengate_local VARCHAR(10);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_cargas_continua_em ON embarques_cargas (continua_em) WHERE continua_em IS NOT NULL;")
+# Indice PARCIAL: carga lancada a mao tem manifesto_origem NULL, e NULL nao colide.
+cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_cargas_manifesto_origem "
+            "ON embarques_cargas (manifesto_origem) WHERE manifesto_origem IS NOT NULL;")
+
+print("✅ Lancamento automatico de embarques (manifesto_origem, criada_por_robo) pronto.\n")
+
+# ── PGR — excesso de velocidade ──────────────────────────────────────
+#
+# O relatório PERSISTE o próprio resultado em vez de recalcular a partir das
+# posições. Sem isto, a retenção de 30 dias apagaria a base do relatório e o
+# PGR do mês passado deixaria de ser reproduzível — justamente a série
+# histórica (ranking por motorista, evolução mês a mês) que dá valor de gestão.
+# São algumas dezenas de linhas por dia contra ~63 mil posições.
+#
+# Grão = EPISÓDIO, não placa-dia: a linha do relatório é agregação, igual ao
+# padrão do resto do app (grão CTRB → agrega). Sem isto não dá para rankear
+# motorista nem abrir o detalhe.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS pgr_eventos (
+        id             BIGSERIAL PRIMARY KEY,
+        dia            DATE NOT NULL,           -- dia de Brasília
+        placa          VARCHAR(10) NOT NULL,
+        tipo_veiculo   VARCHAR(12),             -- CARRETA/CAVALO/TRUCK (veiculos_045)
+        tipo_operacao  VARCHAR(12),             -- FROTA/AGREGADO
+        ini            TIMESTAMP NOT NULL,      -- BRT
+        fim            TIMESTAMP NOT NULL,
+        registros      INTEGER,                 -- leituras >95 no episódio
+        vel_max        INTEGER,
+        vel_sustentada INTEGER,                 -- média do trecho (informativa)
+        sustentado     BOOLEAN,
+        cidade         VARCHAR(120),
+        uf             CHAR(2),
+        endereco       VARCHAR(200),            -- rodovia
+        latitude       NUMERIC(10,7),
+        longitude      NUMERIC(10,7),
+        situacao_carga VARCHAR(20),             -- carregado/vazio/parcial/nao_confirmado
+        manifesto      VARCHAR(20),
+        tomador        VARCHAR(120),
+        origem         VARCHAR(60),
+        destino        VARCHAR(60),
+        motorista      VARCHAR(120),
+        apurado_em     TIMESTAMP DEFAULT NOW(),
+        UNIQUE (placa, ini)
+    );
+""")
+# Quando o veículo passou pelo destino do manifesto — é o que prova o "vazio".
+# Guardar o manifesto entregue (em vez de descartá-lo) é o que dá o
+# frota/agregado nessas linhas: tipo_operacao é propriedade da VIAGEM, e a
+# viagem que acabou de terminar é a que identifica o veículo naquele dia.
+cur.execute("ALTER TABLE pgr_eventos ADD COLUMN IF NOT EXISTS entregue_em TIMESTAMP;")
+# O par da viagem, vindo do manifesto casado. `placa` é só quem carregava o
+# rastreador (quase sempre a carreta); sem o par não dá para filtrar por cavalo,
+# porque o cavalo raramente é a placa do evento.
+cur.execute("ALTER TABLE pgr_eventos ADD COLUMN IF NOT EXISTS placa_cavalo VARCHAR(10);")
+cur.execute("ALTER TABLE pgr_eventos ADD COLUMN IF NOT EXISTS placa_carreta VARCHAR(10);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pgr_eventos_cav ON pgr_eventos (placa_cavalo);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pgr_eventos_car ON pgr_eventos (placa_carreta);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pgr_eventos_dia ON pgr_eventos (dia);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pgr_eventos_placa ON pgr_eventos (placa, dia);")
+
+# Cobertura por placa/dia: sem ela, "zero excessos" fica ambíguo depois que as
+# posições forem apagadas — não dá para distinguir "ninguém correu" de "o
+# worker estava fora do ar".
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS pgr_cobertura (
+        dia               DATE NOT NULL,
+        placa             VARCHAR(10) NOT NULL,
+        posicoes          INTEGER,
+        minutos_com_sinal INTEGER,
+        minutos_sem_sinal INTEGER,
+        maior_gap_min     INTEGER,
+        apurado_em        TIMESTAMP DEFAULT NOW(),
+        PRIMARY KEY (dia, placa)
+    );
+""")
+# Lacuna só é falta de sinal se o veículo se moveu durante ela: parado, o
+# aparelho reporta de 1 em 1 h (ou 12 em 12). Medido em 11/08, as maiores
+# lacunas do dia (243, 239, 142 min) tinham deslocamento 0,0 km — eram pátio.
+# São estas duas colunas que o relatório usa para alarmar.
+cur.execute("ALTER TABLE pgr_cobertura ADD COLUMN IF NOT EXISTS minutos_sem_sinal_mov INTEGER;")
+cur.execute("ALTER TABLE pgr_cobertura ADD COLUMN IF NOT EXISTS maior_gap_mov_min INTEGER;")
+
+# Token de leitura por relatório: o diretor abre o link do WhatsApp sem logar.
+# Por RELATÓRIO, não mestre (vazou, expôs um dia); com validade; e a página é
+# beco sem saída, sem navegação para o resto do app.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS pgr_tokens (
+        token       VARCHAR(64) PRIMARY KEY,
+        dia         DATE NOT NULL,
+        criado_em   TIMESTAMP DEFAULT NOW(),
+        expira_em   TIMESTAMP NOT NULL,
+        acessos     INTEGER DEFAULT 0,
+        ultimo_acesso TIMESTAMP
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pgr_tokens_dia ON pgr_tokens (dia);")
+
+# Cache do cadastro de veículos (veiculos_045 do Power BI).
+#
+# O módulo de rastreamento é Postgres puro — não toca Power BI em lugar nenhum.
+# Dar DAX ao worker acoplaria dois mundos limpos e criaria dependência de
+# credencial e de disponibilidade num job que roda de madrugada sem ninguém
+# olhando. O lado que já fala com o Power BI (server.py) atualiza esta tabela
+# 1×/dia; o job só lê daqui. Cache velho vira aviso no log, não job quebrado:
+# rótulo faltando é falha macia.
+#
+# Guarda só o que é propriedade do VEÍCULO. `tipo_operacao` (frota/agregado)
+# NÃO entra: é propriedade da viagem — a regra é sobre o par cavalo+carreta, e
+# uma carreta Rizza atrás de cavalo de terceiro é agregado. Isso vem do
+# casamento com o manifesto, não do cadastro.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS pgr_cadastro_veiculos (
+        placa_norm    VARCHAR(10) PRIMARY KEY,
+        proprietario  VARCHAR(180),
+        tipo          VARCHAR(12),      -- Cavalo / Carreta / Truck
+        modelo        VARCHAR(120),
+        eh_frota      BOOLEAN,
+        atualizado_em TIMESTAMP DEFAULT NOW()
+    );
+""")
+
+# Cache de manifestos (Auditoria Receita do Power BI), para validar a situação
+# de carga sem dar DAX ao worker — mesmo motivo do cache de cadastro.
+#
+# Já vem GEOCODIFICADO (lat/lng de origem e destino, via municipios_ibge), para
+# o casamento no job ser aritmética local pura.
+#
+# É daqui que sai `tipo_operacao` (frota/agregado): ele é propriedade da
+# VIAGEM, não do veículo — a regra é sobre o par cavalo+carreta, e uma carreta
+# Rizza atrás de cavalo de terceiro é agregado.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS pgr_manifestos (
+        id             BIGSERIAL PRIMARY KEY,
+        manifesto      VARCHAR(30),
+        data_ref       DATE NOT NULL,
+        placa_cavalo   VARCHAR(10),
+        placa_carreta  VARCHAR(10),
+        origem         VARCHAR(80),      -- 'Cidade/UF'
+        destino        VARCHAR(80),
+        origem_lat     NUMERIC(10,7),
+        origem_lng     NUMERIC(10,7),
+        destino_lat    NUMERIC(10,7),
+        destino_lng    NUMERIC(10,7),
+        tomador        VARCHAR(160),
+        motorista      VARCHAR(160),
+        tipo_operacao  VARCHAR(12),
+        atualizado_em  TIMESTAMP DEFAULT NOW(),
+        UNIQUE (manifesto, data_ref, placa_cavalo, placa_carreta)
+    );
+""")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pgr_manif_cav ON pgr_manifestos (placa_cavalo, data_ref);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_pgr_manif_car ON pgr_manifestos (placa_carreta, data_ref);")
+
+print("✅ Tabelas do PGR (pgr_eventos, pgr_cobertura) prontas.\n")
+
+# ── Log de acesso: 1 linha por abertura de tela ──────────────────────────────
+# Grava só navegação de página (nunca /api/): uma tela dispara várias chamadas de
+# API e isso afogaria a contagem. `nome` é snapshot para o relatório continuar
+# legível se o usuário for renomeado ou removido depois.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS auditoria_acessos (
+        id         BIGSERIAL PRIMARY KEY,
+        user_id    INTEGER,
+        nome       VARCHAR(255),
+        aba        VARCHAR(40),      -- chave da aba ('faturamento', 'inicio', 'login'…)
+        caminho    VARCHAR(255),
+        ip         VARCHAR(64),
+        criado_em  TIMESTAMP DEFAULT NOW()
+    );
+""")
+# O relatório sempre corta por período; os índices seguem esse uso.
+cur.execute("CREATE INDEX IF NOT EXISTS ix_acessos_data ON auditoria_acessos (criado_em DESC);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_acessos_user ON auditoria_acessos (user_id, criado_em DESC);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_acessos_aba ON auditoria_acessos (aba, criado_em DESC);")
+
+print("✅ Tabela de log de acesso (auditoria_acessos) pronta.\n")
+
+
+# ── Consolidação diária de rastreamento ──────────────────────────────
+# POR QUE ESTA TABELA EXISTE
+#
+# `embarques_posicoes_historico` é purgada aos RASTREAMENTO_RETENCAO_DIAS (30) e a
+# própria 3S só serve ~35 dias de histórico — medido em 04/09/26: 31/07 respondia,
+# 28/07 devolvia 404. Ou seja, passou de ~35 dias o dado não existe em lugar nenhum.
+# Julho/2026 já se perdeu assim.
+#
+# Consolidar por CARGA (embarques_cargas_rastreio_kpi) não resolve: aquela tabela tem
+# carga_id como PK, então o caminhão só deixa rastro enquanto está dentro de um
+# documento. Viagem vazia, dia no pátio e deslocamento entre uma carga e outra não têm
+# carga_id — e são exatamente o que falta para medir produtividade real (o vazio deu
+# 17,4% do km de um cavalo em agosto/26).
+#
+# O grão certo é PLACA + DIA, e o dia é de BRASÍLIA: data_posicao é gravada em UTC, e
+# o abastecimento do ValeCard (dch_data) não tem hora nenhuma — o dia é a resolução em
+# que as fontes se encontram.
+#
+# Tamanho: ~93 placas × 365 dias ≈ 34 mil linhas/ano, contra 421 mil posições/mês.
+#
+# REGRA: só entra aqui o que MORRE. Manifesto, ValeCard, Sem Parar e receita vivem no
+# Power BI e não são purgados — junta-se na consulta, nunca se copia para cá.
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS embarques_rastreio_dia (
+        placa               VARCHAR(10) NOT NULL,
+        dia                 DATE        NOT NULL,   -- dia de Brasília (UTC-3)
+        odo_ini             BIGINT,                 -- odômetro na 1ª posição do dia
+        odo_fim             BIGINT,                 -- odômetro na última
+        km_odo              INTEGER,                -- odo_fim - odo_ini (NULL se sem odômetro)
+        km_gps              NUMERIC(10,2),          -- haversine entre pontos (confere o odômetro)
+        n_posicoes          INTEGER NOT NULL DEFAULT 0,
+        primeira            TIMESTAMP,              -- em UTC, como o histórico
+        ultima              TIMESTAMP,
+        tempo_movimento_seg BIGINT,
+        tempo_parado_seg    BIGINT,
+        velocidade_max      INTEGER,
+        cidade              VARCHAR(120),           -- onde passou mais posições no dia
+        uf                  CHAR(2),
+        carga_id            INTEGER,                -- carga ativa no dia; NULL = dia sem documento
+        consolidado_em      TIMESTAMP DEFAULT NOW(),
+        PRIMARY KEY (placa, dia)
+    );
+""")
+# km_odo atravessa buraco de sinal (o contador é cumulativo no aparelho), km_gps não —
+# a diferença entre os dois é o próprio diagnóstico de cobertura do dia.
+cur.execute("CREATE INDEX IF NOT EXISTS ix_rastreio_dia_dia ON embarques_rastreio_dia (dia);")
+cur.execute("CREATE INDEX IF NOT EXISTS ix_rastreio_dia_carga ON embarques_rastreio_dia (carga_id) "
+            "WHERE carga_id IS NOT NULL;")
+
+print("✅ Consolidação diária de rastreamento (embarques_rastreio_dia) pronta.\n")
+
+conn.commit()
+cur.close()
+conn.close()
+
+# Base Rizza: aponta o centroide de Uberlândia/MG para o ponto exato do pátio
+# (maioria das cargas sai/chega aqui). Em transação própria (após o commit acima)
+# pra não arriscar as DDLs; ignora se municipios_ibge ainda não foi importado.
+try:
+    conn2 = psycopg2.connect(
+        host=os.getenv('DB_HOST', 'localhost'), port=os.getenv('DB_PORT', '5432'),
+        dbname=os.getenv('DB_NAME', 'postgres'), user=os.getenv('DB_USER', 'postgres'),
+        password=os.getenv('DB_PASSWORD', ''),
+    )
+    cur2 = conn2.cursor()
+    cur2.execute(
+        "UPDATE municipios_ibge SET latitude=-18.87572, longitude=-48.29714 "
+        "WHERE cidade_normalizada='UBERLANDIA' AND uf='MG'"
+    )
+    conn2.commit()
+    print(f"✅ Base da frota aplicada em Uberlândia/MG ({cur2.rowcount} linha).\n")
+    cur2.close(); conn2.close()
+except Exception as _e:
+    print(f"ℹ️  Base da frota não aplicada (municipios_ibge importado?): {_e}\n")
+
+print("Banco de dados pronto. Rode: python server.py")

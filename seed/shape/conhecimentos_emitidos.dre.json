@@ -1,0 +1,1381 @@
+{
+  "tabela": "conhecimentos_emitidos",
+  "dataset": "dre",
+  "referencia_dax": "'public conhecimentos_emitidos'",
+  "coletado_em": "2026-09-22T09:50:18",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 349268,
+  "janela": {
+    "coluna": "data_autorizacao",
+    "de": "2021-02-22T00:00:00",
+    "ate": "2026-09-21T00:00:00"
+  },
+  "n_colunas": 149,
+  "colunas": {
+    "serie_numero_ctrc": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 11,
+      "len_max": 11,
+      "formato": [
+        "AAA999999-9"
+      ]
+    },
+    "serie_numero_cte": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        10,
+        10
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "tipo_documento": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 18,
+      "len_max": 18
+    },
+    "praca_expedidora": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 4,
+      "len_max": 4
+    },
+    "unidade_emissora": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "data_emissao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "hora_emissao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "data_autorizacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "hora_autorizacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "login": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 6,
+      "len_max": 7,
+      "formato": [
+        "aaaaaa",
+        "aaaaaaa"
+      ]
+    },
+    "numero_controle": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "placa_coleta": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "chave_cte": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 44,
+      "len_max": 44,
+      "formato": [
+        "99999999999999999999999999999999999999999999"
+      ]
+    },
+    "cnpj_remetente": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "cliente_remetente": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 27,
+      "len_max": 27
+    },
+    "endereco_remetente": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 28,
+      "len_max": 28
+    },
+    "bairro_remetente": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 10,
+      "len_max": 10
+    },
+    "setor_coleta": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "cidade_remetente": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 10,
+      "len_max": 10
+    },
+    "uf_remetente": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "cep_remetente": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 9,
+      "len_max": 9
+    },
+    "cnpj_expedidor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "cliente_expedidor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 30,
+      "len_max": 30
+    },
+    "cidade_expedidor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 10,
+      "len_max": 10
+    },
+    "uf_expedidor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "cnpj_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "cliente_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 30,
+      "len_max": 30
+    },
+    "endereco_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 28,
+      "len_max": 28
+    },
+    "bairro_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 9,
+      "len_max": 9
+    },
+    "cidade_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 10,
+      "len_max": 10
+    },
+    "uf_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "fone_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 6,
+      "len_max": 6
+    },
+    "segmento_pagador": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "abc_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "unidade_responsavel_pagador": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 3,
+      "len_max": 3
+    },
+    "cnpj_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "cliente_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 19,
+      "len_max": 35
+    },
+    "endereco_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 17,
+      "len_max": 42
+    },
+    "bairro_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 6,
+      "len_max": 6
+    },
+    "setor_destino": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "praca_destino": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 4,
+      "formato": [
+        "AAAA"
+      ]
+    },
+    "cidade_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 6,
+      "len_max": 22
+    },
+    "uf_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "cep_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 9,
+      "len_max": 9
+    },
+    "fone_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 6,
+      "len_max": 6
+    },
+    "celular_destinatario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "cnpj_recebedor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "cliente_recebedor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 19,
+      "len_max": 35
+    },
+    "local_entrega": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "endereco_entrega": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "bairro_entrega": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "cidade_entrega": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 6,
+      "len_max": 22,
+      "formato": [
+        "AAA AA AAAAAAA",
+        "AAA AAAA AA AAA",
+        "AAA AAAAA AA AAAAA",
+        "AAA AAAAAAA AA AAAAA"
+      ]
+    },
+    "uf_entrega": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "AA"
+      ]
+    },
+    "cep_entrega": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 9,
+      "len_max": 9
+    },
+    "unidade_receptora": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 3,
+      "len_max": 3
+    },
+    "cfop": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        4,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "numero_nota_fiscal": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        8,
+        8
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "mercadoria": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 12,
+      "len_max": 12,
+      "formato": [
+        "999-AAAAAAAA"
+      ]
+    },
+    "especie": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 12,
+      "len_max": 12,
+      "formato": [
+        "999-AAAAAAAA"
+      ]
+    },
+    "valor_mercadoria": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "tipo_calculo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 9,
+      "formato": [
+        "AAAAAAAAA"
+      ]
+    },
+    "tabela_calculo": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "ie_cliente_remetente": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "digitos_int": [
+        13,
+        13
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "lote_rps": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "fone_remetente": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 15,
+      "len_max": 15
+    },
+    "agendamento": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "peso_real_kg": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "cubagem_m3": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "quantidade_volumes": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        1
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "quantidade_pares": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "tipo_frete": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "AA"
+      ]
+    },
+    "modalidade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 10,
+      "len_max": 10,
+      "formato": [
+        "AAAAAAAAAA"
+      ]
+    },
+    "unidade_fiscal": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "inscricao_unidade_emissora": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "digitos_int": [
+        13,
+        13
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "tipo_baixa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 9,
+      "formato": [
+        "AAAAAAAAA"
+      ]
+    },
+    "data_liquidacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "valor_liquidado": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "valor_frete": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "valor_frete_sem_icms": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "base_calculo_icms_iss": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "valor_icms": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "aliquota": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "valor_iss": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "peso_calculado_kg": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "frete_peso": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "frete_valor": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "despacho": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "cat": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "itr": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "gris": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "pedagio": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "tas": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "tda": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "suframa": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "dev_canhoto_nf": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "reembolso": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "outros": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "coleta": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "tdc": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "tde": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "tar": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "trt": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "pos": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "adicional_frete": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "imposto_repassado": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "frete_ntc": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "frete_entrega": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "separacao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "capatazia": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "veiculo_dedicado": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "paletizacao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "co2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "rdc": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "seguro_fluvial": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "redespacho_fluvial": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "base_calculo_ibs_cbs": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "aliquota_ibs_municipal": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "valor_ibs_municipal": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "aliquota_ibs_estadual": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "valor_ibs_estadual": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "aliquota_cbs": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "valor_cbs": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "uf_origem_prestacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "AA"
+      ]
+    },
+    "cidade_origem_prestacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 10,
+      "len_max": 10,
+      "formato": [
+        "AAAAAAAAAA"
+      ]
+    },
+    "praca_comercial_origem": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 4,
+      "formato": [
+        "AAAA"
+      ]
+    },
+    "praca_comercial_destino": {
+      "tipo": "str",
+      "nulo_pct": 4,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 4,
+      "formato": [
+        "AAAA"
+      ]
+    },
+    "primeiro_manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 12,
+      "len_max": 12,
+      "formato": [
+        "AAA 999999-9"
+      ]
+    },
+    "data_primeiro_manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "unidade_origem_primeiro_manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "placa_cavalo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999"
+      ]
+    },
+    "placa_carreta": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "conferente_carga": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "conferente_descarga": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "ultimo_manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 12,
+      "len_max": 12,
+      "formato": [
+        "AAA 999999-9"
+      ]
+    },
+    "data_ultimo_manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "unidade_destino_ultimo_manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "ultimo_romaneio": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "data_ultimo_romaneio": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "placa_entrega": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 22,
+      "len_max": 22,
+      "formato": [
+        "9999-99-99A99:99:99.99"
+      ]
+    },
+    "numero_arquivo_averbacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 6,
+      "len_max": 6,
+      "formato": [
+        "999999"
+      ]
+    },
+    "retorno_averbacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 44,
+      "len_max": 44,
+      "formato": [
+        "AAAAAAAA AAAA: 9A9A9A999A9AAAA9999A999A9AAAA",
+        "AAAAAAAA AAAA: 9A9A9A999A9AAAA9999A99A99AAAA",
+        "AAAAAAAA AAAA: 9A9A9A999A9AAAA9999A9A9A9AAAA",
+        "AAAAAAAA AAAA: 9A9A9A999A9AAAA9999A9AA99AAAA"
+      ]
+    },
+    "data_retorno_averbacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "numero_averbacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 40,
+      "len_max": 40,
+      "formato": [
+        "9999999999999999999999999999999999999999"
+      ]
+    },
+    "valor_enviado": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "observacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 40,
+      "len_max": 49
+    },
+    "distancia_km": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "conferente_coleta": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "complemento": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 4,
+      "formato": [
+        "9,99"
+      ]
+    }
+  },
+  "vocabulario": {
+    "tipo_documento": {
+      "distintos": 15,
+      "valores": [
+        "CARGA FECHADA",
+        "COMPLEMENTAR FRETE",
+        "CORTESIA",
+        "DEVOLUCAO",
+        "NORMAL",
+        "PRES SERVICO",
+        "REDESPACHO INTERMEDIARIO",
+        "REENTREGA",
+        "REVERSA",
+        "SUBC EXP FORM LISO",
+        "SUBC FEC FORM CTRC",
+        "SUBC FORM CTRC",
+        "SUBC REC FORM LISO",
+        "SUBSTITUTO"
+      ]
+    },
+    "tipo_frete": {
+      "distintos": 4,
+      "valores": [
+        "CP",
+        "CV",
+        "FP",
+        "FV"
+      ]
+    },
+    "cat": {
+      "distintos": 1,
+      "valores": [
+        "0.0"
+      ]
+    },
+    "uf_origem_prestacao": {
+      "distintos": 24,
+      "valores": [
+        "AL",
+        "AM",
+        "BA",
+        "CE",
+        "DF",
+        "ES",
+        "GO",
+        "MA",
+        "MG",
+        "MS",
+        "MT",
+        "PA",
+        "PB",
+        "PE",
+        "PI",
+        "PR",
+        "RJ",
+        "RN",
+        "RO",
+        "RS",
+        "SC",
+        "SE",
+        "SP",
+        "TO"
+      ]
+    }
+  }
+}

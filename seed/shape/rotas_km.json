@@ -1,0 +1,46 @@
+{
+  "tabela": "rotas_km",
+  "dataset": "main",
+  "referencia_dax": "'public rotas_km'",
+  "coletado_em": "2026-09-22T09:48:52",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 2184,
+  "n_colunas": 3,
+  "colunas": {
+    "cidade_uf_origem": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 13,
+      "len_max": 13,
+      "formato": [
+        "AAAAAAAAAA/AA"
+      ]
+    },
+    "cidade_uf_destino": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 23,
+      "formato": [
+        "AAA AA AAAAAAA/AA",
+        "AAA AAAAA/AA",
+        "AAAA AA AAAA/AA",
+        "AAAA AAAAAAAA/AA"
+      ]
+    },
+    "km": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        4
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    }
+  },
+  "vocabulario": {}
+}

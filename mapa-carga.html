@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa da carga — Nortevia</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23f0a830'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='68' font-weight='900' text-anchor='middle' fill='%2316171d'%3ER%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px;
+  }
+  .breadcrumb {
+    font-size: 0.85rem; color: var(--text-dim);
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .breadcrumb a { color: var(--accent); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb .sep { color: var(--border); }
+  .breadcrumb .ativo { color: var(--text); font-family: 'Space Mono', monospace; font-weight: 600; }
+  .btn-sm {
+    padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+    font-size: 0.78rem; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  .container { display: flex; flex: 1; min-height: 0; }
+  .map-container { flex: 1; position: relative; }
+  #mapa { width: 100%; height: 100%; background: var(--bg); }
+
+  .painel {
+    width: 340px; background: var(--surface); border-left: 1px solid var(--border);
+    overflow-y: auto; padding: 18px;
+  }
+  .card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  }
+  .card-titulo {
+    font-size: 0.7rem; font-weight: 600; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;
+  }
+  .info-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; font-size: 0.83rem; }
+  .info-row .k { color: var(--text-dim); }
+  .info-row .v { font-weight: 600; }
+  .info-row .v.mono { font-family: 'Space Mono', monospace; }
+
+  .badge {
+    padding: 3px 9px; border-radius: 5px; font-size: 0.72rem; font-weight: 600;
+    display: inline-block;
+  }
+  .badge-Aberta   { background: rgba(240,168,48,0.15); color: var(--accent); }
+  .badge-Em\\ rota  { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .badge-Em-rota  { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .badge-No-destino { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .badge-Desengatada { background: rgba(250,204,21,0.15); color: #f0a830; }
+  .badge-Entregue { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge-Cancelada{ background: rgba(248,113,113,0.15); color: var(--red); }
+  .badge-Continuada { background: rgba(148,163,184,0.15); color: var(--text-dim); }
+
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-mini { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .kpi-mini .l { font-size: 0.65rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; }
+  .kpi-mini .v { font-size: 1.1rem; font-weight: 700; font-family: 'Space Mono', monospace; margin-top: 4px; }
+
+  .btn-acao {
+    width: 100%; padding: 10px; background: var(--accent); border: none;
+    color: var(--bg); font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+    font-size: 0.85rem; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-acao:hover { background: var(--accent2); }
+  .btn-acao:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secundario {
+    width: 100%; padding: 10px; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+    font-size: 0.82rem; border-radius: 8px; cursor: pointer; margin-top: 8px;
+  }
+  .marker-icon {
+    width: 38px; height: 38px; border-radius: 50%; border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.55); background: var(--surface);
+  }
+  .leaflet-labels-bright { filter: brightness(2.8) contrast(1.15); }
+  .leaflet-popup-content-wrapper { background: var(--surface); color: var(--text); border-radius: 10px; }
+  .leaflet-popup-tip { background: var(--surface); }
+  .leaflet-popup-content { font-family: 'Space Grotesk', sans-serif; font-size: 0.82rem; margin: 10px 14px; }
+
+  .legenda {
+    position: absolute; bottom: 14px; left: 14px; background: rgba(17,24,39,0.92);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font-size: 0.74rem; z-index: 1000; min-width: 200px;
+  }
+  .legenda-row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .legenda-row .line { width: 24px; height: 3px; border-radius: 2px; }
+
+  .auto-tag { padding: 1px 6px; border-radius: 3px; background: rgba(251,191,36,0.18); color: var(--yellow); font-size: 0.68rem; font-weight: 600; margin-left: 4px; }
+</style>
+</head>
+<body>
+<span data-nav-menu data-nav-active="mapa"></span>
+
+
+<div class="top-bar">
+  <div class="breadcrumb" id="bc">
+    <a href="/embarques">Embarques</a>
+    <span class="sep">›</span>
+    <a href="/embarques/relatorio">Relatório</a>
+    <span class="sep">›</span>
+    <span class="ativo" id="bcNum">—</span>
+    <span class="sep">›</span>
+    <span style="color:var(--accent);">🗺️ Mapa</span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <a href="/embarques/mapa" style="text-decoration:none;"><button class="btn-sm">🗺️ Mapa geral</button></a>
+    <a href="/embarques/relatorio" style="text-decoration:none;"><button class="btn-sm">📋 Relatório</button></a>
+    <a href="/logout" style="text-decoration:none;"><button class="btn-sm">Sair</button></a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="map-container">
+    <div id="mapa"></div>
+    <div class="legenda">
+      <div class="legenda-row"><div class="line" style="background:#60a5fa;"></div> Rota planejada</div>
+      <div class="legenda-row"><div class="line" style="background:#9b9da8;border:1px dashed #9b9da8;"></div> Trajeto percorrido</div>
+      <div class="legenda-row"><span style="font-size:14px;">🟢</span> Origem</div>
+      <div class="legenda-row"><span style="font-size:14px;">📍</span> Destinos</div>
+      <div class="legenda-row"><span style="font-size:14px;">🚚</span> Posição atual</div>
+      <div class="legenda-row" id="legPosFech" style="display:none;"><span style="color:#fb923c;">┈┈</span> Depois do fechamento</div>
+      <div class="legenda-row" id="legSalto" style="display:none;" title="Uma das duas posições é falsa — o veículo não pode ter feito o trecho no tempo registrado. A linha do GPS não atravessa; o KM RASTREADOR (odômetro) mede."><span style="color:#fbbf24;">●</span> Salto impossível (linha quebrada)</div>
+    </div>
+  </div>
+
+  <aside class="painel">
+    <div class="card">
+      <div class="card-titulo">Carga</div>
+      <div class="info-row"><span class="k">Número</span><span class="v mono" id="iNumero">—</span></div>
+      <div class="info-row"><span class="k">Status</span><span class="v" id="iStatus">—</span></div>
+      <div class="info-row"><span class="k">Cliente</span><span class="v" id="iCliente">—</span></div>
+      <div class="info-row"><span class="k">Motorista</span><span class="v" id="iMotorista">—</span></div>
+      <div class="info-row"><span class="k">Cavalo</span><span class="v mono" id="iCavalo">—</span></div>
+      <div class="info-row"><span class="k">Rastreado via</span><span class="v mono" id="iRastreio">—</span></div>
+      <div class="info-row"><span class="k">Data de saída</span><span class="v" id="iDataSaida">—</span></div>
+      <div class="info-row"><span class="k">Chegada no destino</span><span class="v" id="iDataChegada">—</span></div>
+      <!-- §24: a ligacao entre cargas. Linhas escondidas ate haver o que mostrar. -->
+      <div class="info-row" id="rowDesengate" style="display:none;"><span class="k">Desengate</span><span class="v" id="iDesengate">—</span></div>
+      <div class="info-row" id="rowContinuaEm" style="display:none;"><span class="k">Continua em</span><span class="v" id="iContinuaEm">—</span></div>
+      <div class="info-row" id="rowContinuacaoDe" style="display:none;"><span class="k">Continuação de</span><span class="v" id="iContinuacaoDe">—</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-titulo">Posição atual</div>
+      <div class="info-row"><span class="k">Cidade</span><span class="v" id="pCidade">—</span></div>
+      <div class="info-row"><span class="k">Velocidade</span><span class="v mono" id="pVel">—</span></div>
+      <div class="info-row"><span class="k">Última atualização</span><span class="v" id="pUltima">—</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-titulo">KPIs</div>
+      <div class="kpi-grid">
+        <div class="kpi-mini" title="Contador do próprio rastreador. É cumulativo, então atravessa buraco de sinal — o traçado do GPS perde o que acontece na lacuna, este número não. Vale para viagem carregada e vazia.">
+          <div class="l">Km rastreador</div><div class="v" id="kKmOdo">—</div></div>
+        <div class="kpi-mini" title="Soma das distâncias entre os pontos recebidos (haversine). Subestima: corta curva e perde o trecho sem sinal.">
+          <div class="l">Km percorridos</div><div class="v" id="kKmPerc">—</div></div>
+        <div class="kpi-mini"><div class="l">Km faltando</div><div class="v" id="kKmFalta">—</div></div>
+        <div class="kpi-mini"><div class="l">Vel. média</div><div class="v" id="kVelMed">—</div></div>
+        <div class="kpi-mini"><div class="l">Vel. máx</div><div class="v" id="kVelMax">—</div></div>
+        <div class="kpi-mini"><div class="l">Tempo mov.</div><div class="v" id="kTmov">—</div></div>
+        <div class="kpi-mini"><div class="l">Tempo parado</div><div class="v" id="kTpar">—</div></div>
+      </div>
+    </div>
+
+    <div class="card" id="cardRota">
+      <div class="card-titulo" id="tituloRota">Rota planejada</div>
+      <div class="info-row"><span class="k">Distância total</span><span class="v mono" id="rDist">—</span></div>
+      <div class="info-row"><span class="k">Duração estimada</span><span class="v mono" id="rDur">—</span></div>
+      <div class="info-row"><span class="k">Chegada prevista (roteirizador)</span><span class="v" id="rEta">—</span></div>
+      <div class="info-row"><span class="k">Chegada realista (600 km/dia)</span><span class="v" id="rEtaReal">—</span></div>
+      <div class="info-row"><span class="k">Recalculada</span><span class="v" id="rRec">—</span></div>
+      <div class="info-row"><span class="k">Agendamento</span><span class="v" id="rAgend">—</span></div>
+      <div class="info-row"><span class="k">Folga (chegada × agend.)</span><span class="v" id="rFolga">—</span></div>
+    </div>
+
+    <div class="card" id="cardAcoes" style="display:none;">
+      <div class="card-titulo">Ações</div>
+      <button class="btn-acao" id="btnConfirmar" onclick="confirmarEntrega()">✓ Confirmar entrega manual</button>
+    </div>
+  </aside>
+</div>
+
+<!-- Modal Finalizar descarga (carga desengatada) -->
+<div id="modalFinalizar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface,#11161f);border:1px solid var(--border,#1f2733);border-radius:12px;padding:22px;width:min(440px,92vw);">
+    <h2 style="margin:0 0 6px;font-size:1.1rem;">Finalizar descarga</h2>
+    <p style="color:var(--text-dim,#9b9da8);font-size:0.85rem;margin:0 0 14px;">
+      A carga será marcada como <strong>Entregue</strong>. Registre quem efetivamente fez a descarga
+      (se já preenchido no desengate, vem aqui e pode ser ajustado).
+    </p>
+    <label style="display:block;font-size:0.8rem;margin-bottom:4px;">Cavalo que fez a descarga <span style="color:#f87171;">*</span></label>
+    <input type="text" id="fzCavalo" list="dlFzCavalos" placeholder="Placa" style="text-transform:uppercase;width:100%;padding:9px;border-radius:8px;border:1px solid var(--border,#1f2733);background:var(--bg,#16171d);color:var(--text,#e9e9ee);margin-bottom:12px;">
+    <datalist id="dlFzCavalos"></datalist>
+    <label style="display:block;font-size:0.8rem;margin-bottom:4px;">Motorista que fez a descarga <span style="color:#f87171;">*</span></label>
+    <input type="text" id="fzMotorista" list="dlFzMotoristas" placeholder="Nome ou CPF" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border,#1f2733);background:var(--bg,#16171d);color:var(--text,#e9e9ee);margin-bottom:8px;">
+    <datalist id="dlFzMotoristas"></datalist>
+    <div id="fzErro" style="color:#f87171;font-size:0.82rem;min-height:1.1em;"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+      <button class="btn-acao" onclick="fecharFinalizar()">Cancelar</button>
+      <button class="btn-acao" id="fzConfirmar" style="border-color:#34d399;color:#34d399;" onclick="confirmarFinalizar()">🏁 Finalizar descarga</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/mapa-config.js"></script>
+<script>
+  // ── Decodificador polyline (Google encoded) ──
+  function decodePolyline(str, precision = 5) {
+    const coords = [];
+    let i = 0, lat = 0, lng = 0;
+    const factor = Math.pow(10, precision);
+    while (i < str.length) {
+      let shift = 0, result = 0, b;
+      do { b = str.charCodeAt(i++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      lat += ((result & 1) ? ~(result >> 1) : (result >> 1));
+      shift = 0; result = 0;
+      do { b = str.charCodeAt(i++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      lng += ((result & 1) ? ~(result >> 1) : (result >> 1));
+      coords.push([lat / factor, lng / factor]);
+    }
+    return coords;
+  }
+
+  // ── ID da carga vem da URL ──
+  const cargaId = parseInt(location.pathname.match(/cargas\/(\d+)\/mapa/)[1], 10);
+  document.getElementById('bcNum').textContent = '#' + cargaId;
+  let CARGA_ATUAL = null;
+
+  // ── Mapa ──
+  const mapa = L.map('mapa', { zoomControl: true }).setView([-15.78, -47.93], 5);
+  const cartoTiles = (estilo) => `https://{s}.basemaps.cartocdn.com/${estilo}/{z}/{x}/{y}{r}.png`
+    + (window.CARTO_KEY ? `?key=${window.CARTO_KEY}` : '');
+  // Sem chave do CARTO os tiles vêm carimbados com "API KEY REQUIRED" no meio do
+  // mapa. O Esri Dark Gray Canvas é escuro, não pede chave e serve de base; o
+  // par base+labels do CARTO só entra quando há chave.
+  const SEM_CHAVE = !window.CARTO_KEY;
+  const ESRI_BASE = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+  const ESRI_REF  = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
+  L.tileLayer(SEM_CHAVE ? ESRI_BASE : cartoTiles('dark_nolabels'), {
+    attribution: SEM_CHAVE ? '© Esri' : '© OpenStreetMap, © CARTO',
+    subdomains: 'abcd', maxZoom: 19
+  }).addTo(mapa);
+  L.tileLayer(SEM_CHAVE ? ESRI_REF : cartoTiles('dark_only_labels'), {
+    subdomains: 'abcd', maxZoom: 19,
+    className: 'leaflet-labels-bright',
+  }).addTo(mapa);
+
+  let layers = [];
+  function clearLayers() { layers.forEach(l => mapa.removeLayer(l)); layers = []; }
+  function addLayer(l) { layers.push(l); mapa.addLayer(l); }
+
+  function icon(emoji, bg) {
+    return L.divIcon({
+      html: `<div class="marker-icon" style="background:${bg};">${emoji}</div>`,
+      className: '', iconSize: [38, 38], iconAnchor: [19, 19],
+    });
+  }
+
+  function fmtData(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function tempoDesde(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    const s = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (s < 60) return 'há ' + s + 's';
+    if (s < 3600) return 'há ' + Math.floor(s/60) + 'min';
+    if (s < 86400) return 'há ' + Math.floor(s/3600) + 'h';
+    return 'há ' + Math.floor(s/86400) + 'd';
+  }
+
+  function fmtDuracao(min) {
+    if (min == null) return '—';
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    if (h === 0) return m + 'min';
+    return h + 'h ' + m + 'min';
+  }
+
+  function fmtTempoSeg(s) {
+    if (s == null) return '—';
+    return fmtDuracao(Math.floor(s / 60));
+  }
+
+  async function carregar() {
+    try {
+      const r = await fetch(`/api/rastreamento/cargas/${cargaId}/trajeto`, { credentials: 'include' });
+      const d = await r.json();
+      if (!d.ok) {
+        alert('Erro: ' + (d.error || 'falhou'));
+        return;
+      }
+      renderizar(d);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderizar(d) {
+    clearLayers();
+    const c = d.carga;
+    CARGA_ATUAL = c;
+
+    // Header info
+    document.getElementById('iNumero').textContent = c.numero;
+    const statusEl = document.getElementById('iStatus');
+    statusEl.innerHTML = `<span class="badge badge-${c.status.replace(' ', '-')}">${c.status === 'Desengatada' ? 'Desengatada · carregada' : c.status}</span>` +
+      (c.entregue_auto ? '<span class="auto-tag">⚡ AUTO</span>' : '') +
+      (c.saida_auto && c.status==='Em rota' ? '<span class="auto-tag">⚡ SAÍDA AUTO</span>' : '') +
+      (c.status === 'Desengatada' ? `<span class="auto-tag" title="${[
+          c.desengatada_em ? 'Desengatada em ' + fmtData(c.desengatada_em) : '',
+          c.descarga_cavalo_placa ? 'Cavalo p/ descarga: ' + c.descarga_cavalo_placa : '',
+          c.descarga_motorista_nome ? 'Motorista p/ descarga: ' + c.descarga_motorista_nome : '',
+        ].filter(Boolean).join(' · ').replace(/"/g,'&quot;')}">🔌 cavalo+motorista liberados</span>` : '');
+    document.getElementById('iCliente').textContent = c.cliente_nome || '—';
+    document.getElementById('iMotorista').textContent = c.motorista_nome || '—';
+    document.getElementById('iCavalo').textContent = c.cavalo_placa;
+    const rv = d.rastreado_via;
+    const tipoLabel = { carreta1: 'Carreta 1', carreta2: 'Carreta 2', cavalo: 'Cavalo' };
+    const elRastreio = document.getElementById('iRastreio');
+    if (rv) {
+      elRastreio.textContent = `${rv.placa} (${tipoLabel[rv.tipo] || rv.tipo})`;
+      if (rv.fallback_carreta_muda) {
+        elRastreio.innerHTML += ` <span style="color:var(--yellow,#f0a830);font-size:0.82em;cursor:help;" title="Carreta sem sinal — exibindo a posição do cavalo (origem→destino)">· carreta sem sinal</span>`;
+      }
+      // Fora do cadastro de rastreio: a placa NÃO está em embarques_veiculos_rastreio (cópia
+      // local, sincronizada no Admin), mas tem posição gravada — o trajeto abaixo é real.
+      // Antes disto a tela dizia "Sem rastreio" e desenhava o cavalo, que podia ser a placa
+      // sem GPS nenhum (C-2026-001011).
+      if (rv.fora_cadastro || rv.grafia_nao_casou) {
+        elRastreio.innerHTML += ` <span style="color:var(--yellow,#f0a830);font-size:0.82em;cursor:help;" title="${rv.grafia_nao_casou ? 'A placa do cadastro não casou com nenhuma placa desta carga' : 'Placa fora do cadastro de rastreio (Admin → sincronizar veículos)'} — o trajeto vem das posições já gravadas">· fora do cadastro</span>`;
+      }
+    } else {
+      elRastreio.textContent = '🛰️ Sem rastreio';
+    }
+    document.getElementById('iDataSaida').textContent = fmtData(c.data_saida_real);
+    document.getElementById('iDataChegada').textContent = fmtData(c.no_local_desde);
+
+    // §24 — a ligacao. Esta carga terminou onde a carreta ficou; a mercadoria seguiu em B.
+    const ligada = !!c.continua_em;
+    if (c.status === 'Desengatada' && (c.desengatada_em || c.desengate_local)) {
+      document.getElementById('rowDesengate').style.display = '';
+      document.getElementById('iDesengate').textContent =
+        (c.desengatada_em ? fmtData(c.desengatada_em) : '—') +
+        (c.desengate_local === 'patio' ? ' · no pátio (longe do destino)' : c.desengate_local === 'destino' ? ' · no destino' : '');
+    }
+    if (ligada && c.continua_em_numero) {
+      document.getElementById('rowContinuaEm').style.display = '';
+      document.getElementById('iContinuaEm').innerHTML =
+        `<a href="/embarques/cargas/${c.continua_em}/mapa" style="color:var(--accent);">${c.continua_em_numero} ↗</a>`;
+      document.getElementById('iDataChegada').innerHTML = '<span title="Esta carga não chegou ao destino: a mercadoria seguiu na carga ligada">— (segue em ' + c.continua_em_numero + ')</span>';
+    }
+    if (c.continuacao_de && c.continuacao_de_id) {
+      document.getElementById('rowContinuacaoDe').style.display = '';
+      document.getElementById('iContinuacaoDe').innerHTML =
+        `<a href="/embarques/cargas/${c.continuacao_de_id}/mapa" style="color:var(--accent);">${c.continuacao_de} ↗</a>`;
+    }
+
+    // Ações — carga ligada e terminal: nada a confirmar aqui
+    if (!ligada && (c.status === 'Em rota' || c.status === 'Aberta' || c.status === 'No destino' || c.status === 'Desengatada')) {
+      document.getElementById('cardAcoes').style.display = '';
+      // Na carga desengatada, a "entrega" é a finalização da descarga
+      if (c.status === 'Desengatada') {
+        document.getElementById('btnConfirmar').textContent = '🏁 Finalizar descarga';
+      }
+    }
+
+    // Origem
+    const bounds = [];
+    if (d.origem.latitude != null && d.origem.longitude != null) {
+      const ll = [d.origem.latitude, d.origem.longitude];
+      addLayer(L.marker(ll, { icon: icon('🟢', '#34d399') }).bindPopup(`<strong>Origem</strong><br>${d.origem.cidade}/${d.origem.uf}`));
+      addLayer(L.circle(ll, { radius: 5000, color: '#34d399', weight: 1, fillOpacity: 0.05, dashArray: '4,4' }));
+      bounds.push(ll);
+    }
+
+    // Destinos
+    (d.destinos || []).forEach((dst, idx) => {
+      if (dst.latitude == null || dst.longitude == null) return;
+      const ll = [dst.latitude, dst.longitude];
+      const ord = dst.ordem || (idx + 1);
+      addLayer(L.marker(ll, { icon: icon(ord, '#60a5fa') }).bindPopup(`<strong>Destino ${ord}</strong><br>${dst.cidade}/${dst.uf}`));
+      addLayer(L.circle(ll, { radius: 5000, color: '#60a5fa', weight: 1, fillOpacity: 0.05, dashArray: '4,4' }));
+      bounds.push(ll);
+    });
+
+    // Rota planejada (polyline azul)
+    if (d.rota_planejada.polyline) {
+      try {
+        const coords = decodePolyline(d.rota_planejada.polyline);
+        addLayer(L.polyline(coords, { color: '#60a5fa', weight: 4, opacity: 0.7 }));
+      } catch (e) { console.warn('Polyline decode falhou', e); }
+    }
+
+    // Trajeto percorrido — UMA linha só, da placa principal rastreada (carreta > cavalo).
+    // Evita as "3 linhas" quando cavalo e carreta têm rastreador (frota).
+    const tipoPrinc = (d.rastreado_via && d.rastreado_via.tipo) || 'cavalo';
+    let trajPrinc = (d.trajeto && d.trajeto[tipoPrinc]) || [];
+    if (trajPrinc.length < 2) {  // fallback se a principal não tiver pontos
+      trajPrinc = (d.trajeto && d.trajeto.cavalo && d.trajeto.cavalo.length > 1) ? d.trajeto.cavalo
+                : ((d.trajeto && d.trajeto.carreta1) || []);
+    }
+    if (trajPrinc.length > 1) {
+      const pts = trajPrinc.map(t => [t.lat, t.lng]);
+      // A LINHA QUEBRA NA PERNA IMPOSSIVEL, em vez de atravessa-la. O backend manda os
+      // indices em `trajeto_cortes` (regua em embarques_regua): deslocamento que implica
+      // velocidade acima do teto fisico, ou que o odometro do aparelho nega. Nao da para
+      // saber QUAL dos dois pontos e o falso, entao nao se escolhe — desenha-se o vao,
+      // que e honesto. Sem isto o traco cruzava o Brasil e voltava em 2 minutos.
+      const cortes = new Set(((d.trajeto_cortes || {})[tipoPrinc]) || []);
+      let seg = [pts[0]];
+      const segmentos = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        if (cortes.has(i)) { segmentos.push(seg); seg = []; }
+        seg.push(pts[i + 1]);
+      }
+      segmentos.push(seg);
+      segmentos.forEach(sg => {
+        if (sg.length > 1) {
+          addLayer(L.polyline(sg, { color: '#9b9da8', weight: 3, opacity: 0.9, dashArray: '6,6' }));
+        }
+      });
+      // As duas bolinhas de cada corte sao as PONTAS do buraco: o ultimo ponto confiavel
+      // e o primeiro depois do salto. Entre elas nao se desenha nada — antes o tracejado
+      // ligava os dois em reta, e aquela reta afirmava um percurso que nao existiu.
+      //
+      // O TEXTO DIZ QUAL INSTRUMENTO AINDA MEDE, e isso importa: a primeira versao dizia
+      // "o km deste trecho nao entra no total", o que e falso quando ha odometro. O
+      // odometro e cumulativo NO APARELHO e nao depende da posicao — numa posicao falsa
+      // ele marca ~0 km, que e a verdade (o veiculo nao se moveu). Quem perde o trecho e
+      // so o haversine do GPS. Sem odometro nos dois lados, ai sim ninguem sabe.
+      cortes.forEach(i => {
+        const a = trajPrinc[i], b = trajPrinc[i + 1];
+        if (!pts[i] || !pts[i + 1]) return;
+        const temOdo = a && b && a.odometer != null && b.odometer != null;
+        const pop = '<strong>Salto impossível</strong><br>'
+          + 'Uma das duas posições é falsa: o veículo não pode ter feito este trecho no '
+          + 'tempo registrado. Por isso a linha do GPS não atravessa aqui.<br>'
+          + (temOdo
+              ? 'O <strong>KM RASTREADOR</strong> mede este trecho — o odômetro é '
+                + 'cumulativo no aparelho e não depende da posição.'
+              : 'Sem odômetro nos dois pontos, este trecho não é medido por nenhum '
+                + 'instrumento.');
+        [pts[i], pts[i + 1]].forEach(pp => addLayer(
+          L.circleMarker(pp, { radius: 4, color: '#fbbf24', weight: 2, fillOpacity: 0.9 })
+            .bindPopup(pop)));
+      });
+      if (cortes.size) {
+        const leg = document.getElementById('legSalto');
+        if (leg) leg.style.display = '';
+      }
+      pts.forEach(p => bounds.push(p));
+    }
+
+    // Trecho DEPOIS do fechamento — linha própria, laranja, para não se confundir com a
+    // viagem registrada. Só aparece na carga fechada SEM prova de chegada cuja carreta ainda
+    // não saiu em outra viagem: ali o veículo continuou andando depois que o sistema disse
+    // que a viagem acabou, e sem esta linha o ícone fica órfão no mapa (a rota planejada
+    // passa perto por coincidência e o olho lê "teleporte").
+    if (d.trajeto_pos_fechamento && d.trajeto_pos_fechamento.length > 1) {
+      const ptsPos = d.trajeto_pos_fechamento.map(p => [p.lat, p.lng]);
+      addLayer(L.polyline(ptsPos, { color: '#fb923c', weight: 3, opacity: 0.95, dashArray: '2,7' })
+        .bindPopup('<strong>Depois do fechamento</strong><br>' +
+                   d.trajeto_pos_fechamento.length + ' posições após a conclusão registrada'));
+      ptsPos.forEach(p => bounds.push(p));
+    }
+
+    // Posição atual (último ponto do trajeto)
+    if (d.ultima_posicao) {
+      const ll = [d.ultima_posicao.lat, d.ultima_posicao.lng];
+      addLayer(L.marker(ll, { icon: icon('🚚', '#fb923c') }).bindPopup(
+        `<strong>Última posição</strong><br>${d.ultima_posicao.cidade || '—'}/${d.ultima_posicao.uf || '—'}<br>${d.ultima_posicao.velocidade || 0} km/h`
+      ));
+      bounds.push(ll);
+    }
+
+    // Fit bounds
+    if (bounds.length > 0 && !window._zoomed) {
+      mapa.fitBounds(bounds, { padding: [40, 40], maxZoom: 9 });
+      window._zoomed = true;
+    }
+
+    // Posição atual card
+    if (d.ultima_posicao) {
+      document.getElementById('pCidade').textContent = `${d.ultima_posicao.cidade || '—'}/${d.ultima_posicao.uf || '—'}`;
+      document.getElementById('pVel').textContent = (d.ultima_posicao.velocidade || 0) + ' km/h';
+      document.getElementById('pUltima').textContent = tempoDesde(d.ultima_posicao.data);
+      // A carga está fechada e mesmo assim o card mostra posição de AGORA: é o caso em que
+      // o fechamento não teve prova de chegada e a carreta ainda não saiu em outra viagem.
+      // Sem avisar, o operacional lê a linha (que termina na conclusão) e o card (que é de
+      // hoje) como se fossem a mesma afirmação.
+      const cTit = document.querySelector('#pCidade')?.closest('.card')?.querySelector('.card-titulo');
+      const legPF = document.getElementById('legPosFech');
+      if (legPF && d.trajeto_pos_fechamento && d.trajeto_pos_fechamento.length > 1) legPF.style.display = '';
+      if (d.posicao_apos_fechamento) {
+        document.getElementById('pCidade').insertAdjacentHTML('afterend',
+          ' <span style="color:var(--orange,#fb923c);font-size:0.8em;cursor:help;" ' +
+          'title="A carga foi FECHADA sem prova de chegada, e a carreta não saiu em outra ' +
+          'viagem — então esta é a posição de AGORA, depois do fechamento. A linha do mapa ' +
+          'termina na conclusão; o veículo continuou.">⚠ depois do fechamento</span>');
+        if (cTit) cTit.textContent = 'Posição atual (após o fechamento)';
+      }
+    }
+
+    // KPIs
+    if (d.kpi) {
+      // nulo = não sei (sem nenhuma posição). `|| 0` transformava isso num "0,0 km"
+      // que afirma que o caminhão não andou — o card do odômetro já fazia certo.
+      const kPerc = document.getElementById('kKmPerc');
+      kPerc.textContent = d.kpi.distancia_km != null ? d.kpi.distancia_km.toFixed(1) + ' km' : '—';
+      // Quando a janela da carga é grande demais para a viagem caber nela, o km não é
+      // desta viagem — o número sai e o motivo fica no tooltip, como no card do odômetro.
+      kPerc.parentElement.title = d.kpi.km_janela_motivo
+        ? ('Número barrado: ' + d.kpi.km_janela_motivo)
+        : 'Soma das distâncias entre os pontos recebidos (haversine). Subestima: corta curva e perde o trecho sem sinal.';
+      // Km do rastreador: nulo quando o aparelho não reporta odômetro ou houve troca
+      // de equipamento (delta negativo). Mostrar "—" é melhor que mostrar zero.
+      const kOdo = document.getElementById('kKmOdo');
+      if (d.kpi.km_odometro != null) {
+        kOdo.textContent = d.kpi.km_odometro.toLocaleString('pt-BR') + ' km';
+        const cob = d.kpi.odometro_cobertura;
+        kOdo.parentElement.title = 'Contador do próprio rastreador (cumulativo: atravessa '
+          + 'buraco de sinal). ' + (cob != null ? cob + '% das posições da viagem trazem odômetro.' : '');
+      } else {
+        kOdo.textContent = '—';
+        kOdo.parentElement.title = (d.kpi.km_odometro_motivo || d.kpi.km_janela_motivo)
+          ? ('Número barrado: ' + (d.kpi.km_odometro_motivo || d.kpi.km_janela_motivo))
+          : 'O rastreador desta placa não reporta odômetro no período.';
+      }
+      document.getElementById('kVelMax').textContent = (d.kpi.velocidade_max || 0) + ' km/h';
+      document.getElementById('kVelMed').textContent = (d.kpi.velocidade_media || 0).toFixed(1) + ' km/h';
+      document.getElementById('kTmov').textContent = fmtTempoSeg(d.kpi.tempo_movimento_seg);
+      document.getElementById('kTpar').textContent = fmtTempoSeg(d.kpi.tempo_parado_seg);
+    }
+
+    // Rota completa origem→destino; "km faltando" = restante a partir da posição atual
+    // O título declara a FONTE: sem polyline o número veio do CTRB (o robô grava a
+    // distância do manifesto), não do roteirizador. Dizer "ORS" ali seria falso — foi
+    // o que fez uma perna de 400 km exibir "Rota planejada (ORS): 87 km".
+    const tRota = document.getElementById('tituloRota');
+    if (tRota) {
+      tRota.textContent = d.rota_planejada.polyline
+        ? 'Rota planejada (ORS)'
+        : 'Distância do manifesto (rota não traçada)';
+      tRota.title = d.rota_planejada.polyline
+        ? 'Rota rodoviária calculada pelo OpenRouteService.'
+        : 'O roteirizador ainda não traçou esta rota. A distância vem do CTRB, e por isso '
+          + 'não há linha no mapa.';
+    }
+    if (d.rota_planejada.distancia_km != null) {
+      const rp = d.rota_planejada;
+      const kmFalta = (rp.distancia_restante_km != null) ? rp.distancia_restante_km : rp.distancia_km;
+      document.getElementById('kKmFalta').textContent = kmFalta.toFixed(1) + ' km';
+      document.getElementById('rDist').textContent = rp.distancia_km.toFixed(1) + ' km';
+      document.getElementById('rDur').textContent = fmtDuracao(rp.duracao_min);
+
+      if (rp.eta_chegada_iso) {
+        document.getElementById('rEta').textContent = new Date(rp.eta_chegada_iso)
+          .toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      }
+      if (d.rota_planejada.recalculada_em) {
+        document.getElementById('rRec').textContent = tempoDesde(d.rota_planejada.recalculada_em);
+      }
+      const fmtDH = iso => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      if (d.rota_planejada.eta_realista_iso) {
+        document.getElementById('rEtaReal').textContent = fmtDH(d.rota_planejada.eta_realista_iso);
+      }
+      // Agendamento do destino final + folga vs ETA realista
+      const destFinal = (d.destinos && d.destinos.length) ? d.destinos[d.destinos.length - 1] : null;
+      const agend = destFinal && destFinal.data_agendamento ? destFinal.data_agendamento : null;
+      if (agend) {
+        document.getElementById('rAgend').textContent = fmtDH(agend);
+        if (d.rota_planejada.eta_realista_iso) {
+          const dias = Math.round((new Date(agend) - new Date(d.rota_planejada.eta_realista_iso)) / 86400000);
+          const el = document.getElementById('rFolga');
+          if (dias >= 0) { el.textContent = `${dias} dia(s) de folga`; el.style.color = 'var(--green)'; }
+          else { el.textContent = `${Math.abs(dias)} dia(s) de atraso`; el.style.color = 'var(--red)'; }
+        }
+      }
+    } else {
+      document.getElementById('cardRota').style.display = 'none';
+    }
+  }
+
+  // ── Finalização de carga desengatada (modal com cavalo+motorista obrigatórios) ──
+  let DG_DATALISTS_FZ = false;
+  function maskCpfFz(cpf) {
+    const d = (cpf || '').replace(/\D/g, '');
+    if (d.length !== 11) return cpf || '';
+    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+  }
+  async function carregarDatalistsFz() {
+    if (DG_DATALISTS_FZ) return;
+    DG_DATALISTS_FZ = true;
+    try {
+      const [rm, rv] = await Promise.all([
+        fetch('/api/embarques/motoristas', { credentials: 'same-origin' }),
+        fetch('/api/embarques/veiculos', { credentials: 'same-origin' }),
+      ]);
+      const jm = await rm.json(), jv = await rv.json();
+      if (jm.ok) document.getElementById('dlFzMotoristas').innerHTML =
+        jm.data.map(m => `<option value="${m.nome} — ${maskCpfFz(m.cpf)}">`).join('');
+      if (jv.ok) document.getElementById('dlFzCavalos').innerHTML =
+        jv.data.filter(v => v.tipo === 'Cavalo' || v.tipo === 'Truck')
+          .map(v => `<option value="${v.placa}">${v.tipo} — ${v.marca_modelo || ''} — ${v.proprietario || ''}</option>`).join('');
+    } catch (e) { DG_DATALISTS_FZ = false; }
+  }
+  function abrirFinalizar() {
+    const c = CARGA_ATUAL || {};
+    document.getElementById('fzCavalo').value = c.descarga_cavalo_placa || '';
+    document.getElementById('fzMotorista').value = c.descarga_motorista_nome || '';
+    document.getElementById('fzErro').textContent = '';
+    document.getElementById('fzConfirmar').disabled = false;
+    document.getElementById('modalFinalizar').style.display = 'flex';
+    carregarDatalistsFz();
+  }
+  function fecharFinalizar() {
+    document.getElementById('modalFinalizar').style.display = 'none';
+  }
+  async function confirmarFinalizar() {
+    const cavalo = document.getElementById('fzCavalo').value.trim();
+    const motorista = document.getElementById('fzMotorista').value.trim().split(' — ')[0].trim();
+    const err = document.getElementById('fzErro');
+    if (!cavalo || !motorista) {
+      err.textContent = 'Informe o cavalo e o motorista que fizeram a descarga.';
+      return;
+    }
+    const btn = document.getElementById('fzConfirmar');
+    btn.disabled = true;
+    try {
+      const r = await fetch(`/api/rastreamento/cargas/${cargaId}/confirmar-entrega`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descarga_cavalo_placa: cavalo, descarga_motorista_nome: motorista }),
+      });
+      const d = await r.json();
+      if (!d.ok) { err.textContent = 'Erro: ' + d.error; btn.disabled = false; return; }
+      location.reload();
+    } catch (e) {
+      err.textContent = 'Erro de rede'; btn.disabled = false;
+    }
+  }
+
+  async function confirmarEntrega() {
+    // Carga desengatada → modal com cavalo+motorista obrigatórios (registro da descarga)
+    if (CARGA_ATUAL && CARGA_ATUAL.status === 'Desengatada') {
+      abrirFinalizar();
+      return;
+    }
+    if (!confirm('Finalizar esta carga? O status mudará para Entregue.')) return;
+    const btn = document.getElementById('btnConfirmar');
+    const labelOrig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Confirmando...';
+    try {
+      const r = await fetch(`/api/rastreamento/cargas/${cargaId}/confirmar-entrega`, {
+        method: 'POST', credentials: 'include'
+      });
+      const d = await r.json();
+      if (!d.ok) {
+        alert('Erro: ' + d.error);
+        btn.disabled = false; btn.textContent = labelOrig;
+        return;
+      }
+      alert('Carga finalizada com sucesso!');
+      location.reload();
+    } catch (e) {
+      alert('Erro: ' + e.message);
+      btn.disabled = false; btn.textContent = labelOrig;
+    }
+  }
+
+  carregar();
+  setInterval(() => {
+    // Refresh só se status ativo
+    const status = document.getElementById('iStatus').textContent;
+    if (status.includes('Em rota') || status.includes('Aberta') || status.includes('No destino') || status.includes('Desengatada')) carregar();
+  }, 60000);
+</script>
+
+  <script src="/nav-perms.js"></script>
+</body>
+</html>

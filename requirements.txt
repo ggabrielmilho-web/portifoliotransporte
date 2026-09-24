@@ -1,0 +1,14 @@
+flask
+flask-cors
+requests
+python-dotenv
+psycopg2-binary
+openai
+assemblyai
+pydub
+python-docx
+reportlab
+docxtpl
+PyMuPDF
+mammoth
+openpyxl

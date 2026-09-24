@@ -1,0 +1,214 @@
+{
+  "tabela": "manifestos",
+  "dataset": "main",
+  "referencia_dax": "'public manifestos'",
+  "coletado_em": "2026-09-22T09:48:38",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 4951,
+  "janela": {
+    "coluna": "data_emissao",
+    "de": "2026-01-02T00:00:00",
+    "ate": "2026-09-22T00:00:00"
+  },
+  "n_colunas": 18,
+  "colunas": {
+    "sigla_manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "numero_manifesto": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 8,
+      "formato": [
+        "999999-9"
+      ]
+    },
+    "data_emissao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "unidade_origem": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "unidade_destino": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "placa_cavalo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9A99"
+      ]
+    },
+    "proprietario_cavalo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 18,
+      "len_max": 39
+    },
+    "placa_carreta": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "cpf_motorista": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "nome_motorista": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 18,
+      "len_max": 30
+    },
+    "peso_total": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        3,
+        3
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "valor_total_mercadoria": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        1
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "valor_total_frete": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        5,
+        5
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "sigla_ctrb_os": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "numero_ctrb_os": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 6,
+      "len_max": 6,
+      "formato": [
+        "999999"
+      ]
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 23,
+      "len_max": 23,
+      "formato": [
+        "9999-99-99A99:99:99.999"
+      ]
+    },
+    "CHAVE_MANIFESTO": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 11,
+      "len_max": 11,
+      "formato": [
+        "AAA999999-9"
+      ]
+    },
+    "CHAVE_CTRB": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 9,
+      "formato": [
+        "AAA999999"
+      ]
+    }
+  },
+  "vocabulario": {
+    "unidade_origem": {
+      "distintos": 5,
+      "valores": [
+        "CAR",
+        "GYN",
+        "NOD",
+        "RIO",
+        "UDI"
+      ]
+    },
+    "unidade_destino": {
+      "distintos": 6,
+      "valores": [
+        "CAR",
+        "FEC",
+        "GYN",
+        "KAD",
+        "NOD",
+        "UDI"
+      ]
+    }
+  }
+}

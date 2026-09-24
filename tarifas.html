@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarifas de Frete — Nortevia</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23f0a830'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='68' font-weight='900' text-anchor='middle' fill='%2316171d'%3ER%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link rel="stylesheet" href="/theme.css">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<style>
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── LOADING ── */
+  .loading-screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; gap: 20px;
+  }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  .loading-screen h2 {
+    font-size: 1.1rem; font-weight: 600;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .loading-screen p { color: var(--text-dim); font-size: 0.85rem; }
+  .error-box {
+    margin-top: 16px; padding: 14px 20px;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.25);
+    border-radius: 10px; color: var(--red);
+    font-size: 0.82rem; max-width: 500px; text-align: center; line-height: 1.5;
+  }
+  .error-box code {
+    display: block; margin-top: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem; color: var(--text-dim); word-break: break-all;
+  }
+
+  /* ── DASHBOARD ── */
+  .dashboard { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .dashboard.active { display: block; animation: fadeUp 0.5s ease; }
+
+  /* ── TOP BAR ── */
+  .top-bar {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 28px;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .top-bar h1 {
+    font-size: 1.4rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .meta { font-size: 0.78rem; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+
+  /* ── BUTTONS ── */
+  .btn-sm {
+    padding: 8px 18px; background: var(--surface2);
+    border: 1px solid var(--border); color: var(--text);
+    font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+    font-size: 0.82rem; border-radius: 8px;
+    cursor: pointer; transition: all 0.15s; text-decoration: none; display: inline-block;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── BLOCO DE COMPARAÇÃO ── */
+  .compare-block {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.3s ease;
+  }
+  .block-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .block-tag {
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.08em; color: var(--accent);
+    text-transform: uppercase;
+  }
+  .block-remove {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); width: 26px; height: 26px;
+    border-radius: 7px; cursor: pointer; font-size: 0.8rem;
+    display: none; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .block-remove:hover { border-color: var(--red); color: var(--red); }
+
+  .add-block-wrap { display: flex; justify-content: center; margin: 8px 0 28px; }
+  .add-block-btn {
+    padding: 11px 24px; background: var(--surface2);
+    border: 1px dashed var(--border); color: var(--text);
+    border-radius: 10px; cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+    font-size: 0.85rem; transition: all 0.15s;
+  }
+  .add-block-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── FILTROS ── */
+  .filters-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .filters-card h2 {
+    font-size: 0.75rem; font-weight: 600;
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 16px;
+  }
+  .filters-row {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+  }
+  .filter-field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 200px; }
+  .filter-field label {
+    font-size: 0.7rem; font-weight: 600;
+    color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .filter-field select {
+    padding: 9px 14px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.86rem; transition: border-color 0.2s; width: 100%;
+  }
+  .filter-field select:focus { outline: none; border-color: var(--accent); }
+  .filter-field select:disabled { opacity: 0.4; cursor: not-allowed; }
+  .filter-field select option { background: var(--surface2); }
+
+  /* Step indicator */
+  .step-indicator {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .step {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.75rem; color: var(--text-dim);
+  }
+  .step-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700;
+    background: var(--surface2); border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .step.active .step-num { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .step.done .step-num   { background: var(--green); color: var(--bg); border-color: var(--green); }
+  .step.active { color: var(--text); }
+  .step-sep { color: var(--border); font-size: 0.7rem; }
+
+  /* ── RESULTADO ── */
+  .resultado-section { display: none; }
+  .resultado-section.active { display: block; animation: fadeUp 0.3s ease; }
+
+  .resultado-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+  }
+  .resultado-header h2 {
+    font-size: 0.9rem; font-weight: 600; color: var(--text);
+  }
+  .resultado-header .meta { font-size: 0.75rem; }
+
+  /* Cards de resultado */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .result-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  /* Cores alternadas por posição */
+  .result-card:nth-child(5n+1)::before { background: var(--accent); }
+  .result-card:nth-child(5n+2)::before { background: var(--green); }
+  .result-card:nth-child(5n+3)::before { background: var(--accent2); }
+  .result-card:nth-child(5n+4)::before { background: var(--orange); }
+  .result-card:nth-child(5n+5)::before { background: var(--yellow); }
+
+  .result-card .card-label {
+    font-size: 0.68rem; font-weight: 600;
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 8px;
+  }
+  .result-card .card-value {
+    font-size: 1.05rem; font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    word-break: break-word;
+  }
+  .result-card .card-value.text-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+  }
+
+  /* Drag */
+  .cards-grid.sortable-enabled .result-card { cursor: grab; }
+  .cards-grid.sortable-enabled .result-card:active { cursor: grabbing; }
+  .sortable-ghost { opacity: 0.3; }
+
+  /* Múltiplas linhas → tabela */
+  .multi-table-wrapper {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .multi-table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; white-space: nowrap; }
+  thead th {
+    position: sticky; top: 0; background: var(--surface2);
+    padding: 11px 14px; text-align: left;
+    font-weight: 600; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim); border-bottom: 1px solid var(--border);
+  }
+  tbody tr { transition: background 0.12s; }
+  tbody tr:hover { background: rgba(240,168,48,0.04); }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.012); }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
+  td.num { text-align: right; font-family: 'Space Mono', monospace; font-size: 0.75rem; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    color: var(--text-dim);
+  }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* ── SIMULADOR ── */
+  .simulador-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; margin-top: 24px;
+  }
+  .simulador-card h3 {
+    font-size: 0.75rem; font-weight: 600;
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 20px;
+  }
+  .sim-inputs { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+  .sim-field { display: flex; flex-direction: column; gap: 5px; }
+  .sim-field label {
+    font-size: 0.7rem; font-weight: 600;
+    color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .sim-field input {
+    padding: 9px 14px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'Space Mono', monospace;
+    font-size: 0.86rem; transition: border-color 0.2s; width: 200px;
+  }
+  .sim-field input:focus { outline: none; border-color: var(--accent); }
+  .sim-breakdown { width: 100%; border-collapse: collapse; }
+  .sim-breakdown td {
+    padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 0.84rem;
+  }
+  .sim-breakdown td.sim-val {
+    text-align: right; font-family: 'Space Mono', monospace;
+    font-size: 0.82rem; min-width: 150px;
+  }
+  .sim-breakdown .sim-label-cell { color: var(--text-dim); }
+  .sim-breakdown tr.sim-total td {
+    font-weight: 700; font-size: 0.95rem;
+    color: var(--accent); border-bottom: none; padding-top: 16px;
+  }
+  /* Total + Impostos — info secundária (comercial), distinta do número operacional */
+  .sim-breakdown tr.sim-imposto td {
+    font-weight: 600; font-size: 0.85rem;
+    color: var(--text-dim); border-bottom: none; padding-top: 4px;
+  }
+  .sim-imposto-tag {
+    font-size: 0.62rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-dim); opacity: 0.7;
+    border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; margin-left: 8px;
+  }
+  #resumoSection td.resumo-imposto { color: var(--text-dim); }
+  .th-tag {
+    font-size: 0.58rem; font-weight: 600; text-transform: uppercase;
+    color: var(--text-dim); opacity: 0.7; margin-left: 4px;
+  }
+
+  /* ── RESUMO COMPARATIVO ── */
+  #resumoSection { display: none; margin-top: 8px; animation: fadeUp 0.3s ease; }
+  .resumo-title {
+    font-size: 0.85rem; font-weight: 700; color: var(--text);
+    margin-bottom: 14px; letter-spacing: 0.02em;
+  }
+  #resumoSection table tbody td:first-child { white-space: normal; min-width: 220px; }
+  #resumoSection tr.resumo-vazio td { color: var(--text-dim); opacity: 0.6; }
+  #resumoSection td.resumo-total { color: var(--accent); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ── LOADING ── -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <h2>Tarifas de Frete</h2>
+  <p>Carregando tabela do BI...</p>
+  <div class="error-box" id="errorBox" style="display:none;"></div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div class="dashboard" id="dashboard">
+
+  <div class="top-bar">
+    <div>
+      <h1>Tarifas de Frete</h1>
+      <span class="meta" id="userInfo" style="margin-top:4px;display:block;"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="btn-sm" id="btnLayout" onclick="toggleLayout()" style="display:none;">✦ Editar Layout</button>
+      <button class="btn-sm" id="btnResetLayout" onclick="resetLayout()" style="display:none;">↺ Resetar</button>
+      <span data-nav-menu data-nav-style="btn-anchor" data-nav-active="tarifas"></span>
+      <a href="/logout" class="btn-sm">Sair</a>
+    </div>
+  </div>
+
+  <!-- Blocos de comparação (1+ injetados via JS) -->
+  <div id="blocksContainer"></div>
+
+  <!-- Adicionar comparação -->
+  <div class="add-block-wrap">
+    <button class="add-block-btn" id="btnAddBlock" onclick="createBlock()">+ Adicionar comparação</button>
+  </div>
+
+  <!-- Resumo consolidado (aparece com 2+ blocos) -->
+  <div id="resumoSection"></div>
+
+</div>
+
+<script src="/nav-perms.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════════
+// Estado global
+// ════════════════════════════════════════════════════════════════════
+let allData = [];          // dataset compartilhado (buscado 1x do BI)
+let blocks = [];           // [{ id, el, simRow, label, sim }]
+let blockSeq = 0;
+let layoutEditing = false;
+let cardSortable = null;
+const MAX_BLOCKS = 4;
+
+// Colunas excluídas dos cards de resultado (filtros + colunas ocultas + insumos de cálculo)
+const FILTER_COLS = ['cliente_nome', 'cidade_origem', 'cidade_destino', 'tipo_veiculo',
+                     'icms_percentual', 'icms_valor', 'id', 'versao_id', 'frete_bruto', 'cliente_id', 'created_at'];
+
+// Ordem preferencial dos cards (campos não listados aqui aparecem no final)
+const CARD_PREFERRED_ORDER = [
+  'unidade_valor', 'gris', 'modalidade', 'frete_liquido',
+  'diaria', 'uf_origem', 'uf_destino', 'ad_valorem',
+  'distancia_km', 'evento', 'prazo_entrega',
+  'icms_incluso', 'pedagio_incluso', 'prazo_recebimento',
+];
+
+// Rótulos custom (senão formatLabel geraria "Icms Incluso", "Pedagio Incluso")
+const LABEL_OVERRIDE = {
+  icms_incluso: 'ICMS Incluso',
+  pedagio_incluso: 'Pedágio Incluso',
+  prazo_recebimento: 'Prazo Recebimento',
+};
+
+// Colunas com formatação especial
+const PERCENT_COLS = ['ad_valorem', 'gris', 'icms_percentual', 'reentrega', 'devolucao'];
+const MONEY_COLS   = ['valor_frete', 'pedagio', 'vale_pedagio', 'diaria', 'adicional_entrega',
+                      'reentrega', 'devolucao', 'frete_minimo', 'valor_minimo',
+                      'frete_liquido', 'frete_tabela_liquido', 'frete_tabela_gris', 'frete_tabela_adval',
+                      'frete_tabela_adicional_entrega', 'frete_tabela', 'frete_bruto'];
+
+const DEFAULT_CARD_ORDER_KEY = 'tarifas_card_order';
+
+// Componentes do simulador exibidos no resumo (espelha as linhas do breakdown)
+const RESUMO_COMPS = [
+  { key: 'base',     label: 'Frete (base)', always: true },
+  { key: 'gris',     label: 'GRIS' },
+  { key: 'adVal',    label: 'Ad Valorem' },
+  { key: 'pedagio',  label: 'Pedágio' },
+  { key: 'balsa',    label: 'Balsa' },
+  { key: 'adicional',label: 'Adicional Entregas' },
+];
+
+// Helper: busca elemento interno de um bloco
+function q(block, name) { return block.el.querySelector(`[data-el="${name}"]`); }
+
+// ════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadMe();
+  await loadData();
+});
+
+async function loadMe() {
+  try {
+    const resp = await fetch('/api/me', { credentials: 'same-origin' });
+    const json = await resp.json();
+    if (json.ok) document.getElementById('userInfo').textContent = `👤 ${json.nome}`;
+  } catch {}
+}
+
+async function loadData() {
+  try {
+    const resp = await fetch('/api/tarifas', { credentials: 'same-origin' });
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error + (json.detail ? '\n' + JSON.stringify(json.detail) : ''));
+
+    allData = json.data;
+
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('dashboard').classList.add('active');
+
+    createBlock();  // bloco inicial = tela de hoje
+  } catch (err) {
+    const box = document.getElementById('errorBox');
+    box.innerHTML = `Erro ao carregar dados:<code>${err.message}</code>`;
+    box.style.display = 'block';
+    document.querySelector('.spinner').style.display = 'none';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// BLOCOS — criação / remoção
+// ════════════════════════════════════════════════════════════════════
+function blockInnerHTML() {
+  return `
+    <div class="block-header">
+      <span class="block-tag">Comparação <span data-el="blockNum"></span></span>
+      <button class="block-remove" data-el="btnRemove" title="Remover comparação">✕</button>
+    </div>
+
+    <div class="filters-card">
+      <div class="step-indicator">
+        <div class="step active" data-el="step1"><span class="step-num">1</span> Cliente</div>
+        <span class="step-sep">›</span>
+        <div class="step" data-el="step2"><span class="step-num">2</span> Origem</div>
+        <span class="step-sep">›</span>
+        <div class="step" data-el="step3"><span class="step-num">3</span> Destino</div>
+        <span class="step-sep">›</span>
+        <div class="step" data-el="step4"><span class="step-num">4</span> Tipo Veículo</div>
+      </div>
+
+      <div class="filters-row">
+        <div class="filter-field">
+          <label>Cliente</label>
+          <select data-el="selCliente"><option value="">Selecione um cliente...</option></select>
+        </div>
+        <div class="filter-field">
+          <label>Cidade Origem</label>
+          <select data-el="selOrigem" disabled><option value="">Selecione a origem...</option></select>
+        </div>
+        <div class="filter-field">
+          <label>Cidade Destino</label>
+          <select data-el="selDestino" disabled><option value="">Selecione o destino...</option></select>
+        </div>
+        <div class="filter-field">
+          <label>Tipo Veículo</label>
+          <select data-el="selVeiculo" disabled><option value="">Selecione o veículo...</option></select>
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button class="btn-sm" data-el="btnClear">✕ Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="resultado-section" data-el="resultadoSection">
+      <div class="resultado-header">
+        <h2 data-el="resultadoTitulo"></h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="meta" data-el="resultadoMeta"></span>
+        </div>
+      </div>
+      <div data-el="resultadoConteudo"></div>
+      <div data-el="simuladorSection" style="display:none;"></div>
+    </div>`;
+}
+
+function createBlock() {
+  if (blocks.length >= MAX_BLOCKS) return null;
+
+  const block = { id: ++blockSeq, el: document.createElement('div'), simRow: null, label: '', sim: null };
+  block.el.className = 'compare-block';
+  block.el.innerHTML = blockInnerHTML();
+
+  q(block, 'selCliente').addEventListener('change', () => onClienteChange(block));
+  q(block, 'selOrigem').addEventListener('change',  () => onOrigemChange(block));
+  q(block, 'selDestino').addEventListener('change', () => onDestinoChange(block));
+  q(block, 'selVeiculo').addEventListener('change', () => onVeiculoChange(block));
+  q(block, 'btnClear').addEventListener('click',    () => clearFilters(block));
+  q(block, 'btnRemove').addEventListener('click',   () => removeBlock(block));
+
+  document.getElementById('blocksContainer').appendChild(block.el);
+  blocks.push(block);
+
+  populateClientes(block);
+  updateChrome();
+  renderResumo();
+  return block;
+}
+
+function removeBlock(block) {
+  const idx = blocks.indexOf(block);
+  if (idx < 0) return;
+  blocks.splice(idx, 1);
+  block.el.remove();
+  updateChrome();
+  renderResumo();
+}
+
+// Controla cromo da página: botão "+", botões ✕, e "Editar Layout"
+function updateChrome() {
+  document.getElementById('btnAddBlock').style.display =
+    blocks.length < MAX_BLOCKS ? 'inline-block' : 'none';
+
+  const showRemove = blocks.length > 1;
+  blocks.forEach((b, i) => {
+    q(b, 'blockNum').textContent = i + 1;
+    q(b, 'btnRemove').style.display = showRemove ? 'inline-flex' : 'none';
+  });
+
+  // "Editar Layout" só faz sentido com 1 bloco
+  const single = blocks.length === 1;
+  const btnLayout = document.getElementById('btnLayout');
+  const btnReset  = document.getElementById('btnResetLayout');
+
+  if (!single) {
+    if (layoutEditing) {
+      layoutEditing = false;
+      if (cardSortable) { cardSortable.destroy(); cardSortable = null; }
+    }
+    btnLayout.style.display = 'none';
+    btnReset.style.display  = 'none';
+    btnLayout.textContent   = '✦ Editar Layout';
+  } else {
+    const hasCards = blocks[0] && blocks[0].el.querySelector('.cards-grid');
+    btnLayout.style.display = hasCards ? 'inline-block' : 'none';
+    if (!layoutEditing) btnReset.style.display = 'none';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CASCATA (por bloco)
+// ════════════════════════════════════════════════════════════════════
+function populateClientes(block) {
+  const clientes = [...new Set(allData.map(r => r['cliente_nome']).filter(Boolean))].sort();
+  const sel = q(block, 'selCliente');
+  sel.innerHTML = '<option value="">Selecione um cliente...</option>';
+  clientes.forEach(c => {
+    const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
+  });
+}
+
+function onClienteChange(block) {
+  const cliente = q(block, 'selCliente').value;
+  const selOrigem  = q(block, 'selOrigem');
+  const selDestino = q(block, 'selDestino');
+
+  selOrigem.innerHTML  = '<option value="">Selecione a origem...</option>';
+  selDestino.innerHTML = '<option value="">Selecione o destino...</option>';
+  selDestino.disabled  = true;
+  hideResultado(block);
+
+  if (!cliente) {
+    selOrigem.disabled = true;
+    setStep(block, 1);
+    return;
+  }
+
+  const origens = [...new Set(
+    allData.filter(r => r['cliente_nome'] === cliente).map(r => r['cidade_origem']).filter(Boolean)
+  )].sort();
+
+  origens.forEach(o => {
+    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; selOrigem.appendChild(opt);
+  });
+
+  selOrigem.disabled = false;
+  setStep(block, 2);
+}
+
+function onOrigemChange(block) {
+  const cliente    = q(block, 'selCliente').value;
+  const origem     = q(block, 'selOrigem').value;
+  const selDestino = q(block, 'selDestino');
+  const selVeiculo = q(block, 'selVeiculo');
+
+  selDestino.innerHTML = '<option value="">Selecione o destino...</option>';
+  selDestino.disabled  = true;
+  selVeiculo.innerHTML = '<option value="">Selecione o veículo...</option>';
+  selVeiculo.disabled  = true;
+  hideResultado(block);
+
+  if (!origem) { setStep(block, 2); return; }
+
+  const destinos = [...new Set(
+    allData
+      .filter(r => r['cliente_nome'] === cliente && r['cidade_origem'] === origem)
+      .map(r => r['cidade_destino']).filter(Boolean)
+  )].sort();
+
+  destinos.forEach(d => {
+    const opt = document.createElement('option'); opt.value = d; opt.textContent = d; selDestino.appendChild(opt);
+  });
+
+  selDestino.disabled = false;
+  setStep(block, 3);
+}
+
+function onDestinoChange(block) {
+  const cliente    = q(block, 'selCliente').value;
+  const origem     = q(block, 'selOrigem').value;
+  const destino    = q(block, 'selDestino').value;
+  const selVeiculo = q(block, 'selVeiculo');
+
+  selVeiculo.innerHTML = '<option value="">Selecione o veículo...</option>';
+  selVeiculo.disabled  = true;
+  hideResultado(block);
+
+  if (!destino) { setStep(block, 3); return; }
+
+  const veiculos = [...new Set(
+    allData
+      .filter(r => r['cliente_nome'] === cliente && r['cidade_origem'] === origem && r['cidade_destino'] === destino)
+      .map(r => r['tipo_veiculo']).filter(Boolean)
+  )].sort();
+
+  veiculos.forEach(v => {
+    const opt = document.createElement('option'); opt.value = v; opt.textContent = v; selVeiculo.appendChild(opt);
+  });
+
+  selVeiculo.disabled = false;
+
+  // Auto-seleciona se houver somente um tipo
+  if (veiculos.length === 1) {
+    selVeiculo.value = veiculos[0];
+    setStep(block, 4);
+    triggerResultado(block);
+  } else {
+    setStep(block, 4);
+  }
+}
+
+function onVeiculoChange(block) {
+  const veiculo = q(block, 'selVeiculo').value;
+  if (!veiculo) { hideResultado(block); return; }
+  triggerResultado(block);
+}
+
+function triggerResultado(block) {
+  const cliente = q(block, 'selCliente').value;
+  const origem  = q(block, 'selOrigem').value;
+  const destino = q(block, 'selDestino').value;
+  const veiculo = q(block, 'selVeiculo').value;
+
+  if (!cliente || !origem || !destino || !veiculo) return;
+
+  const rows = allData.filter(r =>
+    r['cliente_nome'] === cliente &&
+    r['cidade_origem'] === origem &&
+    r['cidade_destino'] === destino &&
+    r['tipo_veiculo']  === veiculo
+  );
+
+  showResultado(block, rows, cliente, origem, destino, veiculo);
+}
+
+function clearFilters(block) {
+  q(block, 'selCliente').value = '';
+  q(block, 'selOrigem').innerHTML  = '<option value="">Selecione a origem...</option>';
+  q(block, 'selOrigem').disabled   = true;
+  q(block, 'selDestino').innerHTML = '<option value="">Selecione o destino...</option>';
+  q(block, 'selDestino').disabled  = true;
+  q(block, 'selVeiculo').innerHTML = '<option value="">Selecione o veículo...</option>';
+  q(block, 'selVeiculo').disabled  = true;
+  hideResultado(block);
+  setStep(block, 1);
+}
+
+// ── STEPS ──
+function setStep(block, n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = q(block, `step${i}`);
+    el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// RESULTADO (por bloco)
+// ════════════════════════════════════════════════════════════════════
+function showResultado(block, rows, cliente, origem, destino, veiculo) {
+  q(block, 'resultadoSection').classList.add('active');
+
+  block.label = `${cliente} · ${origem} → ${destino} · ${veiculo}`;
+  q(block, 'resultadoTitulo').textContent = block.label;
+  q(block, 'resultadoMeta').textContent = `${rows.length} linha${rows.length > 1 ? 's' : ''}`;
+
+  if (rows.length === 1) {
+    renderCards(block, rows[0]);
+  } else {
+    block.simRow = null;
+    block.sim = null;
+    q(block, 'simuladorSection').style.display = 'none';
+    renderTable(block, rows);
+  }
+
+  renderResumo();
+  updateChrome();
+}
+
+function hideResultado(block) {
+  q(block, 'resultadoSection').classList.remove('active');
+  q(block, 'simuladorSection').style.display = 'none';
+  block.simRow = null;
+  block.sim = null;
+  renderResumo();
+  updateChrome();
+}
+
+// ── CARDS (1 linha) ──
+function getCardFields(row) {
+  const all = Object.keys(row).filter(k => !FILTER_COLS.includes(k) && row[k] !== null && row[k] !== '');
+  const preferred = CARD_PREFERRED_ORDER.filter(k => all.includes(k));
+  const rest = all.filter(k => !CARD_PREFERRED_ORDER.includes(k));
+  return [...preferred, ...rest];
+}
+
+function loadCardOrder(fields) {
+  try {
+    const saved = localStorage.getItem(DEFAULT_CARD_ORDER_KEY);
+    if (saved) {
+      const keys = JSON.parse(saved);
+      const ordered = keys.filter(k => fields.includes(k));
+      fields.forEach(k => { if (!ordered.includes(k)) ordered.push(k); });
+      return ordered;
+    }
+  } catch {}
+  return [...fields];
+}
+
+function renderCards(block, row) {
+  const fields  = getCardFields(row);
+  const ordered = loadCardOrder(fields);
+  const conteudo = q(block, 'resultadoConteudo');
+
+  conteudo.innerHTML = `<div class="cards-grid">
+    ${ordered.map(k => {
+      const v = row[k];
+      const label = formatLabel(k);
+      const value = formatValue(k, v);
+      const isText = typeof v === 'string' && !MONEY_COLS.includes(k) && !PERCENT_COLS.includes(k);
+      return `<div class="result-card" data-field="${k}">
+        <div class="card-label">${label}</div>
+        <div class="card-value ${isText ? 'text-val' : ''}">${value}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  renderSimulador(block, row);
+
+  // Drag só com 1 bloco e em modo edição
+  if (blocks.length === 1 && layoutEditing) enableCardSortable();
+}
+
+// ── TABELA (múltiplas linhas) ──
+function renderTable(block, rows) {
+  const allFields = [...new Set(rows.flatMap(r => Object.keys(r)))].filter(k => !FILTER_COLS.includes(k));
+  const conteudo = q(block, 'resultadoConteudo');
+
+  conteudo.innerHTML = `
+    <div class="multi-table-wrapper">
+      <div class="multi-table-scroll">
+        <table>
+          <thead><tr>${allFields.map(k => `<th>${formatLabel(k)}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${rows.map(r =>
+              `<tr>${allFields.map(k => {
+                const v = r[k];
+                const isNum = MONEY_COLS.includes(k) || PERCENT_COLS.includes(k) || typeof v === 'number';
+                return `<td class="${isNum ? 'num' : ''}">${formatValue(k, v)}</td>`;
+              }).join('')}</tr>`
+            ).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// LAYOUT DRAG (opera apenas no 1º bloco; some no comparativo)
+// ════════════════════════════════════════════════════════════════════
+function firstGrid() {
+  return blocks[0] ? blocks[0].el.querySelector('.cards-grid') : null;
+}
+
+function toggleLayout() {
+  if (blocks.length !== 1) return;
+  layoutEditing = !layoutEditing;
+  const btn = document.getElementById('btnLayout');
+  const btnReset = document.getElementById('btnResetLayout');
+  btn.textContent = layoutEditing ? '✔ Concluir' : '✦ Editar Layout';
+  btnReset.style.display = layoutEditing ? 'inline-block' : 'none';
+
+  const grid = firstGrid();
+  if (!grid) return;
+
+  if (layoutEditing) {
+    grid.classList.add('sortable-enabled');
+    enableCardSortable();
+  } else {
+    grid.classList.remove('sortable-enabled');
+    if (cardSortable) { cardSortable.destroy(); cardSortable = null; }
+  }
+}
+
+function enableCardSortable() {
+  const grid = firstGrid();
+  if (!grid) return;
+  if (cardSortable) cardSortable.destroy();
+  cardSortable = Sortable.create(grid, {
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    onEnd() {
+      const keys = [...grid.querySelectorAll('.result-card')].map(c => c.dataset.field);
+      localStorage.setItem(DEFAULT_CARD_ORDER_KEY, JSON.stringify(keys));
+    }
+  });
+}
+
+function resetLayout() {
+  localStorage.removeItem(DEFAULT_CARD_ORDER_KEY);
+  layoutEditing = false;
+  document.getElementById('btnLayout').textContent = '✦ Editar Layout';
+  document.getElementById('btnResetLayout').style.display = 'none';
+  if (cardSortable) { cardSortable.destroy(); cardSortable = null; }
+  if (blocks[0]) triggerResultado(blocks[0]);  // re-render com ordem padrão
+}
+
+// ════════════════════════════════════════════════════════════════════
+// SIMULADOR (por bloco)
+// ════════════════════════════════════════════════════════════════════
+function renderSimulador(block, row) {
+  block.simRow = row;
+  const section = q(block, 'simuladorSection');
+  section.style.display = 'block';
+  section.innerHTML = `
+    <div class="simulador-card">
+      <h3>Simulador de Frete</h3>
+      <div class="sim-inputs">
+        <div class="sim-field">
+          <label>Valor da NF (R$)</label>
+          <input type="number" data-el="simValorNF" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div class="sim-field">
+          <label>Qtd. Entregas</label>
+          <input type="number" data-el="simQtdEntregas" min="1" step="1" value="1">
+        </div>
+      </div>
+      <table class="sim-breakdown"><tbody data-el="simBreakdown"></tbody></table>
+    </div>`;
+
+  q(block, 'simValorNF').addEventListener('input', () => calcSimulador(block));
+  q(block, 'simQtdEntregas').addEventListener('input', () => calcSimulador(block));
+  calcSimulador(block);
+  resolveIcms(block, row);  // assíncrono: define block.icmsInfo e recalcula quando pronto
+}
+
+// ── ICMS (Total + Impostos — info comercial) ──
+const _icmsCache = {};   // { 'SP-BA': {aliquota, isento, ...} }
+
+async function resolveIcms(block, row) {
+  // A coluna icms_incluso só existe quando publicada no BI; ausente → não calcula (graceful)
+  const inclusoRaw = row['icms_incluso'];
+  if (inclusoRaw === undefined || inclusoRaw === null || String(inclusoRaw).trim() === '') {
+    block.icmsInfo = null;
+    return;
+  }
+  const incluso = String(inclusoRaw).trim();           // 'Sim' | 'Não' | 'Isento'
+  const valorDireto = Number(row['icms_valor']) || 0;  // R$ direto quando preenchido
+
+  let aliquota = null, isentoMatriz = false;
+  if (valorDireto <= 0) {
+    const o = (row['uf_origem'] || '').toUpperCase().trim();
+    const d = (row['uf_destino'] || '').toUpperCase().trim();
+    if (o.length === 2 && d.length === 2) {
+      const key = `${o}-${d}`;
+      try {
+        if (!_icmsCache[key]) {
+          const resp = await fetch(`/api/icms?origem=${o}&destino=${d}`, { credentials: 'same-origin' });
+          _icmsCache[key] = resp.ok ? await resp.json() : { ok: false };
+        }
+        const m = _icmsCache[key];
+        if (m && m.ok) { aliquota = m.isento ? 0 : (m.aliquota || 0); isentoMatriz = !!m.isento; }
+      } catch { /* sem matriz → trata como indisponível abaixo */ }
+    }
+  }
+  block.icmsInfo = { incluso, valorDireto, aliquota, isentoMatriz };
+  // Recalcula só se o bloco ainda mostra esta tarifa
+  if (block.simRow === row) calcSimulador(block);
+}
+
+function calcSimulador(block) {
+  if (!block.simRow) return;
+  const row = block.simRow;
+
+  const valorNF     = parseFloat(q(block, 'simValorNF').value) || 0;
+  const qtdEntregas = Math.max(1, parseInt(q(block, 'simQtdEntregas').value) || 1);
+
+  const frete_liquido     = Number(row['frete_liquido'])     || 0;
+  const valor_multiparada = Number(row['valor_multiparada']) || 0;
+  const gris              = Number(row['gris'])              || 0;
+  const ad_valorem        = Number(row['ad_valorem'])        || 0;
+  const pedagio           = Number(row['pedagio'])           || 0;
+  const balsa             = Number(row['balsa'])             || 0;
+  const adicional_entrega = Number(row['adicional_entrega']) || 0;
+
+  const usarMultiparada = valor_multiparada > 0 && qtdEntregas > 1;
+  const baseFrete       = usarMultiparada ? valor_multiparada : frete_liquido;
+  const baseLabel       = usarMultiparada ? 'Frete Multiparada' : 'Frete Líquido';
+  const valorGris      = valorNF * gris;
+  const valorAdVal     = valorNF * ad_valorem;
+  const valorAdicional = Math.max(0, qtdEntregas - 1) * adicional_entrega;
+  const total          = baseFrete + valorGris + valorAdVal + pedagio + balsa + valorAdicional;
+
+  const fmt    = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const fmtPct = (v, dec) => (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + '%';
+
+  const lines = [];
+  lines.push([baseLabel, baseFrete]);
+  if (gris > 0)              lines.push([`GRIS (${fmtPct(gris, 2)} × ${fmt(valorNF)})`, valorGris]);
+  if (ad_valorem > 0)        lines.push([`Ad Valorem (${fmtPct(ad_valorem, 4)} × ${fmt(valorNF)})`, valorAdVal]);
+  if (pedagio > 0)           lines.push(['Pedágio', pedagio]);
+  if (balsa > 0)             lines.push(['Balsa', balsa]);
+  if (qtdEntregas > 1 && adicional_entrega > 0)
+    lines.push([`Adicional Entregas (${qtdEntregas - 1} × ${fmt(adicional_entrega)})`, valorAdicional]);
+
+  // ── Total + Impostos (ICMS — info comercial; só quando icms_incluso disponível) ──
+  const imp = calcTotalImpostos(total, block.icmsInfo);
+
+  q(block, 'simBreakdown').innerHTML =
+    lines.map(([label, val]) =>
+      `<tr><td class="sim-label-cell">${label}</td><td class="sim-val">${fmt(val)}</td></tr>`
+    ).join('') +
+    `<tr class="sim-total"><td>Total Estimado</td><td class="sim-val">${fmt(total)}</td></tr>` +
+    (imp ? `<tr class="sim-imposto">
+        <td>Total + Impostos <span class="sim-imposto-tag">comercial · ${imp.label}</span></td>
+        <td class="sim-val">${fmt(imp.totalImpostos)}</td>
+      </tr>` : '');
+
+  // Persiste números pro resumo (campos novos não afetam os existentes)
+  block.sim = {
+    baseLabel,
+    base:      baseFrete,
+    gris:      valorGris,
+    adVal:     valorAdVal,
+    pedagio,
+    balsa,
+    adicional: valorAdicional,
+    total,
+    totalImpostos: imp ? imp.totalImpostos : null,
+    icmsValor:     imp ? imp.icms : null,
+    icmsLabel:     imp ? imp.label : null,
+  };
+
+  renderResumo();
+}
+
+// Calcula Total + Impostos a partir do Total Estimado e do ICMS resolvido.
+// Retorna null quando não há info de ICMS (coluna icms_incluso ausente) → linha some.
+function calcTotalImpostos(total, icmsInfo) {
+  if (!icmsInfo) return null;
+  const { incluso, valorDireto, aliquota, isentoMatriz } = icmsInfo;
+
+  if (incluso === 'Isento' || isentoMatriz) {
+    return { totalImpostos: total, icms: 0, label: 'Isento' };
+  }
+  if (incluso === 'Sim') {
+    // ICMS já embutido no frete → total não muda; ICMS embutido é só informativo
+    const icmsEmbutido = valorDireto > 0 ? valorDireto : (aliquota ? total * (aliquota / 100) : 0);
+    return { totalImpostos: total, icms: icmsEmbutido, label: 'ICMS incluso' };
+  }
+  // incluso === 'Não' (ou qualquer outro valor) → soma o ICMS
+  if (valorDireto > 0) {
+    return { totalImpostos: total + valorDireto, icms: valorDireto, label: 'ICMS R$' };
+  }
+  if (aliquota && aliquota > 0 && aliquota < 100) {
+    const totalImpostos = total / (1 - aliquota / 100);   // por dentro (gross-up)
+    return { totalImpostos, icms: totalImpostos - total,
+             label: `ICMS ${aliquota.toLocaleString('pt-BR')}%` };
+  }
+  // Sem alíquota válida e sem valor → não há como compor imposto
+  return { totalImpostos: total, icms: 0, label: 'ICMS n/d' };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// RESUMO CONSOLIDADO (breakdown completo — aparece com 2+ blocos)
+// ════════════════════════════════════════════════════════════════════
+function renderResumo() {
+  const section = document.getElementById('resumoSection');
+
+  if (blocks.length < 2) {
+    section.style.display = 'none';
+    section.innerHTML = '';
+    return;
+  }
+
+  const resolved = blocks.filter(b => b.sim);
+
+  // Colunas: base sempre; demais só se > 0 em algum bloco resolvido
+  const comps = RESUMO_COMPS.filter(c =>
+    c.always || resolved.some(b => (b.sim[c.key] || 0) > 0)
+  );
+
+  const fmt = v => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  // Coluna "Total + Impostos" só quando algum bloco tem ICMS resolvido (col. icms_incluso disponível)
+  const temImpostos = resolved.some(b => b.sim.totalImpostos != null);
+
+  const rowsHtml = blocks.map((b, i) => {
+    const label = b.label || `Comparação ${i + 1}`;
+    if (!b.sim) {
+      return `<tr class="resumo-vazio">
+        <td>${label} <span style="font-size:0.72rem;">(sem seleção)</span></td>
+        ${comps.map(() => '<td class="num">—</td>').join('')}
+        <td class="num">—</td>
+        ${temImpostos ? '<td class="num">—</td>' : ''}
+      </tr>`;
+    }
+    const impCell = temImpostos
+      ? `<td class="num resumo-imposto" title="${b.sim.icmsLabel || ''}">${b.sim.totalImpostos != null ? fmt(b.sim.totalImpostos) : '—'}</td>`
+      : '';
+    return `<tr>
+      <td>${label}</td>
+      ${comps.map(c => `<td class="num">${fmt(b.sim[c.key])}</td>`).join('')}
+      <td class="num resumo-total">${fmt(b.sim.total)}</td>
+      ${impCell}
+    </tr>`;
+  }).join('');
+
+  section.innerHTML = `
+    <h2 class="resumo-title">📊 Resumo comparativo</h2>
+    <div class="multi-table-wrapper">
+      <div class="multi-table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente / Rota</th>
+              ${comps.map(c => `<th>${c.label}</th>`).join('')}
+              <th>Total Estimado</th>
+              ${temImpostos ? '<th>Total + Impostos <span class="th-tag">comercial</span></th>' : ''}
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    </div>`;
+  section.style.display = 'block';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// FORMATAÇÃO
+// ════════════════════════════════════════════════════════════════════
+function formatLabel(key) {
+  if (LABEL_OVERRIDE[key]) return LABEL_OVERRIDE[key];
+  return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function formatValue(key, v) {
+  if (v === null || v === undefined || v === '') return '—';
+
+  if (PERCENT_COLS.includes(key)) {
+    const pct = (Number(v) * 100);
+    const decimals = key === 'gris' ? 2 : 4;
+    return pct.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + '%';
+  }
+
+  if (MONEY_COLS.includes(key)) {
+    return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  if (typeof v === 'number') {
+    return v.toLocaleString('pt-BR');
+  }
+
+  // Data
+  if (typeof v === 'string' && v.match(/^\d{4}-\d{2}-\d{2}/)) {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? v : d.toLocaleDateString('pt-BR');
+  }
+
+  return String(v);
+}
+</script>
+</body>
+</html>

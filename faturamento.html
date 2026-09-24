@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faturamento por Tomador — Nortevia</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23f0a830'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='68' font-weight='900' text-anchor='middle' fill='%2316171d'%3ER%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link rel="stylesheet" href="/theme.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 20px; }
+  .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  .loading-screen h2 { font-size: 1.1rem; font-weight: 600; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .loading-screen p { color: var(--text-dim); font-size: 0.85rem; }
+  .error-box { margin-top: 16px; padding: 14px 20px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); border-radius: 10px; color: var(--red); font-size: 0.82rem; max-width: 560px; text-align: center; line-height: 1.5; }
+  .error-box code { display: block; margin-top: 8px; font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--text-dim); word-break: break-all; }
+
+  .dashboard { display: none; padding: 24px; max-width: 1500px; margin: 0 auto; }
+  .dashboard.active { display: block; animation: fadeUp 0.5s ease; }
+
+  .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .top-bar h1 { font-size: 1.4rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .meta { font-size: 0.78rem; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+  .btn-sm { padding: 8px 18px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 0.82rem; border-radius: 8px; cursor: pointer; transition: all 0.15s; text-decoration: none; display: inline-block; }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .toggle button { padding: 8px 16px; background: var(--surface2); border: none; color: var(--text-dim); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+  .toggle button.active { background: var(--accent); color: var(--bg); }
+  .search { flex: 1; min-width: 220px; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 0.86rem; }
+  .search:focus { outline: none; border-color: var(--accent); }
+
+  .rota-bar { margin-top: -6px; gap: 8px; }
+  .rota-lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); font-weight: 700; }
+  .rota-uf { flex: 0 0 92px; min-width: 92px; text-transform: uppercase; }
+  .rota-cid { flex: 0 1 210px; min-width: 150px; }
+  .rota-uf.ativo, .rota-cid.ativo { border-color: var(--accent); }
+  .rota-seta { color: var(--text-dim); font-weight: 700; margin: 0 6px; }
+  .rota-bar .meta { color: var(--accent); }
+  td.sem-carga { color: var(--text-dim); }
+
+  .kpis { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; }
+  .kpi .l { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); font-weight: 600; }
+  .kpi .v { font-size: 1.1rem; font-weight: 700; font-family: 'Space Mono', monospace; margin-top: 4px; }
+
+  .table-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-scroll { overflow: auto; max-height: 72vh; }
+  table { border-collapse: collapse; font-size: 0.8rem; white-space: nowrap; width: 100%; }
+  thead th { position: sticky; top: 0; z-index: 2; background: var(--surface2); padding: 10px 12px; text-align: right; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+  thead th:first-child { text-align: left; left: 0; z-index: 3; }
+  tbody td { padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: right; font-family: 'Space Mono', monospace; font-size: 0.76rem; }
+  tbody td:first-child { text-align: left; font-family: 'Space Grotesk', sans-serif; font-size: 0.82rem; position: sticky; left: 0; background: var(--surface); z-index: 1; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+  tbody tr:hover td { background: rgba(240,168,48,0.05); }
+  tbody tr:hover td:first-child { background: #15203360; }
+  td.total-col, th.total-col { font-weight: 700; color: var(--accent); }
+  td.zero { color: #3b4760; }
+  tfoot td { position: sticky; bottom: 0; background: var(--surface2); padding: 10px 12px; text-align: right; font-weight: 700; font-family: 'Space Mono', monospace; font-size: 0.78rem; border-top: 2px solid var(--border); }
+  tfoot td:first-child { text-align: left; left: 0; z-index: 2; font-family: 'Space Grotesk', sans-serif; }
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <h2>Faturamento por Tomador</h2>
+  <p>Agregando conhecimentos emitidos...</p>
+  <div class="error-box" id="errorBox" style="display:none;"></div>
+</div>
+
+<div class="dashboard" id="dashboard">
+  <div class="top-bar">
+    <div>
+      <h1>Faturamento por Tomador</h1>
+      <span class="meta" id="userInfo" style="margin-top:4px;display:block;"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span data-nav-menu data-nav-style="btn-anchor" data-nav-active="faturamento"></span>
+      <a href="/logout" class="btn-sm">Sair</a>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="controls">
+    <div class="toggle">
+      <button id="btnFat" class="active" onclick="setModo('fat')">R$ Faturamento</button>
+      <button id="btnCargas" onclick="setModo('cargas')">Nº Cargas</button>
+    </div>
+    <input type="text" class="search" id="busca" placeholder="Buscar tomador..." oninput="render()">
+    <button class="btn-sm" onclick="exportarCsv()">↓ Exportar CSV</button>
+    <span class="meta" id="contador"></span>
+  </div>
+
+  <!-- Rota: estado e cidade em campos separados. Escolher o estado filtra a lista de cidades. -->
+  <div class="controls rota-bar">
+    <span class="rota-lbl">Origem</span>
+    <input type="text" class="search rota-uf" id="fOrigemUF" list="listaOrigemUF" autocomplete="off"
+           placeholder="Estado" oninput="render()">
+    <datalist id="listaOrigemUF"></datalist>
+    <input type="text" class="search rota-cid" id="fOrigemCidade" list="listaOrigemCidade" autocomplete="off"
+           placeholder="Cidade" oninput="render()">
+    <datalist id="listaOrigemCidade"></datalist>
+
+    <span class="rota-seta">→</span>
+
+    <span class="rota-lbl">Destino</span>
+    <input type="text" class="search rota-uf" id="fDestinoUF" list="listaDestinoUF" autocomplete="off"
+           placeholder="Estado" oninput="render()">
+    <datalist id="listaDestinoUF"></datalist>
+    <input type="text" class="search rota-cid" id="fDestinoCidade" list="listaDestinoCidade" autocomplete="off"
+           placeholder="Cidade" oninput="render()">
+    <datalist id="listaDestinoCidade"></datalist>
+
+    <button class="btn-sm" id="btnLimparRota" onclick="limparRota()">Limpar rota</button>
+    <span class="meta" id="infoRota"></span>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-scroll">
+      <table id="tabela">
+        <thead id="thead"></thead>
+        <tbody id="tbody"></tbody>
+        <tfoot id="tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const ANO = 2026;
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+let DADOS = null;          // resposta do endpoint (grão tomador × origem × destino × mês)
+let modo = 'fat';          // 'fat' | 'cargas'
+let ordem = { campo: 'total', dir: 'desc' };  // campo: 'nome' | 1..12 | 'total'
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadMe();
+  await loadData();
+});
+
+async function loadMe() {
+  try {
+    const r = await fetch('/api/me', { credentials: 'same-origin' });
+    const j = await r.json();
+    if (j.ok) document.getElementById('userInfo').textContent = `👤 ${j.nome} · ${ANO}`;
+  } catch {}
+}
+
+async function loadData() {
+  try {
+    const r = await fetch(`/api/faturamento/tomadores?ano=${ANO}`, { credentials: 'same-origin' });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error + (j.detail ? '\n' + JSON.stringify(j.detail) : ''));
+    DADOS = j;
+    montaListasRota();
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('dashboard').classList.add('active');
+    render();
+  } catch (err) {
+    const box = document.getElementById('errorBox');
+    box.innerHTML = `Erro ao carregar:<code>${err.message}</code>`;
+    box.style.display = 'block';
+    document.querySelector('.spinner').style.display = 'none';
+  }
+}
+
+const fmtBRL = v => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmtInt = v => Number(v || 0).toLocaleString('pt-BR');
+const cellVal = (obj, m) => modo === 'fat' ? (obj.meses[m] ? obj.meses[m].faturamento : 0)
+                                           : (obj.meses[m] ? obj.meses[m].cargas : 0);
+const totVal  = obj => modo === 'fat' ? obj.total_faturamento : obj.total_cargas;
+const fmtCell = v => modo === 'fat' ? fmtBRL(v) : fmtInt(v);
+
+function setModo(m) {
+  modo = m;
+  document.getElementById('btnFat').classList.toggle('active', m === 'fat');
+  document.getElementById('btnCargas').classList.toggle('active', m === 'cargas');
+  render();
+}
+
+// ── Filtro de rota ────────────────────────────────────────────────────────────
+// Estado e cidade são campos separados, dos dois lados. O grupo guarda o local
+// como "CIDADE/UF"; aqui a gente quebra e compara cada parte por si.
+const norm = s => (s || '').trim().toUpperCase();
+const ufDe = local => { const p = local.split('/'); return p[p.length - 1]; };
+const cidadeDe = local => local.split('/')[0];
+
+function casaLocal(local, uf, cidade) {
+  if (uf && ufDe(local) !== uf) return false;
+  if (cidade && !cidadeDe(local).includes(cidade)) return false;  // includes: funciona enquanto digita
+  return true;
+}
+
+function filtroRota() {
+  const v = id => norm(document.getElementById(id).value);
+  return { ouf: v('fOrigemUF'), ocid: v('fOrigemCidade'),
+           duf: v('fDestinoUF'), dcid: v('fDestinoCidade') };
+}
+
+const temFiltroRota = f => !!(f.ouf || f.ocid || f.duf || f.dcid);
+
+// Índices para os datalists, montados 1× no load. Cidades ordenadas por volume —
+// são 171 origens e 330 destinos, lista alfabética seria inútil.
+let IDX_ROTA = null;
+
+function montaListasRota() {
+  const lado = (campo) => {
+    const porUf = new Map(), porCidade = new Map();
+    DADOS.grupos.forEach(g => {
+      const l = g[campo], u = ufDe(l), c = cidadeDe(l);
+      porUf.set(u, (porUf.get(u) || 0) + g.mf.length);
+      const k = u + '|' + c;
+      porCidade.set(k, (porCidade.get(k) || 0) + g.mf.length);
+    });
+    return {
+      ufs: [...porUf].sort((a, b) => b[1] - a[1]).map(x => x[0]),
+      cidades: [...porCidade].sort((a, b) => b[1] - a[1])
+        .map(([k]) => ({ uf: k.split('|')[0], cidade: k.split('|')[1] })),
+    };
+  };
+  IDX_ROTA = { o: lado('o'), d: lado('d') };
+  opcoes('listaOrigemUF', IDX_ROTA.o.ufs);
+  opcoes('listaDestinoUF', IDX_ROTA.d.ufs);
+  atualizaListasCidade();
+}
+
+function opcoes(id, vals) {
+  document.getElementById(id).innerHTML = vals.map(v => `<option value="${v}">`).join('');
+}
+
+// A lista de cidades acompanha o estado escolhido — com a UF preenchida sobram
+// poucas opções, sem ela vem tudo por volume.
+function atualizaListasCidade() {
+  if (!IDX_ROTA) return;
+  const f = filtroRota();
+  const filtra = (lista, uf) => {
+    const vistos = new Set();
+    return lista.filter(x => (!uf || x.uf === uf) && !vistos.has(x.cidade) && vistos.add(x.cidade))
+                .map(x => x.cidade);
+  };
+  opcoes('listaOrigemCidade', filtra(IDX_ROTA.o.cidades, f.ouf));
+  opcoes('listaDestinoCidade', filtra(IDX_ROTA.d.cidades, f.duf));
+}
+
+function limparRota() {
+  ['fOrigemUF', 'fOrigemCidade', 'fDestinoUF', 'fDestinoCidade']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  render();
+}
+
+// ── Agregação ─────────────────────────────────────────────────────────────────
+// Monta a matriz tomador × mês sob o filtro de rota. `cargas` NUNCA é soma: cada
+// linha guarda o CONJUNTO de manifestos, e a contagem é o tamanho do conjunto.
+// É isso que faz o número fechar quando a mesma viagem pertence a duas filiais do
+// mesmo grupo, ou a vários tomadores numa carga de distribuição.
+// Com filtro de rota, faturamento e CTe contam SÓ o que tem manifesto (`fm`/`nm`).
+// Filtrar rota é pergunta de operação: quanto rendeu o que rodou aqui. Complemento de
+// frete e cobrança de descarga herdam a cidade de quem emitiu — em Araras→RJ, dois
+// complementos (R$ 8.718) eram de uma viagem de outra rota. Sem filtro, o número segue
+// sendo o faturamento cheio, que é o que fecha com o financeiro.
+function agrega() {
+  const f = filtroRota();
+  const soViagem = temFiltroRota(f);
+  const porTom = new Map();
+  DADOS.grupos.forEach(g => {
+    if (!casaLocal(g.o, f.ouf, f.ocid) || !casaLocal(g.d, f.duf, f.dcid)) return;
+    const vf = soViagem ? g.fm : g.f;
+    const nc = soViagem ? g.nm : g.n;
+    if (soViagem && !nc) return;              // grupo sem viagem nenhuma: fora do recorte
+    let t = porTom.get(g.t);
+    if (!t) {
+      t = { ...DADOS.tomadores[g.t], meses: {}, _mfMes: {}, _mf: new Set(),
+            total_faturamento: 0, total_ctes: 0 };
+      for (let m = 1; m <= 12; m++) { t.meses[m] = { faturamento: 0, cargas: 0, ctes: 0 }; t._mfMes[m] = new Set(); }
+      porTom.set(g.t, t);
+    }
+    t.meses[g.m].faturamento += vf;
+    t.meses[g.m].ctes += nc;
+    t.total_faturamento += vf;
+    t.total_ctes += nc;
+    g.mf.forEach(i => { t._mfMes[g.m].add(i); t._mf.add(i); });
+  });
+  const linhas = [...porTom.values()];
+  linhas.forEach(t => {
+    t.total_faturamento = Math.round(t.total_faturamento * 100) / 100;
+    for (let m = 1; m <= 12; m++) {
+      t.meses[m].faturamento = Math.round(t.meses[m].faturamento * 100) / 100;
+      t.meses[m].cargas = t._mfMes[m].size;
+    }
+    t.total_cargas = t._mf.size;
+  });
+  return linhas;
+}
+
+// Totais do conjunto EXIBIDO. Faturamento soma; carga é união de conjuntos —
+// somar as linhas contaria a mesma viagem uma vez por tomador.
+function somaTotais(arr) {
+  const porMes = {};
+  const mfMes = {}; const mfTot = new Set();
+  for (let m = 1; m <= 12; m++) { porMes[m] = { faturamento: 0, cargas: 0, ctes: 0 }; mfMes[m] = new Set(); }
+  let totFat = 0, totCtes = 0;
+  arr.forEach(t => {
+    for (let m = 1; m <= 12; m++) {
+      porMes[m].faturamento += t.meses[m].faturamento;
+      porMes[m].ctes += t.meses[m].ctes;
+      t._mfMes[m].forEach(i => mfMes[m].add(i));
+    }
+    totFat += t.total_faturamento; totCtes += t.total_ctes;
+    t._mf.forEach(i => mfTot.add(i));
+  });
+  for (let m = 1; m <= 12; m++) {
+    porMes[m].faturamento = Math.round(porMes[m].faturamento * 100) / 100;
+    porMes[m].cargas = mfMes[m].size;
+  }
+  return { porMes, totFat: Math.round(totFat * 100) / 100, totCargas: mfTot.size, totCtes };
+}
+
+function atualizaKpis(arr, tot, filtrado) {
+  const soViagem = temFiltroRota(filtroRota());
+  const lblTom = filtrado ? 'Tomadores (filtro)' : 'Tomadores';
+  const lblFat = soViagem ? `Faturamento ${ANO} · só viagens` : `Faturamento ${ANO}`;
+  const dicaFat = soViagem
+    ? 'title="Com filtro de rota, soma só CTe com manifesto — complemento de frete e cobrança de descarga ficam de fora."' : '';
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="l">${lblTom}</div><div class="v">${fmtInt(arr.length)}</div></div>
+    <div class="kpi" ${dicaFat}><div class="l">${lblFat}</div><div class="v">${fmtBRL(tot.totFat)}</div></div>
+    <div class="kpi" title="Manifestos distintos: a mesma viagem faturada em mais de um CNPJ conta uma vez."><div class="l">Cargas ${ANO}</div><div class="v">${fmtInt(tot.totCargas)}</div></div>
+    <div class="kpi"><div class="l">CTe${soViagem ? ' de viagem' : ''}</div><div class="v">${fmtInt(tot.totCtes)}</div></div>`;
+}
+
+function rotuloLocal(uf, cidade) {
+  if (cidade && uf) return `${cidade}/${uf}`;
+  return cidade || uf || '';
+}
+
+function linhaFiltroRota() {
+  const f = filtroRota();
+  const marca = (id, v) => document.getElementById(id).classList.toggle('ativo', !!v);
+  marca('fOrigemUF', f.ouf); marca('fOrigemCidade', f.ocid);
+  marca('fDestinoUF', f.duf); marca('fDestinoCidade', f.dcid);
+  atualizaListasCidade();
+  const o = rotuloLocal(f.ouf, f.ocid), d = rotuloLocal(f.duf, f.dcid);
+  document.getElementById('infoRota').innerHTML = temFiltroRota(f)
+    ? `rota: ${o || 'todas'} → ${d || 'todos'} · <span style="color:var(--text-dim)">R$ só de viagens (CTe com manifesto)</span>`
+    : '';
+  return temFiltroRota(f);
+}
+
+function ordenar(campo) {
+  if (ordem.campo === campo) ordem.dir = ordem.dir === 'desc' ? 'asc' : 'desc';
+  else { ordem.campo = campo; ordem.dir = campo === 'nome' ? 'asc' : 'desc'; }
+  render();
+}
+
+function linhasFiltradasOrdenadas() {
+  const q = (document.getElementById('busca').value || '').trim().toUpperCase();
+  let arr = agrega().filter(t => !q || t.nome.toUpperCase().includes(q) || (t.cnpj_raiz || '').includes(q));
+  arr = arr.slice().sort((a, b) => {
+    let va, vb;
+    if (ordem.campo === 'nome') { va = a.nome; vb = b.nome; }
+    else if (ordem.campo === 'total') { va = totVal(a); vb = totVal(b); }
+    else { va = cellVal(a, ordem.campo); vb = cellVal(b, ordem.campo); }
+    if (typeof va === 'string') return ordem.dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    return ordem.dir === 'asc' ? va - vb : vb - va;
+  });
+  return arr;
+}
+
+function setaOrd(campo) { return ordem.campo === campo ? (ordem.dir === 'desc' ? ' ▾' : ' ▴') : ''; }
+
+function render() {
+  if (!DADOS) return;
+  // Cabeçalho
+  document.getElementById('thead').innerHTML = `<tr>
+    <th onclick="ordenar('nome')">Tomador${setaOrd('nome')}</th>
+    ${MESES.map((nome, i) => `<th onclick="ordenar(${i + 1})">${nome}${setaOrd(i + 1)}</th>`).join('')}
+    <th class="total-col" onclick="ordenar('total')">Total${setaOrd('total')}</th>
+  </tr>`;
+
+  const comRota = linhaFiltroRota();
+  const arr = linhasFiltradasOrdenadas();
+  const filtrado = (document.getElementById('busca').value || '').trim() !== '' || comRota;
+  const tot = somaTotais(arr);
+  atualizaKpis(arr, tot, filtrado);
+
+  const tb = document.getElementById('tbody');
+  if (arr.length === 0) {
+    tb.innerHTML = `<tr><td colspan="14" class="empty-state">Nenhum tomador encontrado.</td></tr>`;
+    document.getElementById('tfoot').innerHTML = '';
+    document.getElementById('contador').textContent = '0 tomadores';
+    return;
+  }
+
+  tb.innerHTML = arr.map(t => {
+    const cnpjFmt = t.cnpj_raiz ? `Raiz CNPJ ${t.cnpj_raiz}` : 'sem CNPJ';
+    const semCarga = modo === 'cargas' && t.total_ctes && !t.total_cargas;
+    const cells = [];
+    for (let m = 1; m <= 12; m++) {
+      const v = cellVal(t, m);
+      cells.push(`<td class="${v ? '' : 'zero'}">${v ? fmtCell(v) : '—'}</td>`);
+    }
+    return `<tr>
+      <td class="${semCarga ? 'sem-carga' : ''}" title="${t.nome.replace(/"/g, '&quot;')} · ${cnpjFmt} · ${fmtInt(t.total_ctes)} CTe · ${fmtInt(t.total_cargas)} cargas">${t.nome}${semCarga ? ' <span style="opacity:.6">(só CTe s/ manifesto)</span>' : ''}</td>
+      ${cells.join('')}
+      <td class="total-col">${fmtCell(totVal(t))}</td>
+    </tr>`;
+  }).join('');
+
+  // Rodapé: total do conjunto exibido. Em Nº Cargas é contagem distinta (união dos
+  // manifestos), não a soma das linhas — a mesma viagem pode estar em vários tomadores.
+  const footCells = [];
+  for (let m = 1; m <= 12; m++) {
+    const v = modo === 'fat' ? tot.porMes[m].faturamento : tot.porMes[m].cargas;
+    footCells.push(`<td>${v ? fmtCell(v) : '—'}</td>`);
+  }
+  const totGeral = modo === 'fat' ? tot.totFat : tot.totCargas;
+  const lblTotal = filtrado ? `Subtotal (${arr.length})` : 'Total geral';
+  const somaLinhas = arr.reduce((s, t) => s + t.total_cargas, 0);
+  const dica = modo === 'cargas' && somaLinhas !== tot.totCargas
+    ? ` title="Soma das linhas: ${fmtInt(somaLinhas)}. O total é menor porque ${fmtInt(somaLinhas - tot.totCargas)} viagem(ns) atendem mais de um tomador e contam uma vez só."` : '';
+  document.getElementById('tfoot').innerHTML = `<tr${dica}>
+    <td>${lblTotal}${dica ? ' *' : ''}</td>${footCells.join('')}<td class="total-col">${fmtCell(totGeral)}</td>
+  </tr>`;
+
+  document.getElementById('contador').textContent = `${arr.length} tomador${arr.length > 1 ? 'es' : ''}`;
+}
+
+function exportarCsv() {
+  if (!DADOS) return;
+  const arr = linhasFiltradasOrdenadas();
+  const tot = somaTotais(arr);
+  const f = filtroRota();
+  const sep = ';';
+  const rotO = rotuloLocal(f.ouf, f.ocid), rotD = rotuloLocal(f.duf, f.dcid);
+  const linhas = [];
+  if (rotO || rotD) {
+    linhas.push(`Rota: ${rotO || 'todas'} -> ${rotD || 'todos'}`);
+    linhas.push('"Faturamento: so CTe com manifesto (viagens). Complemento de frete e cobranca de descarga ficam de fora."');
+  }
+  linhas.push(['Tomador', 'Raiz CNPJ', ...MESES, 'Total', 'CTe'].join(sep));
+  const num = v => modo === 'fat' ? Number(v || 0).toFixed(2).replace('.', ',') : String(v || 0);
+  arr.forEach(t => {
+    const cols = [`"${t.nome}"`, t.cnpj_raiz || ''];
+    for (let m = 1; m <= 12; m++) cols.push(num(cellVal(t, m)));
+    cols.push(num(totVal(t)));
+    cols.push(String(t.total_ctes));
+    linhas.push(cols.join(sep));
+  });
+  // Total distinto, igual ao rodapé da tela (não é a soma da coluna acima).
+  const totCols = ['"TOTAL"', ''];
+  for (let m = 1; m <= 12; m++) totCols.push(num(modo === 'fat' ? tot.porMes[m].faturamento : tot.porMes[m].cargas));
+  totCols.push(num(modo === 'fat' ? tot.totFat : tot.totCargas));
+  totCols.push(String(tot.totCtes));
+  linhas.push(totCols.join(sep));
+  if (modo === 'cargas') linhas.push('"Cargas = manifestos distintos; o TOTAL nao e a soma das linhas (viagem com varios tomadores conta uma vez)."');
+  const blob = new Blob(['﻿' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const slug = (rotO || rotD) ? `_${(rotO || 'todas').replace(/\//g, '-')}_${(rotD || 'todos').replace(/\//g, '-')}` : '';
+  a.download = `faturamento_tomadores_${ANO}_${modo}${slug}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+<script src="/nav-perms.js"></script>
+</body>
+</html>

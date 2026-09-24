@@ -1,0 +1,492 @@
+{
+  "tabela": "motoristas_047",
+  "dataset": "main",
+  "referencia_dax": "'public motoristas_047'",
+  "coletado_em": "2026-09-22T09:48:57",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 3933,
+  "n_colunas": 72,
+  "colunas": {
+    "cpf": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 11,
+      "len_max": 11
+    },
+    "nome": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 13,
+      "len_max": 29
+    },
+    "endereco": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 8,
+      "len_max": 30
+    },
+    "numero": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 4,
+      "formato": [
+        "99",
+        "999",
+        "9999",
+        "A/A"
+      ]
+    },
+    "complemento": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "bairro": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 6,
+      "len_max": 23
+    },
+    "cep": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 7,
+      "len_max": 8
+    },
+    "cidade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 24,
+      "formato": [
+        "AAA AAAA",
+        "AAA AAAAAAA",
+        "AAAA AAAAAAAAA",
+        "AAAA AAAAAAAAAA"
+      ]
+    },
+    "uf": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "AA"
+      ]
+    },
+    "ddd_fone_residencial": {
+      "tipo": "str",
+      "nulo_pct": 32,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "fone_residencial": {
+      "tipo": "str",
+      "nulo_pct": 32,
+      "sensivel": true,
+      "len_min": 8,
+      "len_max": 8
+    },
+    "ddd_celular": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "99"
+      ]
+    },
+    "celular": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 9,
+      "formato": [
+        "999999999"
+      ]
+    },
+    "ddd_fone_pessoal_1": {
+      "tipo": "str",
+      "nulo_pct": 44,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "fone_pessoal_1": {
+      "tipo": "str",
+      "nulo_pct": 44,
+      "sensivel": true,
+      "len_min": 8,
+      "len_max": 9
+    },
+    "rg": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 5,
+      "len_max": 11
+    },
+    "orgao_expedidor_rg": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 5
+    },
+    "data_emissao_rg": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "cidade_expedidora_rg": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 7,
+      "len_max": 24
+    },
+    "uf_expedidora_rg": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "data_nascimento": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cidade_nascimento": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 17,
+      "formato": [
+        "AAA AAAAA",
+        "AAA AAAAA AA AAA",
+        "AAAA AAAAAAAAA",
+        "AAAA AAAAAAAAAA"
+      ]
+    },
+    "uf_nascimento": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "AA"
+      ]
+    },
+    "nome_pai": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 13,
+      "len_max": 26
+    },
+    "nome_mae": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 15,
+      "len_max": 42
+    },
+    "numero_cnh": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 9,
+      "len_max": 11
+    },
+    "categoria": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 3,
+      "formato": [
+        "A",
+        "A A",
+        "AA"
+      ]
+    },
+    "numero_registro": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 11,
+      "formato": [
+        "999999999",
+        "9999999999",
+        "99999999999"
+      ]
+    },
+    "validade_cnh": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 19,
+      "len_max": 19
+    },
+    "cidade_expedidora_cnh": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 7,
+      "len_max": 24
+    },
+    "uf_expedidora_cnh": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 2,
+      "len_max": 2
+    },
+    "data_emissao_cnh": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 19,
+      "len_max": 19
+    },
+    "data_1a_cnh": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "bloqueado": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "A"
+      ]
+    },
+    "validade_mopp": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "gerenciadora_risco": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "validade_risco": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "nro_autorizacao_risco": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "observacao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "ultimo_movimento": {
+      "tipo": "str",
+      "nulo_pct": 8,
+      "sensivel": false,
+      "len_min": 12,
+      "len_max": 12,
+      "formato": [
+        "AAA 99/99/99"
+      ]
+    },
+    "tipo_residencia": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "tipo_imovel": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "ddd_fone_comercial_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "fone_comercial_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "ddd_fone_comercial_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "fone_comercial_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "ddd_fone_pessoal_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "fone_pessoal_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "ddd_fone_pessoal_3": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "fone_pessoal_3": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "sexo": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "estado_civil": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cod_seguranca_cnh": {
+      "tipo": "str",
+      "nulo_pct": 60,
+      "sensivel": true,
+      "len_min": 1,
+      "len_max": 11
+    },
+    "data_admissao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "relacao_com_transportadora": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "A"
+      ]
+    },
+    "validade_exame_toxicologico": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "gerenciadora_cliente_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "validade_cliente_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "nro_autorizacao_cliente_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "gerenciadora_cliente_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "validade_cliente_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "nro_autorizacao_cliente_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "gerenciadora_cliente_3": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "validade_cliente_3": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "nro_autorizacao_cliente_3": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "gerenciadora_cliente_4": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "validade_cliente_4": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "nro_autorizacao_cliente_4": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "gerenciadora_cliente_5": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "validade_cliente_5": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "nro_autorizacao_cliente_5": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 23,
+      "len_max": 23,
+      "formato": [
+        "9999-99-99A99:99:99.999"
+      ]
+    }
+  },
+  "vocabulario": {}
+}

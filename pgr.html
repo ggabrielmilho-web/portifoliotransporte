@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PGR · Excessos de velocidade — Nortevia</title>
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link rel="stylesheet" href="/theme.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--sans); background:var(--bg); color:var(--text);
+         padding:16px 12px 32px; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:620px; margin:0 auto; }
+
+  header { border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:12px; }
+  .eyebrow { font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--accent); font-weight:500; }
+  h1 { font-size:1.18rem; font-weight:700; margin-top:5px; letter-spacing:-.01em; }
+  .sub { font-family:var(--mono); font-size:.72rem; color:var(--text-dim); margin-top:3px; }
+
+  .nav { display:flex; gap:8px; align-items:center; margin-top:10px; }
+  /* `display:flex` ganha do [hidden] da UA stylesheet — sem esta regra a
+     navegação apareceria no acesso por token, e a página deixaria de ser o
+     beco sem saída que contém o link vazado. */
+  .nav[hidden] { display:none; }
+  .nav { flex-wrap:wrap; }
+  /* estilo dos links injetados pelo nav-perms (data-nav-style="btn-anchor") */
+  .nav a.btn-sm { font-family:var(--mono); font-size:.68rem; color:var(--text-dim);
+        background:var(--surface); border:1px solid var(--border); border-radius:5px;
+        padding:4px 9px; text-decoration:none; }
+  .nav a.btn-sm:hover { color:var(--text); border-color:var(--accent); }
+  .nav a.btn-sm.active { color:var(--accent); border-color:var(--accent); }
+  .nav .sep { width:1px; height:20px; background:var(--border); margin:0 2px; }
+  .filtro { font-family:var(--mono); font-size:.68rem; background:var(--surface); color:var(--text);
+        border:1px solid var(--border); border-radius:5px; padding:4px 7px; width:104px; }
+  .filtro.larga { width:150px; }
+  .filtro::placeholder { color:var(--text-dim); text-transform:none; }
+  .filtro:hover, .filtro:focus { border-color:var(--accent); outline:none; }
+  .filtro.on { color:var(--accent); border-color:var(--accent); }
+
+  /* Seletor de mês — mesmo componente da aba Veículos, para a interação ser a
+     mesma em todo o app (caixinhas + Aplicar). */
+  .mespicker { position:relative; display:inline-block; }
+  .mes-btn { font-family:var(--mono); font-size:.68rem; color:var(--text-dim); background:var(--surface);
+        border:1px solid var(--border); border-radius:5px; padding:4px 9px; cursor:pointer; min-width:96px; text-align:left; }
+  .mes-btn:hover { border-color:var(--accent2); }
+  .mes-btn.on { color:var(--accent); border-color:var(--accent); }
+  .mes-btn::after { content:'▾'; float:right; color:var(--text-dim); margin-left:8px; }
+  .mes-pop { position:absolute; top:calc(100% + 6px); left:0; z-index:50; width:244px; display:none;
+        background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px;
+        box-shadow:0 14px 36px rgba(0,0,0,.55); }
+  .mes-pop.open { display:block; }
+  .mes-pop-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;
+        font-weight:700; font-size:.9rem; }
+  .mes-pop-head button { width:28px; height:28px; background:var(--surface); border:1px solid var(--border);
+        border-radius:6px; color:var(--text); cursor:pointer; font-size:1rem; line-height:1; }
+  .mes-pop-head button:hover { border-color:var(--accent); color:var(--accent); }
+  .mes-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .mes-cell { padding:9px 0; text-align:center; border-radius:7px; background:var(--surface);
+        border:1px solid var(--border); color:var(--text-dim); font-size:.78rem; font-weight:600;
+        cursor:pointer; text-transform:capitalize; user-select:none; }
+  .mes-cell:hover { border-color:var(--accent2); color:var(--text); }
+  .mes-cell.sel { background:var(--accent); border-color:var(--accent); color:#16171d; }
+  /* Mês sem dia apurado não é clicável: a base começou agora, e oferecer um mês
+     vazio faria a tela parecer quebrada. */
+  .mes-cell.off { opacity:.28; cursor:not-allowed; }
+  .mes-cell.off:hover { border-color:var(--border); color:var(--text-dim); }
+  .mes-pop-foot { display:flex; justify-content:space-between; margin-top:12px; }
+  .mes-pop-foot button { background:none; border:none; color:var(--accent); font-weight:700;
+        font-size:.8rem; cursor:pointer; padding:2px 4px; }
+
+  .dia-head { display:flex; align-items:baseline; gap:10px; margin:18px 0 4px; padding-top:10px;
+        border-top:1px solid var(--border); }
+  .dia-head:first-child { margin-top:0; border-top:none; padding-top:0; }
+  .dia-head h2 { font-family:var(--mono); font-size:.82rem; font-weight:500; color:var(--accent); }
+  .dia-head .resumo { font-size:.66rem; color:var(--text-dim); }
+  .nota { font-size:.66rem; color:var(--text-dim); margin-bottom:10px; }
+  .nav a, .nav button { font-family:var(--mono); font-size:.68rem; color:var(--text-dim);
+        background:var(--surface); border:1px solid var(--border); border-radius:5px;
+        padding:4px 9px; text-decoration:none; cursor:pointer; }
+  .nav a:hover, .nav button:hover { color:var(--text); border-color:var(--accent); }
+  .nav input[type=date] { font-family:var(--mono); font-size:.68rem; background:var(--surface);
+        color:var(--text); border:1px solid var(--border); border-radius:5px; padding:3px 7px;
+        color-scheme:dark; }
+
+  .kpis { display:flex; gap:18px; margin-bottom:14px; flex-wrap:wrap; }
+  .kpi { display:flex; align-items:baseline; gap:5px; }
+  .kpi .v { font-family:var(--mono); font-size:1.08rem; font-weight:500; font-variant-numeric:tabular-nums; }
+  .kpi .l { font-size:.66rem; color:var(--text-dim); font-weight:600; }
+  .kpi.al .v { color:var(--red); }
+
+  table { width:100%; border-collapse:collapse; }
+  thead th { font-size:.58rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-dim);
+             font-weight:700; text-align:left; padding:0 6px 6px; border-bottom:1px solid var(--border); }
+  thead th.r { text-align:right; }
+  tbody tr { border-bottom:1px solid rgba(30,41,59,.6); }
+  tbody tr:last-child { border-bottom:none; }
+  td { padding:8px 6px; vertical-align:top; }
+
+  .c-placa { width:82px; white-space:nowrap; }
+  .pl { font-family:var(--mono); font-size:.84rem; font-weight:500; letter-spacing:.02em; display:block; }
+  .tp { font-size:.56rem; letter-spacing:.09em; color:var(--text-dim); font-weight:700; text-transform:uppercase; }
+  .tp em { font-style:normal; }
+  .op-frota { color:var(--accent); }
+  .op-agregado { color:var(--accent2); }
+
+  .c-reg, .c-pico { font-family:var(--mono); text-align:right; font-variant-numeric:tabular-nums;
+                    white-space:nowrap; width:1%; }
+  .c-reg { font-size:.92rem; }
+  .c-reg i { font-style:normal; font-size:.62rem; color:var(--text-dim); }
+  .c-pico { font-size:.96rem; font-weight:500; padding-right:12px; }
+  .p1 { color:var(--yellow); } .p2 { color:var(--orange); } .p3 { color:var(--red); }
+
+  .c-det { padding-left:0; }
+  .lin1 { font-size:.72rem; line-height:1.4; color:var(--text-dim); }
+  .lin1 b { font-weight:600; }
+  .lin2 { font-size:.72rem; line-height:1.45; color:var(--text); margin-top:2px; }
+  .mot { font-family:var(--mono); font-size:.66rem; }
+  .uf { color:var(--text-dim); font-size:.92em; }
+  .sus { font-family:var(--mono); font-size:.58rem; color:var(--orange); border:1px solid var(--orange);
+         border-radius:3px; padding:0 4px; margin-left:6px; text-transform:uppercase; letter-spacing:.06em; }
+
+  .dot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px;
+         vertical-align:middle; position:relative; top:-1px; }
+  .d-carregado { background:var(--orange); }
+  .d-parcial { background:var(--yellow); }
+  .d-vazio { background:var(--text-dim); }
+  .d-nao_confirmado { background:transparent; box-shadow:inset 0 0 0 1.5px var(--text-dim); }
+  .d-carregado ~ b { color:var(--orange); }
+  .d-parcial ~ b { color:var(--yellow); }
+  .d-vazio ~ b, .d-nao_confirmado ~ b { color:var(--text-dim); }
+
+  .aviso { border:1px solid var(--border); border-left:2px solid var(--yellow); border-radius:5px;
+           padding:9px 11px; margin-top:14px; }
+  .aviso h3 { font-size:.68rem; color:var(--yellow); font-weight:700; text-transform:uppercase;
+              letter-spacing:.07em; margin-bottom:5px; }
+  .aviso p { font-size:.66rem; color:var(--text-dim); line-height:1.5; }
+  .aviso ul { list-style:none; margin-top:6px; }
+  .aviso li { font-family:var(--mono); font-size:.68rem; color:var(--text); padding:2px 0; }
+  .aviso li span { color:var(--text-dim); font-size:.92em; }
+
+  .vazio-msg { text-align:center; padding:34px 12px; color:var(--text-dim); font-size:.8rem; }
+  .vazio-msg b { color:var(--green); display:block; font-size:1rem; margin-bottom:5px; }
+
+  footer { border-top:1px solid var(--border); margin-top:14px; padding-top:12px;
+           display:flex; flex-direction:column; gap:7px; }
+  footer p { font-size:.66rem; line-height:1.55; color:var(--text-dim); }
+  footer b { color:var(--text); font-weight:600; }
+  .leg { display:flex; gap:14px; flex-wrap:wrap; font-size:.62rem; color:var(--text-dim); }
+  .leg span::before { content:''; display:inline-block; width:7px; height:7px; border-radius:2px; margin-right:5px; }
+  .l1::before { background:var(--yellow); } .l2::before { background:var(--orange); } .l3::before { background:var(--red); }
+
+  @media (max-width:420px) {
+    .c-placa { width:72px; }
+    .c-pico { padding-right:8px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Nortevia Transportes · PGR</div>
+    <h1 id="titulo">Excessos acima de 95 km/h</h1>
+    <div class="sub" id="subtitulo">carregando…</div>
+    <div class="nav" id="nav" hidden>
+      <button id="ant">‹ dia anterior</button>
+      <input type="date" id="data">
+      <button id="prox">dia seguinte ›</button>
+      <span class="sep"></span>
+      <div class="mespicker">
+        <button class="mes-btn" id="mesBtn" onclick="toggleMesPop(event)">Mês</button>
+        <div class="mes-pop" id="mesPop" onclick="event.stopPropagation()">
+          <div class="mes-pop-head">
+            <button type="button" onclick="mudaAno(-1)">‹</button>
+            <span id="mesAno"></span>
+            <button type="button" onclick="mudaAno(1)">›</button>
+          </div>
+          <div class="mes-grid" id="mesGrid"></div>
+          <div class="mes-pop-foot">
+            <button type="button" onclick="limparMeses()">Limpar</button>
+            <button type="button" onclick="aplicarMeses()">Aplicar</button>
+          </div>
+        </div>
+      </div>
+      <input id="fCavalo" class="filtro" list="lCavalo" placeholder="cavalo" autocomplete="off">
+      <datalist id="lCavalo"></datalist>
+      <input id="fCarreta" class="filtro" list="lCarreta" placeholder="carreta" autocomplete="off">
+      <datalist id="lCarreta"></datalist>
+      <input id="fMotorista" class="filtro larga" list="lMotorista" placeholder="motorista" autocomplete="off">
+      <datalist id="lMotorista"></datalist>
+      <button id="limpaFiltro" hidden>limpar filtros</button>
+    </div>
+    <!-- Menu do app. O nav-perms.js só injeta se /api/me responder ok, e ela é
+         @login_required — então quem abre pelo link com token não recebe menu
+         nenhum e a página segue sendo beco sem saída. -->
+    <div class="nav" id="navapp" hidden>
+      <span data-nav-menu data-nav-style="btn-anchor" data-nav-active="pgr"></span>
+    </div>
+  </header>
+
+  <div id="conteudo"></div>
+</div>
+
+<script>
+// Só carrega o menu do app quando NÃO é acesso por token: /api/me é
+// @login_required, então pelo link do WhatsApp ele responderia 401 e sujaria o
+// console de quem só quer ler o relatório.
+if (!new URLSearchParams(location.search).get('t')) {
+  var _s = document.createElement('script');
+  _s.src = '/nav-perms.js';
+  document.head.appendChild(_s);
+}
+</script>
+<script>
+const qs = new URLSearchParams(location.search);
+const TOKEN = qs.get('t');           // acesso por link do WhatsApp (sem login)
+const $ = id => document.getElementById(id);
+
+// Faixas de gravidade na cor do pico (layout aprovado).
+const sev = p => p >= 110 ? 'p3' : (p >= 103 ? 'p2' : 'p1');
+const marcaUF = t => (t || '').replace(/\/([A-Z]{2})\b/g, '/<span class="uf">$1</span>');
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hm = m => m >= 60 ? `${Math.floor(m/60)}h${String(m%60).padStart(2,'0')}` : `${m}min`;
+// frota/agregado vem do manifesto casado (é propriedade da VIAGEM, não do
+// veículo). Zero é zero — "nenhum veículo do recorte é frota" é fato, não
+// lacuna. O traço fica só para o caso em que NADA foi classificado, que aí sim
+// significa "nenhum manifesto casou".
+const op = (n, algumClassificado) => (n || algumClassificado) ? n : '—';
+
+const ABREV = {CARRETA:'car', CAVALO:'cav', TRUCK:'trk'};
+const abreviaTipo = t => (t || '').toUpperCase().split('+')
+  .map(x => ABREV[x] || (x ? x.toLowerCase().slice(0,3) : '')).filter(Boolean).join('+');
+
+function linha(l) {
+  const tipo = (l.tipo_veiculo || '').toUpperCase();
+  const abrev = abreviaTipo(tipo);
+  const op = (l.tipo_operacao || '').toLowerCase();
+  // Em "vazio" o manifesto guardado é o que o veículo ACABOU de entregar — daí
+  // sai o frota/agregado da linha e o contexto útil ("entregou em X").
+  let ctx = '—';
+  if (l.tomador && l.situacao_carga === 'vazio') {
+    const q = l.entregue_em_br ? ` em ${esc(l.entregue_em_br)}` : '';
+    ctx = `${esc(l.tomador)} · entregou em ${esc(l.destino || '')}${q}`;
+  } else if (l.tomador) {
+    ctx = `${esc(l.tomador)} · ${esc([l.origem, l.destino].filter(Boolean).join(' → '))}`;
+  }
+  // A METADE OPOSTA do par: linha de carreta mostra o cavalo, linha de cavalo
+  // mostra a carreta. É o que faz a linha se explicar sozinha — filtrando uma
+  // carreta, o cavalo que a puxou aparece dizendo por que está ali. Na linha
+  // já fundida não entra: as duas placas estão na própria coluna.
+  const pnorm = p => (p || '').toUpperCase();
+  const naLinha = (l.placas || [l.placa]).map(pnorm);
+  let par = '';
+  if (!l.fundida) {
+    const ehCavalo = tipo === 'CAVALO';
+    const outra = ehCavalo ? l.placa_carreta : l.placa_cavalo;
+    if (outra && !naLinha.includes(pnorm(outra))) {
+      par = ` · <span class="mot">${ehCavalo ? 'carreta' : 'cavalo'} ${esc(outra)}</span>`;
+    }
+  }
+  const mot = l.motorista ? ` · <span class="mot">${esc(l.motorista)}</span>` : '';
+  const selo = l.sustentado ? '<span class="sus">sustentado</span>' : '';
+  const placaCel = (l.placas || [l.placa])
+    .map(p => `<span class="pl">${esc(p)}</span>`).join('');
+  return `<tr>
+    <td class="c-placa">${placaCel}
+      <span class="tp">${abrev}${op ? ' · <em class="op-' + op + '">' + op + '</em>' : ''}</span></td>
+    <td class="c-reg">${l.registros}<i>×</i></td>
+    <td class="c-pico ${sev(l.pico)}">${l.pico}</td>
+    <td class="c-det">
+      <div class="lin1"><span class="dot d-${l.situacao_carga}"></span><b>${esc(l.situacao_rotulo)}</b> · ${ctx}${par}${mot}${selo}</div>
+      <div class="lin2">${marcaUF(l.cidades.map(esc).join(', '))}</div>
+    </td>
+  </tr>`;
+}
+
+const CABECALHO = `<thead><tr><th>Placa</th><th class="r">Reg</th>
+  <th class="r" style="padding-right:12px">Pico</th><th>Situação e trechos</th></tr></thead>`;
+
+function tabela(linhas) {
+  return `<table>${CABECALHO}<tbody>${linhas.map(linha).join('')}</tbody></table>`;
+}
+
+function brData(iso) { const [a,m,d] = iso.split('-'); return `${d}/${m}/${a}`; }
+
+function render(d) {
+  const t = d.totais;
+  const periodo = d.modo === 'periodo';
+  $('titulo').textContent = `Excessos acima de ${d.limiar} km/h`;
+
+  if (periodo) {
+    const nomes = (d.meses || []).map(m => MES_CURTO[+m.split('-')[1] - 1] + '/' + m.split('-')[0]);
+    $('subtitulo').textContent = `${nomes.join(' · ')} · horário de Brasília`;
+    document.title = `PGR · ${nomes.join(' ')} — Nortevia`;
+  } else {
+    const dia = d.dias[0] ? d.dias[0].dia : '';
+    $('subtitulo').textContent = `${brData(dia)} · horário de Brasília`;
+    document.title = `PGR · Excessos ${brData(dia)} — Nortevia`;
+  }
+
+  const classificou = (t.frota || 0) + (t.agregado || 0) > 0;
+  const kpis = `<div class="kpis">
+    <div class="kpi"><span class="v">${t.veiculos}</span><span class="l">veículos</span></div>
+    <div class="kpi al"><span class="v">${t.registros}</span><span class="l">registros</span></div>
+    <div class="kpi al"><span class="v">${t.pico}</span><span class="l">pico km/h</span></div>
+    <div class="kpi"><span class="v">${t.sustentados}</span><span class="l">sustentados</span></div>
+    <div class="kpi"><span class="v op-frota">${op(t.frota, classificou)}</span><span class="l">frota</span>
+      <span class="v op-agregado" style="margin-left:8px">${op(t.agregado, classificou)}</span><span class="l">agregado</span></div>
+  </div>`;
+
+  // Honestidade: "Agosto" com 3 blocos parece quebrado se a tela não disser
+  // quantos dias existem de fato. Mesma razão do rodapé de cobertura.
+  let nota = '';
+  if (periodo) {
+    const comDado = d.dias.length;
+    nota = `<div class="nota">${comDado} dia(s) exibido(s) de ${d.dias_apurados} apurado(s) no período` +
+           (FILTRO_ATIVO ? ' · filtro aplicado' : '') + '</div>';
+  }
+
+  if (!d.dias.length || !t.registros) {
+    $('conteudo').innerHTML = kpis + nota + `<div class="vazio-msg"><b>Nenhum excesso registrado</b>
+      ${periodo ? 'Nenhum episódio no recorte selecionado.' : t.placas_monitoradas + ' veículo(s) monitorado(s) no dia.'}</div>` + rodape(d);
+    return;
+  }
+
+  let corpo = '';
+  for (const b of d.dias) {
+    if (!b.linhas.length) continue;
+    if (periodo) {
+      corpo += `<div class="dia-head"><h2>${brData(b.dia)}</h2>
+        <span class="resumo">${b.totais.veiculos} veículos · ${b.totais.registros} registros ·
+        pico ${b.totais.pico}</span></div>`;
+    }
+    corpo += tabela(b.linhas) + (periodo ? '' : cobertura(b));
+  }
+  $('conteudo').innerHTML = kpis + nota + corpo + rodape(d);
+}
+
+function cobertura(b) {
+  if (!b.sem_cobertura || !b.sem_cobertura.length) return '';
+  // Placa que some do relatório lê como "comportou-se bem". Com o rótulo, lê
+  // como "não sabemos" — são coisas muito diferentes num relatório de segurança.
+  return `<div class="aviso">
+    <h3>Cobertura insuficiente</h3>
+    <p>Estes veículos ficaram sem sinal <b>enquanto rodavam</b>. Ausência da lista acima
+       não significa que se comportaram bem — significa que não sabemos.</p>
+    <ul>${b.sem_cobertura.map(c => `<li>${esc(c.placa)}
+      <span>· ${c.posicoes} posições · maior lacuna em movimento ${hm(c.maior_gap_mov_min)}</span></li>`).join('')}</ul>
+  </div>`;
+}
+
+function rodape(d) {
+  const mon = d.dias && d.dias.length === 1 && d.dias[0].totais
+    ? `<p style="color:#6c6e7a">${d.dias[0].totais.placas_monitoradas} veículo(s) com posição no dia.</p>` : '';
+  return `<footer>
+    <div class="leg"><span class="l1">96–102 km/h</span><span class="l2">103–109</span><span class="l3">110+</span></div>
+    <p><b>O número é recorrência, não duração.</b> O rastreador reporta a cada 2–5 min e cada
+       leitura é um instante, não um intervalo — somar tempo acima do limite seria inventar número.</p>
+    <p><b>Pico</b> = o maior entre a leitura do aparelho e a média do trecho. As duas medidas são
+       piso do valor real (a média usa distância em linha reta, que subestima), então o número
+       mostrado erra sempre para baixo.</p>
+    <p><b>Sustentado</b> = 2 ou mais registros acima do limite no mesmo episódio.</p>
+    <p><b>Situação da carga</b> é provada por GPS, nunca por data de emissão do manifesto:
+       o excesso está no corredor origem→destino, o veículo passou pela origem antes e ainda
+       não tinha chegado ao destino. <b>Vazio</b> = já havia passado pelo destino.
+       <b>Parcial</b> = parte dos episódios do dia com carga provada, parte não.
+       <b>Não confirmado</b> = sem prova — não quer dizer vazio.</p>
+    <p>Excesso com o veículo vazio continua sendo desvio de PGR — por isso permanece na lista.</p>
+    ${mon}
+  </footer>`;
+}
+
+// ── Seletor de mês (mesmo componente da aba Veículos) ──
+const MES_CURTO = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+let mesesSel = new Set();
+let mesesComDado = new Set();       // 'YYYY-MM' que têm dia apurado
+let anoPicker = new Date().getFullYear();
+let FILTRO_ATIVO = false;
+
+function renderMesGrid() {
+  $('mesAno').textContent = anoPicker;
+  $('mesGrid').innerHTML = MES_CURTO.map((nm, i) => {
+    const ym = `${anoPicker}-${String(i + 1).padStart(2, '0')}`;
+    const tem = mesesComDado.has(ym);
+    const cls = (mesesSel.has(ym) ? 'sel ' : '') + (tem ? '' : 'off');
+    const acao = tem ? ` onclick="toggleMes('${ym}')"` : '';
+    return `<div class="mes-cell ${cls}"${acao}>${nm}</div>`;
+  }).join('');
+}
+function toggleMes(ym) { mesesSel.has(ym) ? mesesSel.delete(ym) : mesesSel.add(ym); renderMesGrid(); }
+function mudaAno(d) { anoPicker += d; renderMesGrid(); }
+function toggleMesPop(e) { e.stopPropagation(); $('mesPop').classList.toggle('open'); renderMesGrid(); }
+function limparMeses() { mesesSel.clear(); renderMesGrid(); }
+function mesPadrao() {
+  const h = new Date();
+  const atual = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}`;
+  if (mesesComDado.has(atual)) return atual;
+  // Mês vigente ainda sem apuração (virada de mês antes do job): usa o mais
+  // recente que tem dado, para o filtro nunca cair num recorte vazio.
+  return [...mesesComDado].sort().reverse()[0] || atual;
+}
+
+function aplicarMeses() {
+  $('mesPop').classList.remove('open');
+  const p = new URLSearchParams();
+  const campos = [['fCavalo','cavalo'],['fCarreta','carreta'],['fMotorista','motorista']];
+  const filtros = campos.map(([id, k]) => [k, ($(id).value || '').trim()]).filter(x => x[1]);
+
+  let meses = [...mesesSel];
+  // Filtrar sem escolher mês cairia no modo de UM dia, que ignora filtro: a
+  // pessoa digita a placa e nada muda na tela. Assume o mês vigente.
+  if (!meses.length && filtros.length) meses = [mesPadrao()];
+
+  if (meses.length) p.set('meses', meses.sort().join(','));
+  for (const [k, v] of filtros) p.set(k, v);
+  location.search = p.toString();
+}
+document.addEventListener('click', () => $('mesPop') && $('mesPop').classList.remove('open'));
+
+function aplicarFiltros() { aplicarMeses(); }
+
+async function montarControles(d) {
+  $('nav').hidden = false;
+  $('navapp').hidden = false;
+
+  const dia = d.modo === 'dia' && d.dias[0] ? d.dias[0].dia : '';
+  if (dia) $('data').value = dia;
+  const desloca = n => {
+    const dt = new Date((dia || new Date().toISOString().slice(0,10)) + 'T12:00:00');
+    dt.setDate(dt.getDate() + n);
+    irPara(dt.toISOString().slice(0, 10));
+  };
+  $('ant').onclick = () => desloca(-1);
+  $('prox').onclick = () => desloca(1);
+  $('data').onchange = e => irPara(e.target.value);
+
+  const r = await fetch('/api/pgr/opcoes?' + new URLSearchParams(
+    mesesSel.size ? {meses: [...mesesSel].sort().join(',')} : {}));
+  if (!r.ok) return;
+  const o = await r.json();
+  mesesComDado = new Set((o.meses || []).map(m => m.mes));
+  if (o.meses && o.meses.length) anoPicker = +o.meses[0].mes.split('-')[0];
+  renderMesGrid();
+
+  // `input list` + `datalist`: aceita digitar E sugere, sem biblioteca — mesmo
+  // padrão do autocomplete de motorista dos Embarques. O texto digitado vai
+  // cru para o servidor: placa é normalizada em Mercosul lá, e motorista casa
+  // por trecho, então o rótulo curto ("Pedro Henrique de S.") encontra o nome
+  // completo do manifesto.
+  const preenche = (id, lista, itens, sel) => {
+    const el = $(id);
+    $(lista).innerHTML = itens.map(i => {
+      const t = i.label !== undefined ? i.label : i;
+      return `<option value="${esc(t)}">`;
+    }).join('');
+    el.value = sel;
+    el.classList.toggle('on', !!sel);
+    el.onchange = aplicarFiltros;
+    el.onkeydown = e => { if (e.key === 'Enter') aplicarFiltros(); };
+  };
+  preenche('fCavalo', 'lCavalo', o.cavalos || [], qs.get('cavalo') || '');
+  preenche('fCarreta', 'lCarreta', o.carretas || [], qs.get('carreta') || '');
+  preenche('fMotorista', 'lMotorista', o.motoristas || [], qs.get('motorista') || '');
+
+  if (mesesSel.size) {
+    const nomes = [...mesesSel].sort().map(m => MES_CURTO[+m.split('-')[1] - 1]);
+    $('mesBtn').textContent = nomes.join(', ');
+    $('mesBtn').classList.add('on');
+  }
+  if (FILTRO_ATIVO || mesesSel.size) {
+    $('limpaFiltro').hidden = false;
+    $('limpaFiltro').onclick = () => { location.search = ''; };
+  }
+}
+
+function irPara(dia) {
+  const p = new URLSearchParams({data: dia});
+  if (TOKEN) p.set('t', TOKEN);
+  location.search = p.toString();
+}
+
+async function carregar() {
+  const p = new URLSearchParams();
+  for (const k of ['data', 'meses', 'cavalo', 'carreta', 'motorista']) {
+    if (qs.get(k)) p.set(k, qs.get(k));
+  }
+  if (TOKEN) p.set('t', TOKEN);
+  (qs.get('meses') || '').split(',').filter(Boolean).forEach(m => mesesSel.add(m));
+  FILTRO_ATIVO = !!(qs.get('cavalo') || qs.get('carreta') || qs.get('motorista'));
+
+  const r = await fetch('/api/pgr?' + p.toString());
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    $('conteudo').innerHTML = `<div class="vazio-msg">${esc(e.error || 'Falha ao carregar')}</div>`;
+    $('subtitulo').textContent = '';
+    return;
+  }
+  const d = await r.json();
+  render(d);
+
+  // Controles só para quem entrou logado: pelo token a página é beco sem saída
+  // e o modo período fica fora do alcance de um link vazado.
+  if (!TOKEN) montarControles(d);
+}
+
+carregar();
+</script>
+</body>
+</html>

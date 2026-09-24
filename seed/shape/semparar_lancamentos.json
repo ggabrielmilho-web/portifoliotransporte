@@ -1,0 +1,152 @@
+{
+  "tabela": "semparar_lancamentos",
+  "dataset": "main",
+  "referencia_dax": "'public semparar_lancamentos'",
+  "coletado_em": "2026-09-22T09:49:08",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 12477,
+  "n_colunas": 13,
+  "colunas": {
+    "numero_fatura": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 10,
+      "len_max": 10,
+      "formato": [
+        "9999999999"
+      ]
+    },
+    "data": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 10,
+      "len_max": 10,
+      "formato": [
+        "99/99/9999"
+      ]
+    },
+    "horario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 8,
+      "formato": [
+        "99:99:99"
+      ]
+    },
+    "placa_veiculo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "tipo_veiculo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 8,
+      "len_max": 8,
+      "formato": [
+        "AAAAAAAA"
+      ]
+    },
+    "descricao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "tipo_uso": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 16,
+      "len_max": 16,
+      "formato": [
+        "AAAAA AAAAAAAAAA"
+      ]
+    },
+    "valor": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        2,
+        2
+      ],
+      "tem_negativo": false,
+      "tem_decimal": true
+    },
+    "debito_credito": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "AA"
+      ]
+    },
+    "viagem_vale_pedagio": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "embarcador": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "sentido_praca": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 25,
+      "len_max": 26,
+      "formato": [
+        "9999-99-99 99:99:99.99999",
+        "9999-99-99 99:99:99.999999"
+      ]
+    }
+  },
+  "vocabulario": {
+    "tipo_uso": {
+      "distintos": 7,
+      "valores": [
+        "ADESÃO",
+        "ESTACIONAMENTO",
+        "JUROS E MORA",
+        "MULTA",
+        "OUTRAS TAXAS",
+        "PASSAGENS",
+        "PLANO CONTRATADO"
+      ]
+    },
+    "sentido_praca": {
+      "distintos": 3,
+      "valores": [
+        "Norte",
+        "Sul"
+      ]
+    },
+    "debito_credito": {
+      "distintos": 2,
+      "valores": [
+        "CR",
+        "DB"
+      ]
+    }
+  }
+}

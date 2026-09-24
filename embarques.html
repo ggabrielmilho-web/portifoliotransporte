@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embarques — Nortevia</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23f0a830'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='68' font-weight='900' text-anchor='middle' fill='%2316171d'%3ER%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link rel="stylesheet" href="/theme.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .dashboard { padding: 24px; max-width: 1400px; margin: 0 auto; animation: fadeUp 0.5s ease; }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .top-bar h1 {
+    font-size: 1.4rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .meta { font-size: 0.78rem; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+  .btn-sm {
+    padding: 8px 18px; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+    font-size: 0.82rem; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  /* 7 cards numa linha so: (1400 - 48 de padding - 6 gaps de 12) / 7 = 182,9px por card,
+     menos 32 de padding = 150,9px de texto. O rotulo mais longo tinha 21 caracteres
+     ("CARRETAS DESENGATADAS", ~145px a 0.66rem uppercase) e sobravam 6px — margem que
+     some no primeiro notebook de 1366. Por isso ele virou "Desengatadas", que e como o
+     filtro do mapa geral ja o chama. Degrau em 1280 para nao pular de 7 direto para 3. */
+  .kpi-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 28px; }
+  @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 640px)  { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; position: relative; overflow: hidden; }
+  a.kpi-card { text-decoration: none; color: inherit; display: block; transition: border-color 0.2s, transform 0.2s; }
+  a.kpi-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 12px 12px 0 0; }
+  .kpi-card:nth-child(1)::before { background: var(--accent); }
+  .kpi-card:nth-child(2)::before { background: var(--orange); }
+  .kpi-card:nth-child(3)::before { background: #a78bfa; }
+  .kpi-card:nth-child(4)::before { background: var(--green); }
+  .kpi-card:nth-child(5)::before { background: var(--accent2); }
+  .kpi-card:nth-child(6)::before { background: var(--yellow, #f0a830); }
+  .kpi-card:nth-child(7)::before { background: var(--text-dim, #9b9da8); }
+  .kpi-card .label { font-size: 0.66rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .kpi-card .value { font-size: 1.55rem; font-weight: 700; font-family: 'Space Mono', monospace; }
+
+  .acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 28px; }
+  .acao-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 26px 28px; cursor: pointer; transition: all 0.18s;
+    display: flex; align-items: center; gap: 18px; text-decoration: none; color: inherit;
+  }
+  .acao-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .acao-card .ico { font-size: 2.2rem; }
+  .acao-card .titulo { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+  .acao-card .sub { font-size: 0.82rem; color: var(--text-dim); }
+  @media (max-width: 768px) { .acoes { grid-template-columns: 1fr; } }
+
+  .section-title { font-size: 0.92rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .ultimas { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .ultimas table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .ultimas th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+  .ultimas td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
+  .ultimas tr:last-child td { border-bottom: none; }
+  .ultimas tr:hover td { background: rgba(240,168,48,0.04); }
+  .ultimas .vazio { padding: 28px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+
+  .badge-status { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+  .badge-Aberta   { background: rgba(240,168,48,0.15); color: var(--accent); }
+  .badge-Em-rota  { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .badge-No-destino { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .badge-Desengatada { background: rgba(250,204,21,0.15); color: #f0a830; }
+  .badge-Entregue { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge-Cancelada{ background: rgba(248,113,113,0.15); color: var(--red); }
+  /* Perna vazia: o STATUS continua sendo 'Entregue' (secao 0 do handoff — nenhum status
+     muda de significado, e toda tela que filtra 'Entregue' quebraria). O que muda e o
+     rotulo, no padrao da 21.18: "rotulo, nunca status". Cinza porque nao houve entrega. */
+  .badge-Vazia    { background: rgba(148,163,184,0.15); color: var(--text-dim); }
+  .badge-Continuada { background: rgba(148,163,184,0.15); color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+  <div class="top-bar">
+    <div>
+      <h1>Embarques</h1>
+      <span class="meta" id="userInfo"></span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <span data-nav-menu data-nav-style="btn-wrap" data-nav-active="embarques"></span>
+      <a href="/logout" style="text-decoration:none;"><button class="btn-sm">Sair</button></a>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <a class="kpi-card" id="cardHoje" href="/embarques/relatorio"><div class="label">Cargas hoje</div><div class="value" id="kpiHoje">—</div></a>
+    <a class="kpi-card" href="/embarques/relatorio?status=Em%20rota"><div class="label">Em rota</div><div class="value" id="kpiRota">—</div></a>
+    <a class="kpi-card" href="/embarques/relatorio?status=No%20destino"><div class="label">No destino</div><div class="value" id="kpiNoDestino">—</div></a>
+    <a class="kpi-card" href="/embarques/relatorio?status=Entregue"><div class="label">Entregues no mês</div><div class="value" id="kpiEntregues">—</div></a>
+    <a class="kpi-card" href="/embarques/relatorio?status=Aberta"><div class="label">Abertas</div><div class="value" id="kpiAbertas">—</div></a>
+    <a class="kpi-card" href="/embarques/relatorio?status=Desengatada"><div class="label">Desengatadas</div><div class="value" id="kpiDesengatadas">—</div></a>
+    <a class="kpi-card" href="/embarques/relatorio?viagem_vazia=1" title="Pernas de reposicionamento: o trecho que a carreta rodou sem carga entre uma viagem e a seguinte. Nao entram em 'Entregues no mes'."><div class="label">Vazias no mês</div><div class="value" id="kpiVazias">—</div></a>
+  </div>
+
+  <div class="acoes" style="grid-template-columns:repeat(4,1fr);">
+    <a href="/embarques/novo" class="acao-card">
+      <div class="ico">➕</div>
+      <div>
+        <div class="titulo">Lançar nova carga</div>
+        <div class="sub">Formulário com motorista, veículos, destinos e cliente</div>
+      </div>
+    </a>
+    <a href="/embarques/relatorio" class="acao-card">
+      <div class="ico">📋</div>
+      <div>
+        <div class="titulo">Ver relatório</div>
+        <div class="sub">Listagem filtrada, edição e exportação em CSV</div>
+      </div>
+    </a>
+    <a href="/embarques/mapa" class="acao-card">
+      <div class="ico">🗺️</div>
+      <div>
+        <div class="titulo">Mapa em tempo real</div>
+        <div class="sub">Veículos rastreados, filtros carregado/vazio</div>
+      </div>
+    </a>
+    <a href="/embarques/ordens" class="acao-card">
+      <div class="ico">📥</div>
+      <div>
+        <div class="titulo">Ordens de coleta</div>
+        <div class="sub">O que foi comandado, o que virou carga e o que venceu sem documento</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-title">Últimas 10 cargas</div>
+  <div class="ultimas" id="ultimasBox">
+    <div class="vazio">Carregando...</div>
+  </div>
+</div>
+
+<script>
+  async function loadMe() {
+    try {
+      const r = await fetch('/api/me', { credentials: 'same-origin' });
+      const j = await r.json();
+      if (j.ok) {
+        document.getElementById('userInfo').textContent = '👤 ' + j.nome;
+        if (j.role === 'admin') {
+          document.getElementById('linkReuniao').style.display = '';
+          document.getElementById('linkDre').style.display = '';
+          document.getElementById('linkAdmin').style.display = '';
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function loadKpis() {
+    try {
+      const r = await fetch('/api/embarques/kpis', { credentials: 'same-origin' });
+      const j = await r.json();
+      if (j.ok) {
+        document.getElementById('kpiHoje').textContent = j.data.hoje;
+        document.getElementById('kpiRota').textContent = j.data.em_rota;
+        document.getElementById('kpiNoDestino').textContent = j.data.no_destino ?? 0;
+        document.getElementById('kpiEntregues').textContent = j.data.entregues_mes;
+        document.getElementById('kpiAbertas').textContent = j.data.abertas;
+        document.getElementById('kpiDesengatadas').textContent = j.data.desengatadas ?? 0;
+        document.getElementById('kpiVazias').textContent = j.data.vazias_mes ?? 0;
+      }
+    } catch (e) {}
+  }
+
+  // Recebe a CARGA, nao so o status: a perna vazia precisa do `viagem_vazia` para trocar
+  // o rotulo. `Entregue` numa perna vazia e mentira — ela nao entregou nada, so terminou.
+  function badgeStatus(c) {
+    const s = (c && c.status) || '';
+    if (c && c.viagem_vazia && s === 'Entregue') {
+      return '<span class="badge-status badge-Vazia" title="Viagem vazia concluída (status interno: Entregue)">Viagem vazia</span>';
+    }
+    const cls = 'badge-' + s.replace(' ', '-');
+    // §24 — carga com ligacao: o status e terminal e a mercadoria seguiu em `continua_em`
+    const lig = (c && c.continua_em_numero) ? ' <span style="font-size:0.7rem;color:var(--text-dim);" title="A mercadoria seguiu nesta carga">→ ' + c.continua_em_numero + '</span>' : '';
+    return '<span class="badge-status ' + cls + '">' + (s || '—') + '</span>' + lig;
+  }
+
+  function fmtData(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('T')[0].split('-');
+    return d + '/' + m + '/' + y;
+  }
+
+  async function loadUltimas() {
+    try {
+      // A perna do robo e criada DEPOIS da carga que a origina, entao tem id maior e domina
+      // o topo da lista: medido na base local em 10/09/26, as 10 ultimas eram 10 pernas e
+      // nenhuma carga de verdade aparecia. A porta de entrada delas passa a ser o card
+      // "Vazias no mes".
+      //
+      // `perna_vazia=0` e NAO `viagem_vazia=0`: a segunda esconderia tambem a viagem vazia
+      // LANCADA A MAO (a C-2026-000036, aberta desde 07/07), e sumir com carga do caminho
+      // manual e o que a secao 0 do handoff proibe. O filtro do servidor exige a conjuncao
+      // `viagem_vazia AND criada_por_robo`.
+      const r = await fetch('/api/embarques/cargas?limit=10&perna_vazia=0', { credentials: 'same-origin' });
+      const j = await r.json();
+      const box = document.getElementById('ultimasBox');
+      if (!j.ok || j.count === 0) {
+        box.innerHTML = '<div class="vazio">Nenhuma carga lançada ainda. Clique em "Lançar nova carga" para começar.</div>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Nº</th><th>Data</th><th>Status</th><th>Tipo</th><th>Cliente</th><th>Origem → Destinos</th><th>Motorista</th><th>Cavalo</th></tr></thead><tbody>';
+      for (const c of j.data) {
+        html += '<tr>'
+          + '<td><strong>' + (c.numero || '—') + '</strong></td>'
+          + '<td>' + fmtData(c.data_carregamento) + '</td>'
+          + '<td>' + badgeStatus(c) + '</td>'
+          + '<td>' + (c.tipo_operacao || '—') + '</td>'
+          + '<td>' + (c.cliente_nome || '—') + '</td>'
+          + '<td>' + (c.origem_cidade || '') + '/' + (c.origem_uf || '') + ' → ' + (c.destinos || '—') + '</td>'
+          + '<td>' + (c.motorista_nome || '—') + '</td>'
+          + '<td>' + (c.cavalo_placa || '—') + '</td>'
+          + '</tr>';
+      }
+      html += '</tbody></table>';
+      box.innerHTML = html;
+    } catch (e) {
+      document.getElementById('ultimasBox').innerHTML = '<div class="vazio">Erro ao carregar.</div>';
+    }
+  }
+
+  // "Cargas hoje" → relatório filtrado pela data de hoje (carregamento)
+  (function () {
+    const hoje = new Date().toLocaleDateString('en-CA');  // YYYY-MM-DD local
+    document.getElementById('cardHoje').href =
+      `/embarques/relatorio?data_campo=carregamento&start=${hoje}&end=${hoje}`;
+  })();
+
+  loadMe();
+  loadKpis();
+  loadUltimas();
+</script>
+<script src="/nav-perms.js"></script>
+</body>
+</html>

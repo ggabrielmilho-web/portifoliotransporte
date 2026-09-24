@@ -1,0 +1,412 @@
+{
+  "tabela": "veiculos_045",
+  "dataset": "main",
+  "referencia_dax": "'public veiculos_045'",
+  "coletado_em": "2026-09-22T09:48:53",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 6911,
+  "n_colunas": 46,
+  "colunas": {
+    "placa": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "tipo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAAAAAA"
+      ]
+    },
+    "relacionamento": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 10,
+      "len_max": 10,
+      "formato": [
+        "AAAAAAAAAA"
+      ]
+    },
+    "disponivel": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "A"
+      ]
+    },
+    "frota": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "data_hora_cadastro": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 16,
+      "len_max": 16,
+      "formato": [
+        "99/99/9999 99:99"
+      ]
+    },
+    "usuario_cadastro": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 20,
+      "len_max": 29
+    },
+    "marca": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 11,
+      "formato": [
+        "AA",
+        "AA AAAAAA",
+        "AA/ AAAAAA",
+        "AA/AAAAAA"
+      ]
+    },
+    "modelo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 20,
+      "formato": [
+        "AA 99A",
+        "AA AA",
+        "AA AA AA",
+        "AA AAA AA"
+      ]
+    },
+    "chassis": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 17,
+      "len_max": 17
+    },
+    "cor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 4,
+      "len_max": 8,
+      "formato": [
+        "AAAA",
+        "AAAAA",
+        "AAAAAA",
+        "AAAAAAA"
+      ]
+    },
+    "capacidade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "99,99"
+      ]
+    },
+    "ano": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "99"
+      ]
+    },
+    "carroceria": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAAAAAA"
+      ]
+    },
+    "eixos": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "9"
+      ]
+    },
+    "rastreado": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "A"
+      ]
+    },
+    "marca_rastreador_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "modelo_e_n_rastreador_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "marca_rastreador_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "modelo_e_n_rastreador_2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "bloqueador": {
+      "tipo": "str",
+      "nulo_pct": 52,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "A"
+      ]
+    },
+    "localizador": {
+      "tipo": "str",
+      "nulo_pct": 52,
+      "sensivel": false,
+      "len_min": 1,
+      "len_max": 1,
+      "formato": [
+        "A"
+      ]
+    },
+    "proprietario": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 50
+    },
+    "crntrc": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 9,
+      "formato": [
+        "999999999"
+      ]
+    },
+    "ult_mvto": {
+      "tipo": "str",
+      "nulo_pct": 4,
+      "sensivel": false,
+      "len_min": 12,
+      "len_max": 12,
+      "formato": [
+        "AAA 99/99/99"
+      ]
+    },
+    "renavam": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 9,
+      "len_max": 11
+    },
+    "certificado_propriedade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAAAAAA"
+      ]
+    },
+    "cidade_uf_expedicao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 24,
+      "formato": [
+        "AAA AAAA AA AAAAAAAAA/AA",
+        "AAA AAAA AAA AAAAAAA/AA",
+        "AAA AAAAA/AA",
+        "AAAA AAAAAAAAA/AA"
+      ]
+    },
+    "vigencia_seguro": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "validade_cronotacografo": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "validade_dedetizacao": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "mes_vcto_ipva": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "combustivel": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "media_min": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "media_max": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "apolice_seguro": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "mes_seguro": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "99"
+      ]
+    },
+    "km_odometro": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "99999"
+      ]
+    },
+    "km_veiculo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 5,
+      "formato": [
+        "99999"
+      ]
+    },
+    "digito_odometro": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "tag_pedagio": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cpf_motorista": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": true
+    },
+    "gerenciadora_1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "validade": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 26,
+      "len_max": 26,
+      "formato": [
+        "9999-99-99 99:99:99.999999"
+      ]
+    },
+    "cnpj": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    }
+  },
+  "vocabulario": {
+    "tipo": {
+      "distintos": 7,
+      "valores": [
+        "BALSA",
+        "CARRETA",
+        "CAVALO",
+        "CAVALO TRUCADO",
+        "OUTROS",
+        "TOCO",
+        "TRUCK"
+      ]
+    },
+    "modelo": {
+      "distintos": ">80",
+      "valores": null
+    },
+    "disponivel": {
+      "distintos": 2,
+      "valores": [
+        "N",
+        "S"
+      ]
+    },
+    "relacionamento": {
+      "distintos": 3,
+      "valores": [
+        "AGREGADO",
+        "CARRETEIRO",
+        "FROTA"
+      ]
+    }
+  }
+}

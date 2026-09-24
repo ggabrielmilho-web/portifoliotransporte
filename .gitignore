@@ -1,0 +1,20 @@
+# Segredo: o .env tem a chave da OpenAI e a senha do banco.
+.env
+.env.*
+*.env.bak
+
+__pycache__/
+*.pyc
+*.pyo
+*.log
+
+# As fixtures são ARTEFATO: 29 MB de JSON que o `seed/gerar.py` reproduz em ~20 s
+# a partir do `seed/shape/` (que vai versionado). A imagem as gera no build, e o
+# `seed/atualizar.py` as refaz a cada dia — versioná-las seria guardar saída de
+# build no repositório e fazer cada mudança de calibração virar um diff de MB.
+seed/fixtures/
+
+# Saída de análise dos robôs de derivação
+*.csv
+*.dump
+*.dump.gz

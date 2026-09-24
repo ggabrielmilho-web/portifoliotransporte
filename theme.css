@@ -1,0 +1,157 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Tema da vitrine — fonte única de cor, forma e navegação.
+
+   Antes disto, cada uma das 21 telas trazia o próprio `:root` e ainda repetia
+   os mesmos valores em ~400 hexadecimais soltos no meio do CSS. Trocar de cor
+   era editar 21 arquivos e torcer; agora é editar este bloco.
+
+   A paleta e o formato da barra lateral vêm do JOGA Portfolio (`static/theme.css`
+   de lá), reaproveitados com autorização. O que veio junto de propósito:
+
+   * **navegação lateral** no lugar da barra superior. A barra empilhava 16
+     botões em 3 linhas e comia ~120 px antes de qualquer conteúdo — era a
+     silhueta que identificava o sistema de origem à distância;
+   * **ícone monocromático** no lugar de emoji colorido. Cada emoji trazia a
+     própria paleta e a tela acabava com uma dúzia de tons que ninguém escolheu;
+     o glifo herda `currentColor` e some quando não é o assunto.
+
+   Verde, vermelho, laranja e amarelo NÃO mudaram: ali são semântica (positivo,
+   negativo, alerta), não marca. Trocá-los junto com o acento teria quebrado a
+   leitura de todas as tabelas de uma vez.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── superfícies: grafite quente, não preto-azulado ── */
+  --bg:        #16171d;
+  --bg2:       #101117;
+  --surface:   #1f2129;
+  --surface2:  #272a34;
+  --border:    #34363f;
+  --border2:   #404350;
+
+  --text:      #e9e9ee;
+  --text-dim:  #9b9da8;
+  --text-mute: #6c6e7a;
+  --gray:      #6c6e7a;
+  --muted:     #6c6e7a;   /* usado por algumas telas e nunca definido antes */
+
+  /* ── marca ── */
+  --accent:    #f0a830;
+  --accent-d:  #c9871d;
+  --accent2:   #2dd4bf;
+  --accent2-d: #14a89a;
+
+  /* ── semântica (inalterada de propósito) ── */
+  --green:  #34d399;
+  --red:    #f87171;
+  --orange: #fb923c;
+  --yellow: #fbbf24;
+  --blue:   #60a5fa;
+  --purple: #a78bfa;
+
+  /* ── DRE: cores de grupo contábil ── */
+  --cor-receita:         #2dd4bf;
+  --cor-operacional:     #60a5fa;
+  --cor-administrativo:  #a78bfa;
+  --cor-financeiro:      #f0a830;
+  --cor-impostos:        #fbbf24;
+  --cor-deducoes:        #ec4899;
+  --cor-investimento:    #34d399;
+  --cor-retirada:        #fb923c;
+  --cor-resultado-pos:   #34d399;
+  --cor-resultado-neg:   #f87171;
+  --cor-linha-resultado: #f0a830;
+
+  --radius:    14px;
+  --radius-sm: 9px;
+  --shadow:    0 6px 24px rgba(0,0,0,.35);
+  --sidebar-w: 236px;
+
+  --sans: 'Space Grotesk', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'Space Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+}
+
+/* ─── Barra lateral ──────────────────────────────────────────────────────
+   Injetada pelo `nav-perms.js` como primeiro filho do <body>, e não escrita
+   em cada HTML: as telas só têm um placeholder de menu, então a navegação
+   inteira troca num arquivo só. O `body` das páginas não tinha layout próprio
+   (apenas fundo e fonte), o que deixa o `padding-left` abaixo seguro.       */
+
+body.tem-sidebar { padding-left: var(--sidebar-w); }
+
+.side-nav {
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w);
+  background: linear-gradient(180deg, var(--bg2), #14151b);
+  border-right: 1px solid var(--border);
+  padding: 20px 14px 14px;
+  display: flex; flex-direction: column; gap: 3px;
+  overflow-y: auto; z-index: 900;
+}
+.side-nav::-webkit-scrollbar { width: 7px; }
+.side-nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.side-nav .marca {
+  display: flex; align-items: center; gap: 10px;
+  padding: 2px 6px 18px; text-decoration: none; color: var(--text);
+}
+.side-nav .marca .logo {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: grid; place-items: center;
+  color: #16171d; font-weight: 700; font-size: 17px; font-family: var(--sans);
+  box-shadow: 0 4px 14px rgba(240,168,48,.28);
+}
+.side-nav .marca .nome { font-weight: 700; font-size: 15px; letter-spacing: .2px; line-height: 1.15; }
+.side-nav .marca .sub {
+  font-size: 9.5px; color: var(--text-mute);
+  letter-spacing: .7px; text-transform: uppercase;
+}
+
+.side-nav .grupo {
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-mute); padding: 13px 9px 5px;
+}
+
+.side-nav a.item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  color: var(--text-dim); font-size: 13.5px; font-weight: 500;
+  text-decoration: none; transition: background .15s, color .15s;
+}
+.side-nav a.item .ic {
+  width: 17px; text-align: center; opacity: .8; font-size: 14px; flex-shrink: 0;
+}
+.side-nav a.item:hover { background: var(--surface); color: var(--text); }
+.side-nav a.item.ativo {
+  background: linear-gradient(90deg, rgba(240,168,48,.16), rgba(240,168,48,.03));
+  color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.side-nav a.item.ativo .ic { opacity: 1; }
+
+.side-nav .espaco { flex: 1; min-height: 12px; }
+.side-nav .rodape {
+  border-top: 1px solid var(--border); padding-top: 12px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.side-nav .rodape .quem { font-size: 12.5px; color: var(--text-dim); }
+.side-nav .rodape .papel {
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--accent); font-weight: 600;
+}
+.side-nav .rodape a.sair {
+  font-size: 12px; color: var(--text-mute); text-decoration: none;
+  padding: 5px 0; transition: color .15s;
+}
+.side-nav .rodape a.sair:hover { color: var(--red); }
+
+/* Telas estreitas: a lateral vira uma faixa de ícones. Some o rótulo, não a
+   navegação — esconder a barra inteira deixaria o usuário sem caminho. */
+@media (max-width: 980px) {
+  :root { --sidebar-w: 58px; }
+  .side-nav { padding: 14px 8px; }
+  .side-nav .marca .texto, .side-nav .grupo,
+  .side-nav a.item .rotulo, .side-nav .rodape .quem { display: none; }
+  .side-nav a.item { justify-content: center; padding: 9px 4px; }
+  .side-nav .rodape { align-items: center; }
+}

@@ -1,0 +1,463 @@
+{
+  "tabela": "coletas_0157",
+  "dataset": "main",
+  "referencia_dax": "'public coletas_0157'",
+  "coletado_em": "2026-09-22T09:48:48",
+  "nota": "Somente shape. Nenhum valor de linha foi persistido.",
+  "linhas": 290,
+  "n_colunas": 49,
+  "colunas": {
+    "unidade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "numero": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 6,
+      "len_max": 6,
+      "formato": [
+        "999999"
+      ]
+    },
+    "tipo": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 6,
+      "len_max": 6,
+      "formato": [
+        "AAAAAA"
+      ]
+    },
+    "data_limite_inicial": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "limite_em": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "situacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 9,
+      "len_max": 10,
+      "formato": [
+        "AAAAAAAAA",
+        "AAAAAAAAAA"
+      ]
+    },
+    "situacao_em": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "reme_cnpj": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "reme_nome": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 20,
+      "len_max": 30
+    },
+    "reme_endereco": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 15,
+      "len_max": 29
+    },
+    "reme_bairro": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 3,
+      "len_max": 19
+    },
+    "reme_cep": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 8,
+      "len_max": 8
+    },
+    "reme_cidade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 11,
+      "formato": [
+        "AAAAA",
+        "AAAAAAA",
+        "AAAAAAAA",
+        "AAAAAAAAA"
+      ]
+    },
+    "reme_fone": {
+      "tipo": "str",
+      "nulo_pct": 48,
+      "sensivel": true,
+      "len_min": 13,
+      "len_max": 13
+    },
+    "setor": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "999"
+      ]
+    },
+    "dest_cnpj": {
+      "tipo": "str",
+      "nulo_pct": 28,
+      "sensivel": true,
+      "len_min": 14,
+      "len_max": 14
+    },
+    "dest_nome": {
+      "tipo": "str",
+      "nulo_pct": 28,
+      "sensivel": true,
+      "len_min": 21,
+      "len_max": 30
+    },
+    "dest_endereco": {
+      "tipo": "str",
+      "nulo_pct": 8,
+      "sensivel": true,
+      "len_min": 3,
+      "len_max": 29
+    },
+    "dest_cep": {
+      "tipo": "str",
+      "nulo_pct": 28,
+      "sensivel": true,
+      "len_min": 7,
+      "len_max": 8
+    },
+    "dest_cidade": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 17,
+      "formato": [
+        "AAAAA",
+        "AAAAA AA AAAAAA",
+        "AAAAAA",
+        "AAAAAAA"
+      ]
+    },
+    "dest_uf": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 2,
+      "len_max": 2,
+      "formato": [
+        "AA"
+      ]
+    },
+    "dest_fone": {
+      "tipo": "str",
+      "nulo_pct": 64,
+      "sensivel": true,
+      "len_min": 13,
+      "len_max": 13
+    },
+    "solicitante": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": true,
+      "len_min": 3,
+      "len_max": 14
+    },
+    "motorista": {
+      "tipo": "str",
+      "nulo_pct": 12,
+      "sensivel": true,
+      "len_min": 16,
+      "len_max": 32
+    },
+    "veiculo": {
+      "tipo": "str",
+      "nulo_pct": 12,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "veiculo_2": {
+      "tipo": "str",
+      "nulo_pct": 12,
+      "sensivel": false,
+      "len_min": 7,
+      "len_max": 7,
+      "formato": [
+        "AAA9999",
+        "AAA9A99"
+      ]
+    },
+    "val_merc": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        0,
+        0
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "qtde_vol": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        1
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "peso_kg": {
+      "tipo": "float",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        5
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "mercadoria": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 14,
+      "len_max": 14,
+      "formato": [
+        "999 - AAAAAAAA"
+      ]
+    },
+    "tipo_frete": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 3,
+      "len_max": 3,
+      "formato": [
+        "AAA"
+      ]
+    },
+    "nfiscais": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cadastrada_em": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "cadastrada_por": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 6,
+      "formato": [
+        "aaaaa",
+        "aaaaaa"
+      ]
+    },
+    "comandada_em": {
+      "tipo": "str",
+      "nulo_pct": 12,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "comandada_por": {
+      "tipo": "str",
+      "nulo_pct": 12,
+      "sensivel": false,
+      "len_min": 5,
+      "len_max": 6,
+      "formato": [
+        "aaaaa",
+        "aaaaaa"
+      ]
+    },
+    "coletada_em": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "coletada_por": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cancelada_em": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "cancelada_por": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "obs1": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "obs2": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "obs3": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "ctrc_gerado": {
+      "tipo": "desconhecido",
+      "nulo_pct": 100,
+      "sensivel": false
+    },
+    "qtd_ocorrencias": {
+      "tipo": "int",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "digitos_int": [
+        1,
+        1
+      ],
+      "tem_negativo": false,
+      "tem_decimal": false
+    },
+    "periodo_ini": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "periodo_fim": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "emitido_em": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 19,
+      "len_max": 19,
+      "formato": [
+        "9999-99-99A99:99:99"
+      ]
+    },
+    "data_importacao": {
+      "tipo": "str",
+      "nulo_pct": 0,
+      "sensivel": false,
+      "len_min": 23,
+      "len_max": 23,
+      "formato": [
+        "9999-99-99A99:99:99.999"
+      ]
+    }
+  },
+  "vocabulario": {
+    "situacao": {
+      "distintos": 5,
+      "valores": [
+        "CADASTRADA",
+        "CANCELADA",
+        "COLETADA",
+        "COMANDADA",
+        "PRE-CADAST"
+      ]
+    },
+    "unidade": {
+      "distintos": 8,
+      "valores": [
+        "BEL",
+        "CAR",
+        "GYN",
+        "KMT",
+        "LUZ",
+        "NOD",
+        "RIO",
+        "UDI"
+      ]
+    },
+    "tipo": {
+      "distintos": 1,
+      "valores": [
+        "NORMAL"
+      ]
+    }
+  }
+}
