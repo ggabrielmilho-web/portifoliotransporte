@@ -54,6 +54,8 @@
   .kpi-card:nth-child(7)::before { background: var(--text-dim, #9b9da8); }
   .kpi-card .label { font-size: 0.66rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
   .kpi-card .value { font-size: 1.55rem; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .kpi-card .sub { font-size: 0.68rem; color: var(--text-dim); margin-top: 4px; }
+  .kpi-card .sub.alerta { color: var(--orange); font-weight: 600; }
 
   .acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 28px; }
   .acao-card {
@@ -110,7 +112,7 @@
     <a class="kpi-card" href="/embarques/relatorio?status=No%20destino"><div class="label">No destino</div><div class="value" id="kpiNoDestino">—</div></a>
     <a class="kpi-card" href="/embarques/relatorio?status=Entregue"><div class="label">Entregues no mês</div><div class="value" id="kpiEntregues">—</div></a>
     <a class="kpi-card" href="/embarques/relatorio?status=Aberta"><div class="label">Abertas</div><div class="value" id="kpiAbertas">—</div></a>
-    <a class="kpi-card" href="/embarques/relatorio?status=Desengatada"><div class="label">Desengatadas</div><div class="value" id="kpiDesengatadas">—</div></a>
+    <a class="kpi-card" id="cardDesengatadas" href="/embarques/relatorio?status=Desengatada" title="Carreta carregada largada para outro cavalo levar. O número é do mês (pela data de carregamento); embaixo, as que estão paradas agora, esperando seguir."><div class="label">Desengatadas no mês</div><div class="value" id="kpiDesengatadas">—</div><div class="sub" id="kpiDesengEsperando"></div></a>
     <a class="kpi-card" href="/embarques/relatorio?viagem_vazia=1" title="Pernas de reposicionamento: o trecho que a carreta rodou sem carga entre uma viagem e a seguinte. Nao entram em 'Entregues no mes'."><div class="label">Vazias no mês</div><div class="value" id="kpiVazias">—</div></a>
   </div>
 
@@ -178,6 +180,16 @@
         document.getElementById('kpiEntregues').textContent = j.data.entregues_mes;
         document.getElementById('kpiAbertas').textContent = j.data.abertas;
         document.getElementById('kpiDesengatadas').textContent = j.data.desengatadas ?? 0;
+        // O clique abre o MESMO conjunto do número: desengatadas carregadas neste mês
+        const hj = new Date(), p = n => String(n).padStart(2, '0');
+        const ini = `${hj.getFullYear()}-${p(hj.getMonth() + 1)}-01`;
+        const fim = `${hj.getFullYear()}-${p(hj.getMonth() + 1)}-${p(hj.getDate())}`;
+        document.getElementById('cardDesengatadas').href =
+          `/embarques/relatorio?status=Desengatada&data_campo=carregamento&start=${ini}&end=${fim}`;
+        const esp = j.data.desengatadas_esperando ?? 0;
+        const elEsp = document.getElementById('kpiDesengEsperando');
+        elEsp.textContent = esp ? `${esp} esperando seguir agora` : 'nenhuma parada agora';
+        elEsp.classList.toggle('alerta', esp > 0);
         document.getElementById('kpiVazias').textContent = j.data.vazias_mes ?? 0;
       }
     } catch (e) {}

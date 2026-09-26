@@ -25,7 +25,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='.')
+# SEM pasta estática. Era `static_folder='.'`, que publicava a pasta do projeto inteira em
+# `/./<arquivo>`, sem login — código, seed e o docker-compose.yml respondiam 200 (mesmo
+# achado do Tabela Auditoria em 24/09/2026). Todo arquivo que as telas usam tem rota própria.
+app = Flask(__name__, static_folder=None)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-change-me')
 CORS(app, supports_credentials=True)
 
@@ -6802,6 +6805,8 @@ def api_embarques_kpis():
         conn = get_db(); cur = conn.cursor()
         import embarques_continuacao as _ec
         _f24 = _ec.filtro_ligadas(cur, 'embarques_cargas')
+        # "Esperando" = carreta largada que ainda não seguiu em outra carga (sem ligação).
+        _esperando = " AND continua_em IS NULL" if _ec.colunas_existem(cur) else ""
         cur.execute(f"""
             SELECT
               COUNT(*) FILTER (WHERE data_carregamento = (NOW() AT TIME ZONE 'America/Sao_Paulo')::date) AS hoje,
@@ -6820,10 +6825,15 @@ def api_embarques_kpis():
                                {_f24}
                                AND date_trunc('month', data_conclusao) = date_trunc('month', (NOW() AT TIME ZONE 'America/Sao_Paulo')::date)) AS entregues_mes,
               COUNT(*) FILTER (WHERE status = 'Aberta')                 AS abertas,
-              -- Conta TODO status 'Desengatada' (esperando ou ja ligada a carga seguinte): e o
-              -- que o clique no card lista (/embarques/relatorio?status=Desengatada), e o card
-              -- e a lista tem de falar do mesmo conjunto. Decisao do Gabriel em 11/09/26.
-              COUNT(*) FILTER (WHERE status = 'Desengatada')            AS desengatadas,
+              -- Desengatadas DO MES (pela data de carregamento), esperando ou ja ligadas. O card
+              -- e a lista que ele abre continuam falando do mesmo conjunto (decisao do Gabriel
+              -- em 11/09/26): o clique leva status=Desengatada + o mesmo recorte de mes. Antes
+              -- somava o historico inteiro (70 na vitrine, ao lado de "126 entregues no mes"),
+              -- o que lia como 70 carretas largadas — eram todas ja ligadas a carga seguinte.
+              COUNT(*) FILTER (WHERE status = 'Desengatada'
+                               AND date_trunc('month', data_carregamento) = date_trunc('month', (NOW() AT TIME ZONE 'America/Sao_Paulo')::date)) AS desengatadas,
+              -- As que estao PARADAS AGORA, de qualquer mes: o numero operacional.
+              COUNT(*) FILTER (WHERE status = 'Desengatada' {_esperando}) AS desengatadas_esperando,
               -- Vazias do mes: o km de reposicionamento que fechou no periodo. Conta pela
               -- `data_conclusao` igual as entregues, para as duas falarem do mesmo mes.
               COUNT(*) FILTER (WHERE COALESCE(viagem_vazia, FALSE)
@@ -6841,7 +6851,8 @@ def api_embarques_kpis():
                 'entregues_mes':  r[3] or 0,
                 'abertas':        r[4] or 0,
                 'desengatadas':   r[5] or 0,
-                'vazias_mes':     r[6] or 0,
+                'desengatadas_esperando': r[6] or 0,
+                'vazias_mes':     r[7] or 0,
             }
         })
     except Exception as e:
@@ -8443,6 +8454,62 @@ if __name__ == '__main__':
             print(f"⚠️  Worker não iniciou: {e}")
     else:
         print("ℹ️  Worker de rastreamento desligado (START_WORKER != true)")
+
+    # Atualização diária da vitrine — SÓ em modo demo. A base sintética tem data (as telas
+    # abrem no mês corrente, "Cargas hoje" conta o dia, o mapa mostra quem está na
+    # estrada). Sem isto a imagem ficava com as fixtures do dia do build: em 26/09/2026 a
+    # produção mostrava zero carga hoje e a última de 24/09. Roda o ciclo COMPLETO
+    # (`seed/atualizar.py`, ~4 min): o `--rapido` não regera as fixtures, então no
+    # container não mudaria nada. Dispara no boot se a base não é de hoje (cobre o
+    # restart, que volta as fixtures ao dia do build) e todo dia a partir de
+    # VITRINE_ATUALIZAR_HORA (BRT). VITRINE_ATUALIZAR=false desliga.
+    if DEMO and os.getenv('VITRINE_ATUALIZAR', 'true').lower() == 'true':
+        import threading as _th_vt
+        import subprocess as _sp
+        import sys
+
+        def _loop_atualizar_vitrine():
+            from datetime import datetime, timedelta
+            marca = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 'seed', 'fixtures', '.atualizado_em')
+            try:
+                _hh, _mm = [int(x) for x in os.getenv('VITRINE_ATUALIZAR_HORA', '04:00').split(':')]
+            except Exception:
+                _hh, _mm = 4, 0
+
+            def _ultima():
+                try:
+                    with open(marca, encoding='utf-8') as fh:
+                        return fh.read().strip()
+                except OSError:
+                    return None
+
+            time.sleep(60)          # deixa o app e o worker subirem antes do ciclo pesado
+            boot = True
+            while True:
+                agora = datetime.utcnow() - timedelta(hours=3)
+                hoje = agora.date().isoformat()
+                no_horario = (agora.hour, agora.minute) >= (_hh, _mm)
+                # boot com base velha → roda já; nos outros dias → só a partir do horário
+                if _ultima() != hoje and (boot or no_horario):
+                    print(f'🔄 Vitrine: atualizando a base para {hoje}…')
+                    r = _sp.run([sys.executable, '-X', 'utf8', 'seed/atualizar.py'],
+                                cwd=os.path.dirname(os.path.abspath(__file__)),
+                                capture_output=True, text=True, encoding='utf-8', errors='replace')
+                    if r.returncode == 0:
+                        with open(marca, 'w', encoding='utf-8') as fh:
+                            fh.write(hoje)
+                        print('✅ Vitrine: ' + ((r.stdout or '').strip().splitlines() or ['ok'])[-1])
+                    else:
+                        # não grava a marca: tenta de novo no próximo ciclo
+                        print(f'⚠️  Vitrine: atualização falhou ({r.returncode}): '
+                              f'{((r.stdout or "") + (r.stderr or ""))[-600:]}')
+                boot = False
+                time.sleep(600)
+
+        _th_vt.Thread(target=_loop_atualizar_vitrine, daemon=True, name='VitrineAtualizar').start()
+        print(f"✅ Atualização diária da vitrine LIGADA (no boot se a base não é de hoje + "
+              f"todo dia às {os.getenv('VITRINE_ATUALIZAR_HORA', '04:00')} BRT)")
 
     print(f"\n🌐 Acesse: http://localhost:5000\n")
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)

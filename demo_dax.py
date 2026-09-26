@@ -40,19 +40,25 @@ class DaxNaoSuportado(Exception):
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────
-_CACHE = {}
+_CACHE = {}    # nome → (mtime do arquivo, linhas)
 
 
 def _carregar(tabela, dataset):
-    """Tabela do dataset pedido. `conhecimentos_emitidos` tem uma por dataset."""
+    """Tabela do dataset pedido. `conhecimentos_emitidos` tem uma por dataset.
+
+    O cache vale enquanto o arquivo não muda: a atualização diária regera as fixtures
+    com o servidor no ar, e um cache eterno mostraria a base do dia do build até o
+    próximo restart (foi o que deixou a vitrine de produção parada em 24/09/2026)."""
     for nome in (f'{tabela}.{dataset}', tabela):
-        if nome in _CACHE:
-            return _CACHE[nome]
         caminho = os.path.join(FIXTURES, f'{nome}.json')
-        if os.path.exists(caminho):
-            with open(caminho, encoding='utf-8') as fh:
-                _CACHE[nome] = json.load(fh)
-            return _CACHE[nome]
+        if not os.path.exists(caminho):
+            continue
+        mtime = os.path.getmtime(caminho)
+        if nome in _CACHE and _CACHE[nome][0] == mtime:
+            return _CACHE[nome][1]
+        with open(caminho, encoding='utf-8') as fh:
+            _CACHE[nome] = (mtime, json.load(fh))
+        return _CACHE[nome][1]
     raise DaxNaoSuportado(f'sem fixture para a tabela {tabela!r} (dataset {dataset})')
 
 

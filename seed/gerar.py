@@ -1012,17 +1012,24 @@ def main():
         return 0
 
     os.makedirs(FIXTURES, exist_ok=True)
+
+    def _gravar(nome, dados):
+        # Atômico (temporário + os.replace): em produção o servidor está no ar enquanto a
+        # atualização diária regera tudo, e o demo_dax relê a fixture quando ela muda —
+        # sem isso ele podia pegar um JSON pela metade.
+        destino = os.path.join(FIXTURES, f'{nome}.json')
+        with open(destino + '.tmp', 'w', encoding='utf-8') as fh:
+            json.dump(dados, fh, ensure_ascii=False)
+        os.replace(destino + '.tmp', destino)
+
     for nome, linhas in g.t.items():
         if not linhas:
             continue
         if nome == 'conhecimentos_emitidos':          # sai em duas variantes
             for variante in ('conhecimentos_emitidos.main', 'conhecimentos_emitidos.dre'):
-                sel = [r for v, r in linhas if v == variante]
-                with open(os.path.join(FIXTURES, f'{variante}.json'), 'w', encoding='utf-8') as fh:
-                    json.dump(sel, fh, ensure_ascii=False)
+                _gravar(variante, [r for v, r in linhas if v == variante])
             continue
-        with open(os.path.join(FIXTURES, f'{nome}.json'), 'w', encoding='utf-8') as fh:
-            json.dump(linhas, fh, ensure_ascii=False)
+        _gravar(nome, linhas)
     print(f'\nGravado em {FIXTURES}')
     return 0
 
