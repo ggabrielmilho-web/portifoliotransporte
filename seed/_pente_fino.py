@@ -45,14 +45,15 @@ PAGINAS = ['/login', '/inicio', '/', '/tarifas', '/embarques', '/embarques/novo'
            '/embarques/relatorio', '/embarques/ordens', '/embarques/mapa',
            '/pgr', '/jornada', '/ciot', '/dre', '/dre/despesas',
            '/dre/conhecimentos', '/faturamento', '/veiculos', '/carbono',
-           '/admin', '/sem-acesso']
+           '/projecao', '/admin', '/sem-acesso']
 ESTATICOS = ['/theme.css', '/nav-perms.js', '/report-filter.js', '/mapa-config.js']
 APIS = [
     '/api/me', '/api/status', '/api/auditoria', '/api/tarifas',
     '/api/dre?meses=2026-08', '/api/dre/detalhamento?meses=2026-08',
     '/api/dre/despesas?start=2026-08-01&end=2026-09-30',
     '/api/dre/conhecimentos?start=2026-09-01&end=2026-09-30',
-    '/api/faturamento/tomadores?ano=2026',
+    '/api/faturamento/tomadores?ano=2026', '/api/faturamento/tomadores?ano=2023',
+    '/api/projecao?refresh=1', '/api/dre?meses=2023-12',
     '/api/veiculos/analise?dim=cavalo&meses=2026-08&tipos=Frota',
     '/api/veiculos/analise?dim=carreta&meses=2026-08&tipos=Frota,Agregado',
     '/api/jornada', '/api/ciot/pendencias?status=todas',

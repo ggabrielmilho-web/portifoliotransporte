@@ -89,6 +89,52 @@ As 12 abas respondem: Auditoria, Tarifas, Embarques, Coletas, Mapa, PGR,
 Jornada, CIOT, DRE, Despesas, Conhecimentos, Faturamento, Veículos e Verda.
 Contábil, Reunião e Contratos ficaram fora do recorte.
 
+## Projeção financeira e o passado da NORTEVIA (26/09/2026)
+
+A aba **Projeção** (`/projecao`) é a mesma do Tabela Auditoria — motor `projecao.py`,
+teste `_teste_projecao.py` — no visual da vitrine e com textos genéricos. Ela precisa
+de ~5 anos de receita e despesa (36 meses de janela + 24 testes às cegas) e de parcelas
+futuras já contratadas, que a janela de 9 meses não tinha. Quem dá esse passado é o
+`seed/narrativa.py`:
+
+| | |
+|---|---|
+| história | crescimento de ~12% ao ano desde jan/2022, sazonalidade de transportadora, choque mensal de ~5% e um **cliente novo** grande a partir de mar/2025 (+8% de patamar — o degrau que o modelo admite não prever) |
+| receita por ano | 2022 R$ 7,0 mi · 2023 7,7 · 2024 8,7 · 2025 10,6 |
+| margem EBITDA | 4% a 16% por mês, com as quedas de dezembro/janeiro (13º, férias, IPVA) |
+| contratos | FINAME, CDC, consórcio, empréstimo e capital de giro (`CONTRATOS`), com parcelas até 2030 — a escada de compromissos |
+| provisões | o financeiro lança PREVISAO/PROVISAO (valor redondo) para os meses à frente — a tabela "Projeção × lançado no ERP" |
+| substitutos | a observação cita o original; ~1/3 dos originais fica esquecido na base, e a projeção desconta |
+| acerto do modelo nesta base | 6,8% no mês seguinte, 5,9% na soma de 12 meses — na faixa da operação real, de propósito (99% ninguém acredita) |
+
+Três regras que sustentam isto:
+
+* **O histórico mora só no dataset da DRE e no 477.** O robô do manifesto, o mapa e as
+  telas operacionais leem o outro dataset e continuam com a janela.
+* **Semente por mês.** A janela de 9 meses desliza com a data; o passado não. Um mês que
+  já passou sai idêntico todo dia, e a projeção só se move com o mês corrente.
+* **O histórico é enxuto:** ~45 colunas por CTe em vez das 149 (o `demo_dax` lê coluna
+  ausente como vazia, como o BI faz com célula em branco). Com todas, seriam +30 MB.
+
+A janela principal também passou a seguir a história (volume do mês = tendência ×
+sazonalidade × choque). Plana, a projeção via uma reta.
+
+## Atualização diária (produção)
+
+Com `DEMO=true`, o `server.py` roda o **ciclo completo** do `seed/atualizar.py` no boot
+(se a base não é de hoje) e todo dia às 04:00 BRT — `VITRINE_ATUALIZAR=false` desliga,
+`VITRINE_ATUALIZAR_HORA` muda o horário. Até 26/09/2026 a imagem ficava com a base do dia
+do build (zero carga hoje). O `--rapido` não serve no container: não regera as fixtures.
+O `demo_dax` relê a fixture quando o arquivo muda, e o `gerar.py` grava de forma atômica.
+
+## Segredos
+
+`SECRET_KEY` e `DB_PASSWORD` **não moram no `docker-compose.yml`**: entram por `${VAR}` no
+ambiente do deploy (`VITRINE_SECRET_KEY`, `DB_PASSWORD`; o `:?` recusa subir sem eles).
+Até 26/09/2026 estavam no arquivo, com o repositório público — trocar as duas é pendência.
+A pasta estática também foi fechada (`static_folder=None`): `/./<arquivo>` servia o código
+e o próprio compose sem login.
+
 ## O que mudou em relação ao Tabela Auditoria
 
 | mudança | por quê |

@@ -36,6 +36,7 @@
     { id: 'ciot',          page: 'ciot',          href: '/ciot',              label: 'CIOT', ic: '▦' },
     { id: 'tarifas',       page: 'tarifas',       href: '/tarifas',           label: 'Tarifas', ic: '◧' },
     { id: 'dre',           page: 'dre',           href: '/dre',               label: 'DRE', ic: '◪' },
+    { id: 'projecao',      page: 'projecao',      href: '/projecao',          label: 'Projeção', ic: '◬' },
     { id: 'conhecimentos', page: 'conhecimentos', href: '/dre/conhecimentos', label: 'Conhecimentos', ic: '▥' },
     { id: 'despesas',      page: 'despesas',      href: '/dre/despesas',      label: 'Despesas', ic: '▨' },
     { id: 'faturamento',   page: 'faturamento',   href: '/faturamento',       label: 'Faturamento', ic: '▣' },
@@ -64,7 +65,7 @@
   var GRUPOS = [
     { nome: 'Operação',   abas: ['embarques', 'ordens', 'mapa', 'pgr', 'jornada', 'ciot', 'veiculos', 'carbono'] },
     { nome: 'Comercial',  abas: ['tarifas', 'faturamento'] },
-    { nome: 'Financeiro', abas: ['auditoria', 'dre', 'despesas', 'conhecimentos'] },
+    { nome: 'Financeiro', abas: ['auditoria', 'dre', 'projecao', 'despesas', 'conhecimentos'] },
     { nome: 'Sistema',    abas: ['admin'] }
   ];
 

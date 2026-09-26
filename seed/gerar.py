@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from empresa import (CIDADES, EMPRESA, UNIDADES, cidade_uf, dv_cnpj,  # noqa: E402
                      para_mercosul, universo)
+import narrativa  # noqa: E402
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SHAPE = os.path.join(AQUI, 'shape')
@@ -443,10 +444,12 @@ class Gerador:
             tom = v['tomador'] if i == 0 else self.rnd.choice(self.u['tomadores'])
             dest_cid = v['destino'] if i == 0 else self.rnd.choice(CIDADES)
             aut = v['saida'] + timedelta(hours=self.rnd.randint(2, 26))
-            tipo_doc = 'NORMAL'
+            tipo_doc, obs, fantasma = 'NORMAL', '', None
             if self.rnd.random() < 0.07:
                 tipo_doc = self.rnd.choice(['COMPLEMENTAR FRETE', 'SUBC REC FORM LISO',
                                             'SUBSTITUTO'])
+            if tipo_doc == 'SUBSTITUTO':
+                tipo_doc, obs, fantasma = self._substituto(self.num, v['sigla'], self.rnd)
             cte_ref = f'{v["sigla"]}{cte}'
             v['ctes'].append(cte_ref)
 
@@ -498,8 +501,15 @@ class Gerador:
                 'valor_mercadoria': round(valor * self.rnd.uniform(9, 22), 2),
                 'distancia_km': float(v['km']),
                 'UF_Origem_Brasil': v['origem'][1], 'UF_Destino_Brasil': dest_cid[1],
+                'observacao': obs,
                 'data_importacao': iso(aut + timedelta(hours=4)),
             }
+            if fantasma:
+                # o original esquecido: só no dataset da DRE, dias antes do substituto
+                self._cte_historico(fantasma, v['sigla'], v['origem'], dest_cid, tom, v['km'],
+                                    aut - timedelta(days=self.rnd.randint(2, 9)),
+                                    round(valor * self.rnd.uniform(0.95, 1.05), 2),
+                                    v['manifesto'], v['saida'], 'NORMAL', '')
             # A tabela existe nos DOIS datasets com shapes diferentes (102 × 149
             # colunas): a fixture é por (tabela, dataset), e o mesmo fato entra
             # nas duas com o esqueleto de cada uma.
@@ -720,66 +730,200 @@ class Gerador:
         return sum(v['frete'] for v in self.viagens
                    if v['dia'].year == ano and v['dia'].month == mes)
 
-    def despesas(self, mapa_dre):
-        """Despesa mensal: os eventos de custo da frota + o resto do MAPA_DRE.
+    # ── a história financeira (narrativa.py) ──
+    def _fator_mes(self, d):
+        """Volume do mês em relação ao mês de referência: tendência × sazonalidade × choque."""
+        m, ref = date(d.year, d.month, 1), date(self.ref.year, self.ref.month, 1)
+        return narrativa.fator(m) * narrativa.tendencia(m) / narrativa.tendencia(ref)
+
+    def _base_mes(self, d, nivel):
+        """Receita ESTRUTURAL do mês (sem sazonalidade nem choque): o que dimensiona a
+        despesa fixa. Administrativo não cai em fevereiro porque o faturamento caiu."""
+        ref = date(self.ref.year, self.ref.month, 1)
+        return nivel * narrativa.tendencia(d) / narrativa.tendencia(ref)
+
+    def _nivel_referencia(self):
+        """Receita estrutural do mês de referência, medida nos meses FECHADOS da janela:
+        é o que costura o histórico sintético à janela sem degrau na emenda."""
+        fechados = [d for d in narrativa.meses(self.inicio(), self.ref)
+                    if narrativa.proximo_mes(d) <= date(self.ref.year, self.ref.month, 1)]
+        amostras = [self._receita_do_mes(d.year, d.month) / self._fator_mes(d) for d in fechados]
+        return sum(amostras) / len(amostras) if amostras else VIAGENS_MES * 5000.0
+
+    # Colunas que o histórico preenche. É o que as telas e a projeção leem da
+    # receita; as outras ~100 colunas do dataset ficam fora da linha, e o demo_dax
+    # as lê como vazias — sem isso seriam +30 MB de JSON só de colunas em branco.
+    def historico_receita(self, nivel):
+        """CTe do dataset da DRE de jan/2022 até o mês anterior à janela.
+
+        Só o dataset da DRE: o robô do manifesto, o mapa e as telas operacionais leem o
+        outro dataset e continuam com a janela — nada do que já funciona muda. Semente
+        por mês: o passado sai igual todo dia. Devolve {mês: receita}.
+        """
+        fim = self.inicio()
+        ref = date(self.ref.year, self.ref.month, 1)
+        num = Numerador(inicio=0)             # abaixo da numeração da janela (10001+)
+        novo = self.u['tomadores'][7]['raiz']   # o cliente que entra em mar/2025
+        cidades_uni = [next(c for c in CIDADES if c[0] == n and c[1] == uf)
+                       for n, uf in UNIDADES.values()]
+        receita = {}
+        for d in narrativa.meses(narrativa.INICIO_HISTORICO, fim - timedelta(days=1)):
+            rnd = narrativa.rnd_mes(d, 'receita')
+            alvo = nivel * narrativa.tendencia(d) / narrativa.tendencia(ref) * narrativa.fator(d)
+            toms = [t for t in self.u['tomadores']
+                    if d >= narrativa.CLIENTE_NOVO_DESDE or t['raiz'] != novo]
+            dias = [d + timedelta(days=i) for i in range(31) if (d + timedelta(days=i)).month == d.month]
+            peso_dia = [{5: 0.5, 6: 0.15}.get(x.weekday(), 1.0) for x in dias]
+            soma = 0.0
+            while soma < alvo:
+                sigla = rnd.choice(list(UNIDADES))
+                origem = cidades_uni[list(UNIDADES).index(sigla)]
+                destino = rnd.choice([c for c in CIDADES if c[0] != origem[0]])
+                km = self.rota(origem, destino)
+                frete = round(km * rnd.uniform(6.1, 8.9), 2)
+                dia = rnd.choices(dias, weights=peso_dia)[0]
+                saida = datetime.combine(dia, datetime.min.time()) + timedelta(hours=rnd.randint(5, 19))
+                _nm, man = num.proximo(sigla, 'M')
+                n_ctes = rnd.choices([1, 2], weights=[80, 20])[0]
+                resto = frete
+                for i in range(n_ctes):
+                    valor = round(resto / (n_ctes - i), 2)
+                    resto = round(resto - valor, 2)
+                    tom = rnd.choice(toms)
+                    aut = saida + timedelta(hours=rnd.randint(2, 26))
+                    _nc, cte = num.proximo(sigla, 'T')
+                    tipo, obs = 'NORMAL', ''
+                    sorteio = rnd.random()
+                    if sorteio < 0.02:
+                        tipo = 'COMPLEMENTAR FRETE'
+                    elif sorteio < 0.03:
+                        tipo, obs, fantasma = self._substituto(num, sigla, rnd)
+                        if fantasma:
+                            self._cte_historico(fantasma, sigla, origem, destino, tom, km,
+                                                aut - timedelta(days=rnd.randint(2, 9)),
+                                                round(valor * rnd.uniform(0.95, 1.05), 2),
+                                                f'{sigla}{man}', saida, 'NORMAL', '')
+                    self._cte_historico(f'{sigla}{cte}', sigla, origem, destino, tom, km, aut,
+                                        valor, f'{sigla}{man}', saida, tipo, obs)
+                soma += frete
+            receita[d] = soma
+        return receita
+
+    def _substituto(self, num, sigla, rnd):
+        """CTe substituto: a observação cita o original, como o ERP grava. Em ~1/3 dos
+        casos o original fica esquecido na base — acontece na operação real, e é o que
+        a projeção desconta (o cliente paga só o substituto)."""
+        _n, orig = num.proximo(sigla, 'T')
+        obs = f'CTRC EMITIDO PARA SUBSTITUIR O CTRC {sigla} {orig}'
+        return 'SUBSTITUTO', obs, (f'{sigla}{orig}' if rnd.random() < 0.35 else None)
+
+    def _cte_historico(self, ctrc, sigla, origem, destino, tom, km, aut, valor,
+                       manifesto, saida, tipo, obs):
+        self.t['conhecimentos_emitidos'].append(('conhecimentos_emitidos.dre', {
+            'serie_numero_ctrc': ctrc, 'serie_numero_cte': ctrc, 'tipo_documento': tipo,
+            'unidade_emissora': sigla, 'praca_expedidora': origem[0],
+            'data_emissao': iso(aut), 'hora_emissao': aut.strftime('%H:%M'),
+            'data_autorizacao': iso(aut), 'hora_autorizacao': aut.strftime('%H:%M'),
+            'cnpj_pagador': tom['cnpj'], 'cliente_pagador': tom['nome'],
+            'cidade_pagador': tom['cidade'][0], 'uf_pagador': tom['cidade'][1],
+            'cnpj_remetente': tom['cnpj'], 'cliente_remetente': tom['nome'],
+            'cidade_remetente': origem[0], 'uf_remetente': origem[1],
+            'cliente_destinatario': f'{destino[0]} DISTRIBUICAO LTDA',
+            'cidade_destinatario': destino[0], 'uf_destinatario': destino[1],
+            'cidade_entrega': destino[0], 'uf_entrega': destino[1],
+            'uf_origem_prestacao': origem[1], 'cidade_origem_prestacao': origem[0],
+            'primeiro_manifesto': manifesto, 'ultimo_manifesto': manifesto,
+            'data_primeiro_manifesto': iso(saida), 'data_ultimo_manifesto': iso(saida),
+            'valor_frete': valor, 'valor_frete_sem_icms': round(valor * 0.88, 2),
+            'valor_icms': round(valor * 0.12, 2), 'aliquota': 12.0,
+            'base_calculo_icms_iss': valor, 'distancia_km': float(km),
+            'mercadoria': 'CARGA GERAL', 'especie': 'PALLETS',
+            'observacao': obs, 'data_importacao': iso(aut + timedelta(hours=4)),
+        }))
+
+    def _lanc477(self, mapa_dre, d, evento, descr, valor, fornecedor, rnd, hist='',
+                 sit='LIQU', inclusao=None):
+        """Uma linha do 477 na competência `d` (primeiro dia do mês)."""
+        self._n477 = getattr(self, '_n477', 0) + 1
+        grupo, sub = mapa_dre.get(descr, ('Operacional', 'Outros'))
+        dia = d.replace(day=min(rnd.randint(2, 27), 28))
+        emissao = datetime.combine(dia, datetime.min.time())
+        inc = datetime.combine(inclusao, datetime.min.time()) if inclusao else emissao
+        ref = f'{d.year}/{d.month:02d}'
+        r = esqueleto('consulta_despesas_477')
+        r.update({
+            'empresa': '1', 'numlancto': f'{20000 + self._n477}', 'parcela': '01',
+            'evento': evento, 'descr_evento': descr,
+            'nome_fornecedor': fornecedor,
+            'cnpj_fornecedor': dv_cnpj(''.join(str(rnd.randint(0, 9)) for _ in range(12))),
+            'vlr_nota': valor, 'vlr_parcela': valor, 'vlr_final': valor,
+            'valor_total_produtos': valor,
+            'emissao': iso(emissao),
+            'vencimen': iso(emissao + timedelta(days=28)),
+            'inclusao': iso(inc),
+            'mes_competencia': f'{d.month:02d}/{d.year % 100:02d}',   # MM/AA, como na base
+            'REF': ref,                                               # AAAA/MM — o filtro da DRE
+            'sit_des': sit,
+            'uni': rnd.choice(list(UNIDADES)),
+            'grupo': grupo, 'subgrupo': sub, 'classificacao_dre': grupo,
+            'grupo_evento': f'{evento[0]} {grupo.upper()}',
+            'fixo_variavel': 'Variavel' if grupo in ('Operacional', 'Deduções') else 'Fixo',
+            'custo_despesa': ('Custo' if grupo == 'Operacional' else
+                              'Investimento' if grupo == 'Investimento' else 'Despesa'),
+            'historico_despesa': hist,
+            'data_importacao': iso(inc),
+            'periodo_relatorio': ref,
+        })
+        self.t['consulta_despesas_477'].append(r)
+        return grupo
+
+    # Custo que não acompanha a receita do mês: pico sazonal sobre a receita
+    # ESTRUTURAL. É o que faz o EBITDA de dezembro e do 1º trimestre cair na demo
+    # como cai na operação real (13º, férias, IPVA) — sem isso a margem era uma reta.
+    PICOS = {12: [('13O SALARIOS', 0.045)],
+             1: [('FERIAS', 0.020), ('IPVA', 0.009)],
+             2: [('IPVA', 0.009)],
+             3: [('IPVA', 0.009)]}
+
+    def despesas(self, mapa_dre, meses_receita):
+        """Despesa mensal do 477 para cada (mês, receita do mês, receita estrutural).
 
         O 477 **não traz placa**: a manutenção real só se liga ao veículo pelo
         texto do `historico_despesa` (match parcial, como em produção), e pneu é
         pool rateado. A demo reproduz isso — inventar uma coluna de placa aqui
         faria a tela mentir para melhor.
+
+        Perfil: operacional e deduções acompanham a receita do mês (com ruído);
+        administrativo acompanha a receita ESTRUTURAL (o porte da empresa, não o mês);
+        investimento e dívida saem dos contratos de `narrativa.CONTRATOS`. Semente por
+        mês: a despesa de um mês passado não muda de um dia para o outro.
         """
-        rnd = self.rnd
         placas_cav = [v['placa'] for v in self.cavalos
                       if v['proprietario'] == EMPRESA['nome']]
         placas_car = [v['placa'] for v in self.carretas
                       if v['proprietario'] == EMPRESA['nome']]
-        n = 0
-        d = self.inicio()
-        while d <= self.ref:
-            comp = f'{d.month:02d}/{d.year % 100:02d}'
-            ref = f'{d.year}/{d.month:02d}'
+        eventos_contrato = {'5512', '5513', '5515', '5517'}
+        for d, receita, base in meses_receita:
+            rnd = narrativa.rnd_mes(d, 'despesa')
             liquidado = (self.ref - d).days > 45
+            sit = 'LIQU' if liquidado else 'PEND'
+            gasto = {}
 
-            def lanc(evento, descr, valor, fornecedor, hist=''):
-                nonlocal n
-                n += 1
-                grupo, sub = mapa_dre.get(descr, ('Operacional', 'Outros'))
-                dia = d.replace(day=min(rnd.randint(2, 27), 28))
-                r = esqueleto('consulta_despesas_477')
-                r.update({
-                    'empresa': '1', 'numlancto': f'{20000 + n}', 'parcela': '01',
-                    'evento': evento, 'descr_evento': descr,
-                    'nome_fornecedor': fornecedor,
-                    'cnpj_fornecedor': dv_cnpj(''.join(str(rnd.randint(0, 9)) for _ in range(12))),
-                    'vlr_nota': valor, 'vlr_parcela': valor, 'vlr_final': valor,
-                    'valor_total_produtos': valor,
-                    'emissao': iso(datetime.combine(dia, datetime.min.time())),
-                    'vencimen': iso(datetime.combine(dia, datetime.min.time()) + timedelta(days=28)),
-                    'inclusao': iso(datetime.combine(dia, datetime.min.time())),
-                    'mes_competencia': comp,            # MM/AA, como na base
-                    'REF': ref,                         # AAAA/MM — o filtro da DRE
-                    'sit_des': 'LIQU' if liquidado else 'PEND',
-                    'uni': rnd.choice(list(UNIDADES)),
-                    'grupo': grupo, 'subgrupo': sub, 'classificacao_dre': grupo,
-                    'grupo_evento': f'{evento[0]} {grupo.upper()}',
-                    'fixo_variavel': 'Variavel' if grupo == 'Operacional' else 'Fixo',
-                    'custo_despesa': 'Custo' if grupo == 'Operacional' else 'Despesa',
-                    'historico_despesa': hist,
-                    'data_importacao': iso(datetime.combine(dia, datetime.min.time())),
-                    'periodo_relatorio': ref,
-                })
-                self.t['consulta_despesas_477'].append(r)
-                _registrar(descr, valor)
+            def lanc(evento, descr, valor, fornecedor, hist='', inclusao=None,
+                     _d=d, _rnd=rnd, _sit=sit, _gasto=gasto):
+                g = self._lanc477(mapa_dre, _d, evento, descr, valor, fornecedor, _rnd,
+                                  hist=hist, sit=_sit, inclusao=inclusao)
+                _gasto[g] = _gasto.get(g, 0.0) + valor
 
-            receita = self._receita_do_mes(d.year, d.month) or 1.0
             orcamento = {g: receita * p for g, p in self.PESO_GRUPO.items()}
-            gasto = {g: 0.0 for g in orcamento}
-
-            def _registrar(descr, valor):
-                g = mapa_dre.get(descr, ('Operacional', ''))[0]
-                gasto[g] = gasto.get(g, 0.0) + valor
+            orcamento['Operacional'] *= 1 + rnd.gauss(0, 0.025)
+            orcamento['Deduções'] *= 1 + rnd.gauss(0, 0.02)
+            orcamento['Administrativo'] = base * self.PESO_GRUPO['Administrativo'] * (1 + rnd.gauss(0, 0.03))
+            orcamento['Investimento'] = receita * 0.003      # o grosso vem dos contratos
 
             for cod, descr in self.EVENTOS_CUSTO:
+                if cod in eventos_contrato:
+                    continue
                 if cod in ('5150', '5154'):
                     for _ in range(rnd.randint(6, 14)):
                         p = rnd.choice(placas_cav)
@@ -799,20 +943,29 @@ class Gerador:
                     for _ in range(rnd.randint(3, 8)):
                         lanc(cod, descr, round(rnd.uniform(1200, 7800), 2),
                              'PNEUS ' + rnd.choice(['BRASIL', 'VIA SUL', 'RODOMAR']))
-                else:
-                    for _ in range(rnd.randint(2, 5)):
-                        lanc(cod, descr, round(receita * rnd.uniform(0.0008, 0.0018), 2),
-                             'BANCO ' + rnd.choice(['MERIDIONAL', 'PLANALTO']),
-                             hist=f'PARCELA {rnd.randint(6,48)} CONTRATO {rnd.randint(100000,999999)}')
 
-            # O resto do plano: uma linha por evento por mês, para a DRE ter
-            # todos os grupos e o Pareto não ficar com três barras.
-            # O resto do plano divide o SALDO do orçamento do grupo, para que
-            # todos os grupos apareçam na DRE sem estourar a margem. Peso
-            # aleatório por evento: divisão igual deixaria o Pareto reto, e é o
-            # Pareto que mostra a concentração — a informação que a tela vende.
-            restantes = [(n, g) for n, (g, _s) in mapa_dre.items()
-                         if n not in {d for _c, d in self.EVENTOS_CUSTO}]
+            # parcelas dos contratos ativos no mês (+ a entrada, no mês da compra)
+            for cid, ev, descr, k, n_parc, valor, ini_c in narrativa.parcelas_do_mes(d):
+                lanc(ev, descr, valor, 'BANCO ' + ('PLANALTO' if int(cid) % 2 else 'MERIDIONAL'),
+                     hist=f'PARCELA {k}/{n_parc} CONTRATO {cid}', inclusao=ini_c)
+                if k == 1 and cid in narrativa.ENTRADA_VEICULO:
+                    lanc('5517', 'ATIVO IMOBILIZADO- VEICULOS', narrativa.ENTRADA_VEICULO[cid],
+                         'CONCESSIONARIA RODOVIA NORTE', hist=f'ENTRADA CONTRATO {cid}')
+                    orcamento['Investimento'] += narrativa.ENTRADA_VEICULO[cid]
+
+            # picos sazonais: entram no orçamento E como lançamento próprio
+            for descr, peso in self.PICOS.get(d.month, []):
+                valor = round(base * peso * rnd.uniform(0.9, 1.1), 2)
+                g = mapa_dre.get(descr, ('Administrativo', ''))[0]
+                orcamento[g] = orcamento.get(g, 0.0) + valor
+                lanc(f'{rnd.randint(5100, 5990)}', descr, valor, 'FOLHA DE PAGAMENTO')
+
+            # O resto do plano divide o SALDO do orçamento do grupo, para que todos os
+            # grupos apareçam na DRE sem estourar a margem. Peso aleatório por evento:
+            # divisão igual deixaria o Pareto reto, e é o Pareto que mostra a
+            # concentração — a informação que a tela vende.
+            restantes = [(nome, g) for nome, (g, _s) in mapa_dre.items()
+                         if nome not in {x for _c, x in self.EVENTOS_CUSTO}]
             pesos = {}
             for descr, grupo in restantes:
                 pesos.setdefault(grupo, []).append((descr, rnd.uniform(0.4, 3.2)))
@@ -826,7 +979,40 @@ class Gerador:
                     lanc(f'{rnd.randint(5100, 5990)}', descr, valor,
                          'FORNECEDOR ' + rnd.choice(['ALFA', 'BETA', 'GAMA', 'DELTA']))
 
-            d = (d.replace(day=28) + timedelta(days=5)).replace(day=1)
+    # Provisões que o financeiro lança para os meses à frente e troca pelo custo real
+    # quando ele chega: (descrição no MAPA_DRE, texto do histórico, fração da receita
+    # estrutural, até quantos meses à frente o financeiro costuma lançar).
+    PROVISOES = [
+        ('FRETE TRANSFERENCIA C/ AGREGADOS', 'PROVISAO FRETE AGREGADOS', 0.16, 3),
+        ('SALARIO MENSAL - OPERACIONAL',     'PREVISAO FOLHA OPERACIONAL', 0.05, 6),
+        ('SALARIOS ADMINISTRATIVOS - APOIO', 'PREVISAO FOLHA ADMINISTRATIVA', 0.035, 12),
+        ('ALUGUEL DO IMOVEL',                'PREVISAO ALUGUEL', 0.012, 12),
+        ('SOFTWARE E LICENCAS',              'PREVISAO SISTEMAS', 0.006, 12),
+        ('PLANO DE SAUDE',                   'PREVISAO PLANO DE SAUDE', 0.009, 6),
+        ('COFINS',                           'PREVISAO COFINS', 0.050, 6),
+        ('ICMS',                             'PREVISAO ICMS', 0.060, 6),
+        ('PIS',                              'PREVISAO PIS', 0.011, 6),
+    ]
+
+    def despesas_futuras(self, mapa_dre, nivel):
+        """O que o ERP já mostra para os meses à frente: parcelas de contrato (fato) e
+        provisões do financeiro (estimativa em valor redondo, que ele troca pelo real)."""
+        mes_ref = date(self.ref.year, self.ref.month, 1)
+        for i, d in enumerate(narrativa.meses(narrativa.proximo_mes(mes_ref),
+                                              narrativa.fim_dos_contratos()), start=1):
+            rnd = narrativa.rnd_mes(d, 'futuro')
+            for cid, ev, descr, k, n_parc, valor, ini_c in narrativa.parcelas_do_mes(d):
+                self._lanc477(mapa_dre, d, ev, descr, valor,
+                              'BANCO ' + ('PLANALTO' if int(cid) % 2 else 'MERIDIONAL'), rnd,
+                              hist=f'PARCELA {k}/{n_parc} CONTRATO {cid}', sit='PEND', inclusao=ini_c)
+            base = self._base_mes(d, nivel)
+            lancado_em = self.ref - timedelta(days=rnd.randint(5, 40))
+            for descr, hist, frac, alcance in self.PROVISOES:
+                if i <= alcance and descr in mapa_dre:
+                    valor = float(round(base * frac * rnd.uniform(0.9, 1.1), -3))
+                    self._lanc477(mapa_dre, d, f'{rnd.randint(5100, 5990)}', descr, valor,
+                                  'PROVISAO FINANCEIRO', rnd, hist=hist, sit='PEND',
+                                  inclusao=lancado_em)
 
     # ── ordens de coleta (a fita monta a aba /embarques/ordens a partir daqui) ──
     def coletas(self):
@@ -966,7 +1152,11 @@ class Gerador:
         while dia <= self.ref:
             # Sábado tem metade do movimento; domingo quase nada.
             fator = {5: 0.5, 6: 0.15}.get(dia.weekday(), 1.0)
-            for _ in range(max(0, round(por_dia * fator))):
+            # E cada mês segue a história da empresa (tendência × sazonalidade ×
+            # choque) — com a janela plana, a projeção via uma reta e acertava 99%.
+            # Arredondamento sorteado: com ~6 viagens/dia, `round` comeria a variação.
+            x = por_dia * fator * self._fator_mes(dia)
+            for _ in range(int(x) + (self.rnd.random() < x - int(x))):
                 self.viagem(dia)
             dia += timedelta(days=1)
 
@@ -979,7 +1169,18 @@ class Gerador:
         self.tarifas()
         self.folha()
         self.coletas()
-        self.despesas(_mapa_dre())
+
+        # O passado e o futuro financeiro (aba Projeção): histórico de receita e
+        # despesa desde jan/2022 e as parcelas/provisões dos meses à frente. A
+        # despesa da janela e a do histórico saem da MESMA função e do mesmo perfil.
+        mapa = _mapa_dre()
+        nivel = self._nivel_referencia()
+        rec_hist = self.historico_receita(nivel)
+        meses_desp = [(d, r, self._base_mes(d, nivel)) for d, r in sorted(rec_hist.items())]
+        meses_desp += [(d, self._receita_do_mes(d.year, d.month) or 1.0, self._base_mes(d, nivel))
+                       for d in narrativa.meses(self.inicio(), self.ref)]
+        self.despesas(mapa, meses_desp)
+        self.despesas_futuras(mapa, nivel)
         return defeitos
 
 

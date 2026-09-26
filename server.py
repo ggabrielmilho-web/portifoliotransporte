@@ -120,7 +120,7 @@ def admin_required(f):
 # (plano de contas e contrato TAC são específicos demais para uma demonstração).
 PAGINAS_VALIDAS = {'auditoria', 'tarifas', 'embarques', 'dre',
                    'despesas', 'conhecimentos', 'faturamento', 'veiculos',
-                   'pgr', 'carbono', 'jornada', 'ciot'}
+                   'pgr', 'carbono', 'jornada', 'ciot', 'projecao'}
 # O de-para aba → rota e a ordem de preferência viviam aqui para escolher em qual
 # aba o usuário caía no login. Não existem mais: quem escolhe é ele, na /inicio.
 # As rotas de cada aba são declaradas uma vez só, no `ABAS` do nav-perms.js.
@@ -478,6 +478,12 @@ def dre_page():
 @page_required('despesas')
 def dre_despesas_page():
     return send_from_directory('.', 'dre-despesas.html')
+
+
+@app.route('/projecao')
+@page_required('projecao')
+def projecao_page():
+    return send_from_directory('.', 'projecao.html')
 
 
 @app.route('/dre/conhecimentos')
@@ -3013,6 +3019,146 @@ def api_dre_conhecimentos():
     try:
         cols, data = _query_conhecimentos_periodo(start, end)
         return jsonify({'ok': True, 'columns': cols, 'data': data, 'count': len(data)})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+# ════════════════════════════════════════
+# PROJEÇÃO FINANCEIRA — 12 meses, régua do DRE (motor em projecao.py)
+# ════════════════════════════════════════
+# Só LÊ o que o DRE lê (mesmo dataset, mesmo MAPA_DRE) e não altera nada do DRE.
+# A única diferença de régua é o CTe substituído, que sai da receita — ver
+# projecao.originais_substituidos.
+
+_PROJECAO_CACHE = {'ts': 0, 'data': None}
+_PROJECAO_TTL_SEG = 3600
+_PROJECAO_DESDE = 2022      # o motor usa 36 meses + 24 origens de retroanálise
+
+
+def _dax_dre(dax):
+    """DAX no dataset do DRE, recusando resposta cortada (o BI corta a resposta e devolve 200)."""
+    res = execute_dax(get_token(), dax, dataset_id=CONFIG['dre_dataset_id'])['results'][0]
+    if res.get('error'):
+        raise RuntimeError(f"resposta do BI cortada/erro: {res['error']}")
+    return clean_rows(res['tables'][0]['rows'])
+
+
+def _projecao_dados():
+    """Busca no BI tudo que o motor precisa e devolve o resultado pronto para a tela."""
+    import projecao as pj
+    from datetime import datetime, timedelta
+    hoje = (datetime.utcnow() - timedelta(hours=3)).date()     # Brasília; o container roda em UTC
+    mes_corrente = hoje.strftime('%Y-%m')
+    # O 477 só fecha depois que o financeiro troca as provisões pelo real (~dia 10):
+    # até lá, o mês anterior ainda tem provisão e não entra como histórico de custo.
+    ult_custo = pj.mes_add(mes_corrente, -1 if hoje.day > 10 else -2)
+    C = "'public conhecimentos_emitidos'"
+    D = "'public consulta_despesas_477'"
+
+    # ── receita diária (para o histórico mensal e o ritmo do mês corrente) ──
+    diario = {}
+    for r in _dax_dre(
+            f"EVALUATE CALCULATETABLE(SUMMARIZE({C},{C}[data_autorizacao],\"v\",SUM({C}[valor_frete])),"
+            f"{C}[data_autorizacao] >= DATE({_PROJECAO_DESDE},1,1), {C}[data_autorizacao] <= {_dax_data(hoje)})"):
+        if r.get('data_autorizacao'):
+            d = str(r['data_autorizacao'])[:10]
+            diario[d] = diario.get(d, 0.0) + float(r.get('v') or 0)
+
+    # CTe substituído: o cliente paga só o substituto, mas às vezes o original fica na base
+    obs = [r.get('obs') for r in _dax_dre(
+        f"EVALUATE SELECTCOLUMNS(FILTER({C},{C}[tipo_documento]=\"SUBSTITUTO\"),\"obs\",{C}[observacao])")]
+    originais = pj.originais_substituidos(obs)
+    desc_subst = {'n': 0, 'valor': 0.0}
+    if originais:
+        lista = '{' + ','.join(f'"{o}"' for o in sorted(originais)) + '}'
+        for r in _dax_dre(
+                f"EVALUATE SELECTCOLUMNS(FILTER({C},{C}[serie_numero_ctrc] IN {lista} && "
+                f"{C}[tipo_documento]<>\"SUBSTITUTO\"),\"d\",{C}[data_autorizacao],\"v\",{C}[valor_frete])"):
+            d = str(r.get('d') or '')[:10]
+            if d in diario:
+                diario[d] -= float(r.get('v') or 0)
+                desc_subst['n'] += 1
+                desc_subst['valor'] += float(r.get('v') or 0)
+
+    receita_hist = {}
+    for d, v in diario.items():
+        if d[:7] < mes_corrente:
+            receita_hist[d[:7]] = receita_hist.get(d[:7], 0.0) + v
+    receita_mes = sum(v for d, v in diario.items() if d[:7] == mes_corrente)
+    fracao = pj.fracao_do_mes(diario, hoje.day,
+                              pj.meses_entre(pj.mes_add(mes_corrente, -12), pj.mes_add(mes_corrente, -1)))
+
+    # ── despesa fechada, no grão grupo|fixo_variavel ──
+    refs = [m.replace('-', '/') for m in pj.meses_entre(f'{_PROJECAO_DESDE}-01', ult_custo)]
+    linhas_hist = {}
+    for r in _dax_dre(
+            f"EVALUATE CALCULATETABLE(SUMMARIZE({D},{D}[REF],{D}[descr_evento],{D}[fixo_variavel],"
+            f"\"v\",SUM({D}[vlr_final])),{D}[REF] IN {_dax_lista_refs(refs)})"):
+        ev = r.get('descr_evento')
+        if ev not in MAPA_DRE:
+            continue
+        m = r['REF'].replace('/', '-')
+        chave = f"{MAPA_DRE[ev][0]}|{r.get('fixo_variavel') or '?'}"
+        linhas_hist.setdefault(m, {})
+        linhas_hist[m][chave] = linhas_hist[m].get(chave, 0.0) + float(r.get('v') or 0)
+
+    # ── lançamentos de meses ainda não fechados: contratos + visão do ERP hoje ──
+    # REF é TEXTO: o filtro de piso deixa passar o malformado ('20ES/6 '), que o
+    # regex abaixo descarta. Sem teto de propósito — a escada vai até 2036.
+    contratos, visao_ssw = {}, {}
+    primeiro_aberto = pj.mes_add(ult_custo, 1).replace('-', '/')
+    for r in _dax_dre(
+            f"EVALUATE CALCULATETABLE(SUMMARIZE({D},{D}[REF],{D}[descr_evento],{D}[sit_des],"
+            f"{D}[historico_despesa],\"v\",SUM({D}[vlr_final])),{D}[REF] >= \"{primeiro_aberto}\")"):
+        ref, ev = str(r.get('REF') or ''), r.get('descr_evento')
+        if not re.fullmatch(r'\d{4}/\d{2}', ref) or ev not in MAPA_DRE:
+            continue
+        m, g, v = ref.replace('/', '-'), MAPA_DRE[ev][0], float(r.get('v') or 0)
+        visao_ssw.setdefault(m, {})
+        visao_ssw[m][g] = visao_ssw[m].get(g, 0.0) + v
+        # "contratado" = parcela pendente de contrato + o que JÁ foi pago no mês em aberto
+        sit = r.get('sit_des')
+        if (sit == 'LIQU' and g in ('Investimento', 'Financeiro')) or \
+                (sit == 'PEND' and pj.natureza_pend(g, r.get('historico_despesa')) == 'contrato'):
+            contratos.setdefault(m, {})
+            contratos[m][g] = contratos[m].get(g, 0.0) + v
+
+    res = pj.projetar(receita_hist, linhas_hist, mes_corrente, contratos=contratos,
+                      previsao_fin=visao_ssw, receita_mes_corrente=receita_mes,
+                      fracao_mes_corrente=fracao)
+
+    # histórico real (24 meses fechados de custo), na mesma cascata — para o gráfico e a tabela
+    historico = []
+    for m in pj.meses_entre(pj.mes_add(ult_custo, -23), ult_custo):
+        if m in receita_hist and m in linhas_hist:
+            historico.append({'mes': m, 'dre': pj.cascata(receita_hist[m], pj.grupos_do_mes(linhas_hist[m]))})
+    # receita real dos meses entre o último custo fechado e o corrente (ex.: o mês anterior, antes do dia 10)
+    receita_recente = [{'mes': m, 'receita': receita_hist[m]}
+                       for m in pj.meses_entre(pj.mes_add(ult_custo, -23), pj.mes_add(mes_corrente, -1))
+                       if m in receita_hist]
+
+    res.update({
+        'ok': True, 'gerado_em': datetime.utcnow().isoformat() + 'Z', 'hoje': hoje.isoformat(),
+        'estrutura': [{'linha': l, 'tipo': t, 'key': k} for l, t, k in pj.DRE_LINHAS],
+        'historico': historico, 'receita_recente': receita_recente,
+        'escada_compromissos': pj.escada_compromissos(
+            {m: gs for m, gs in contratos.items() if m >= mes_corrente}),
+        'substituidos_descontados': desc_subst,
+    })
+    return res
+
+
+@app.route('/api/projecao')
+@page_required('projecao')
+def api_projecao():
+    try:
+        agora = time.time()
+        if (request.args.get('refresh') != '1' and _PROJECAO_CACHE['data']
+                and agora - _PROJECAO_CACHE['ts'] < _PROJECAO_TTL_SEG):
+            return jsonify(_PROJECAO_CACHE['data'])
+        data = _projecao_dados()
+        _PROJECAO_CACHE.update(ts=agora, data=data)
+        return jsonify(data)
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
