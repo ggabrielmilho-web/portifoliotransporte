@@ -3611,14 +3611,10 @@ def _pessoal_por_cavalo(token, meses_set, cadastro, fat_por_placa):
 # Eventos do 477 que carregam aquisição de veículo. O de-para contrato→placa não existe
 # no dado (o histórico traz modelo e contrato, nunca a placa), então é mantido aqui,
 # validado com o diretor. Consórcio ainda NÃO contemplado fica fora: não há veículo rodando.
-FIN_CAVALO = {          # numlancto -> placas que o contrato cobre (rateio igual entre elas)
-    '97178': ('TYX9F52', 'TYX9F55', 'TYX9F59'),   # 3 LS-36 Actros (BNDES TCF), ano 25
-    '82371': ('TDW4E79',),                        # Mercedes 2548 Actros CDC ...546, ano 24
-    '82373': ('TDW4G23',),                        # Mercedes 2548 Actros CDC ...554, ano 24
-    '97227': ('QOX7H94',),                        # placa no próprio histórico
-    '97230': ('EWJ6C10',),                        # placa no próprio histórico
-}
-FIN_CARRETA = ('94813', '93245', '70261', '100912', '68316', '45209')
+# Na vitrine não há contrato de frota ligado a placa: o de-para vem vazio (o do projeto de
+# origem é dado do cliente — contrato, banco e placa — e não pode morar num repositório público).
+FIN_CAVALO = {}          # numlancto -> placas que o contrato cobre (rateio igual entre elas)
+FIN_CARRETA = ()
 
 
 def _fin_parcelas(token, meses_set, lancamentos):
@@ -8134,7 +8130,7 @@ def api_rastreamento_trajeto(carga_id):
             # desenha um vao ali em vez de atravessar: nao da para saber QUAL dos dois
             # pontos e o falso, e adivinhar seria chute com cara de dado. Foi este traco
             # atravessando o teleporte que o Gabriel viu como "ja foi no meio do caminho e
-            # voltou" — a TYX9F52 fazendo Formosa->Jaborandi->Formosa, 257 km para cada
+            # voltou" — a ABC1D23 fazendo Formosa->Jaborandi->Formosa, 257 km para cada
             # lado, em 2 minutos, com o odometro parado em 37487.
             'trajeto_cortes': {
                 'cavalo': _regua_mapa.cortes_do_trajeto(traj_cavalo),

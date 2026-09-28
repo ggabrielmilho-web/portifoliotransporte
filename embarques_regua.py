@@ -201,8 +201,8 @@ def chegada_emprestada(cheg, como, dd_carreta, dd_cavalo, sono_h=SONO_CARRETA_H)
 # filtrava. Nao e furo de sinal: sao dois pontos consecutivos da MESMA placa, minutos um
 # do outro, separados por centenas de quilometros. O caso que o Gabriel viu na tela:
 #
-#     TYX9F52  07/09 07:37  Formosa   -> Jaborandi  257,5 km em 2,0 min  odo 37487 -> 37487
-#     TYX9F52  07/09 07:57  Jaborandi -> Formosa    257,5 km em 2,0 min  odo 37487 -> 37487
+#     ABC1D23  07/09 07:37  Formosa   -> Jaborandi  257,5 km em 2,0 min  odo 37487 -> 37487
+#     ABC1D23  07/09 07:57  Jaborandi -> Formosa    257,5 km em 2,0 min  odo 37487 -> 37487
 #     HKE0321  08/09 14:30  Sta Luzia -> Serra      374,4 km em 3,5 min  odo 376904 -> 376904
 #
 # Foi e voltou, com o ODOMETRO CONGELADO no mesmo numero. O odometro e cumulativo no

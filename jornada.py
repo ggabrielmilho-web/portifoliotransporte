@@ -4,7 +4,7 @@
 O RH manda à empresa de controle de jornada uma planilha dizendo em que placa
 cada motorista frota esteve em cada período — a empresa puxa a jornada pela
 telemetria da PLACA. Hoje é digitada à mão; placa errada faz a jornada do
-motorista sumir (o `UBS-5G65` do ciclo 21/07–20/08 não existe no cadastro).
+motorista sumir (já houve placa digitada que não existe no cadastro).
 
 Este módulo só monta a escala a partir do que já temos e não fala DAX nem
 Flask — quem busca os dados é a rota, no mesmo padrão do `verda_painel`.
@@ -21,7 +21,7 @@ Entre duas provas o motorista segue na placa da última ("carry-forward"), que �
 como o RH preenche. Esse carregamento para quando:
 
 - a placa aparece com OUTRO motorista (manifesto ou abastecimento dele) — é o
-  que encerra o Gaspar no TYX9F55 quando entra de férias e o Blender assume;
+  que encerra o motorista A na placa quando ele entra de férias e o B assume;
 - passam `CARRY_MAX_DIAS` sem prova nenhuma — lacuna longa é ausência, não
   viagem (medido: o maior intervalo normal entre viagens foi de 9 dias).
 
@@ -84,7 +84,7 @@ def casar_grafias(alvos, candidatos, parecido, corte):
     """{candidato: alvo} — cada grafia vai para o alvo mais parecido.
 
     Diferente do CPF, o nome do cartão de abastecimento é digitado na bomba e o mesmo motorista
-    aparece com várias grafias ('BLENDER JUNIO ALMIDA', 'CRESIO'). Tratar a
+    aparece com várias grafias (nome completo com erro, só o apelido). Tratar a
     segunda grafia como outra pessoa quebrava a placa dele e acusava placa
     compartilhada consigo mesmo."""
     feito = {}
@@ -108,7 +108,7 @@ def montar(ini, fim, motoristas, eventos, viagens=None, gps_dia=None, carry_max=
              dizem QUANDO a viagem começou e acabou, medido pelo GPS. É isso que
              arbitra o abastecimento: o nome do cartão de abastecimento é o do cartão ou o digitado
              no CAIS, e já tirou motorista da placa no meio da própria viagem
-             (Daniel 05–12/09, Gaspar 12–14/09, com cartão de quem saiu da empresa).
+             (dois casos em um só mês, com cartão de quem saiu da empresa).
     gps_dia: {(placa, dia): km} da consolidação diária (opcional) — status do dia.
 
     Retorna {'motoristas': [...], 'compartilhadas': [...]}.
@@ -198,7 +198,7 @@ def montar(ini, fim, motoristas, eventos, viagens=None, gps_dia=None, carry_max=
             # Viagem dele em andamento (GPS) segura a placa mesmo depois de dias
             # sem documento. Mas quem manda é o MANIFESTO: carga que o robô abriu
             # antes e fechou tarde não pode devolver o motorista para a placa
-            # velha depois de ele já ter manifesto novo em outra (Daniel, 25–28/07).
+            # velha depois de ele já ter manifesto novo em outra (caso real, 4 dias).
             if ultimo_mf and ultimo_mf not in vd:
                 vd = {}
             if vd and (atual is None or atual in vd):

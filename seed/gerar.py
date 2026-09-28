@@ -149,6 +149,17 @@ def _mapa_dre():
     return {n: (g, s) for n, g, s in pares}
 
 
+def _pedagios(v):
+    """Pedágio × vale-pedágio da viagem — um OU outro, nunca os dois."""
+    valor = float(round(v['km'] * 0.11, 2))
+    if v['tipo_op'] == 'FROTA':
+        return {'pedagio': valor, 'vale_pedagio': 0.0}
+    return {'pedagio': 0.0, 'vale_pedagio': valor}
+
+
+TOLERANCIA_FRETE = 5.0     # R$: até isto de diferença é arredondamento — o frete "confere"
+
+
 # ── O motor ───────────────────────────────────────────────────────────────
 class Gerador:
     def __init__(self, referencia=REFERENCIA, meses=MESES, viagens_mes=VIAGENS_MES):
@@ -414,8 +425,9 @@ class Gerador:
                 'cpf_motorista': mot['cpf'], 'motorista': mot['nome'],
                 'distancia_km': float(v['km']),
                 'valor_a_pagar': pagar,
-                'pedagio': float(round(v['km'] * 0.11, 2)),
-                'vale_pedagio': float(round(v['km'] * 0.09, 2)),
+                # Um OU outro (28/09/2026): frota paga o pedágio direto (tag); agregado e
+                # terceiro recebem vale-pedágio junto do frete. Antes vinham os dois sempre.
+                **_pedagios(v),
                 'ciot': ciot,
                 'tabela_antt': f'{rnd.randint(1, 9)}' if v['tipo_op'] != 'FROTA' else '0',
                 'manifesto': v['manifesto'],
@@ -536,10 +548,27 @@ class Gerador:
         # 4. AUDITORIA RECEITA — 1 linha por CTRB (o shape confirmou: 5.224 = 5.224)
         if v['defeito'] != 'manifesto_sem_ctrb':
             pagar = 0.0 if v['tipo_op'] == 'FROTA' else round(v['frete'] * rnd.uniform(0.62, 0.78), 2)
-            tab = round(v['km'] * rnd.uniform(4.1, 6.3), 2)
+            # A TABELA é o frete que a tarifa do cliente manda cobrar. Até 28/09/2026 era sorteada
+            # por km numa faixa abaixo da do frete: 100% "cobrado a maior", nenhum "OK", e a coluna
+            # Frete Tabela zerada na tela. Agora a maioria confere e o resto é o que a auditoria
+            # existe para pegar. Sorteio próprio por CTRB (o `rnd.uniform` abaixo só mantém a
+            # sequência do resto da base igual).
+            rnd.uniform(4.1, 6.3)
+            ra = random.Random(v['ctrb'])
+            x = ra.random()
+            # "OK" é BATER com a tabela — centavos de arredondamento, não 3% do frete (em frete de
+            # R$ 9 mil os 3% deixavam R$ 270 de diferença passar como OK).
+            if x < 0.72:
+                tab = round(v['frete'] - ra.uniform(-TOLERANCIA_FRETE, TOLERANCIA_FRETE), 2)   # confere
+            else:
+                fator = ra.uniform(0.82, 0.94) if x < 0.87 else ra.uniform(1.06, 1.16)          # a maior / a menor
+                tab = round(v['frete'] * fator, 2)
             dif = round(v['frete'] - tab, 2)
-            status = 'OK' if abs(dif) < tab * 0.03 else (
+            status = 'OK' if abs(dif) <= TOLERANCIA_FRETE else (
                 'COBRADO A MAIOR' if dif > 0 else 'COBRADO A MENOR')
+            tab_gris = round(tab * 0.003, 2)
+            tab_ped = float(round(v['km'] * 0.11, 2))
+            tab_adval = round(v['frete'] * 12 * 0.0005, 2)          # 0,05% da mercadoria
             if v['n_ctes'] > 2:
                 status = 'MULTI-DESTINO - VALIDAR MANUALMENTE'
             a = esqueleto('Auditoria Receita')
@@ -553,11 +582,12 @@ class Gerador:
                 'receita_rateada': v['frete'],
                 'valor_frete_sem_icms': round(v['frete'] * 0.88, 2),
                 'valor_a_pagar': pagar,
-                'frete_motorista_total': pagar,
-                'resultado': round(v['frete'] - pagar, 2),
-                'margem': round((v['frete'] - pagar) / v['frete'], 4) if v['frete'] else 0.0,
-                'pedagio': float(round(v['km'] * 0.11, 2)),
-                'vale_pedagio': float(round(v['km'] * 0.09, 2)),
+                # regra do BI: frete do motorista = valor a pagar + vale-pedágio (só agregado/terceiro)
+                'frete_motorista_total': round(pagar + _pedagios(v)['vale_pedagio'], 2),
+                'resultado': round(v['frete'] - pagar - _pedagios(v)['vale_pedagio'], 2),
+                'margem': (round((v['frete'] - pagar - _pedagios(v)['vale_pedagio']) / v['frete'], 4)
+                           if v['frete'] else 0.0),
+                **_pedagios(v),
                 'distancia_km': v['km'],
                 'motorista': mot['nome'],
                 'placa_cavalo': v['cavalo'], 'placa_carreta': v['carreta'],
@@ -568,8 +598,12 @@ class Gerador:
                 'cidade_uf_destino': cidade_uf(v['destino']),
                 'cidade_uf_origem_tarifa': cidade_uf(v['origem']),
                 'cidade_uf_destino_tarifa': cidade_uf(v['destino']),
-                'frete_tabela_gris': round(tab * 0.003, 2),
-                'frete_tabela_pedagio': float(round(v['km'] * 0.11, 2)),
+                'frete_tabela_gris': tab_gris,
+                'frete_tabela_adval': tab_adval,
+                'frete_tabela_pedagio': tab_ped,
+                'frete_tabela_liquido': round(tab - tab_gris - tab_adval - tab_ped, 2),
+                'frete_tabela': tab,
+                'diferenca_frete': dif,
                 'status_auditoria_frete': status,
             })
             self.t['Auditoria Receita'].append(a)

@@ -161,6 +161,13 @@ coleta comandada hoje que vence às 09:30 sem veículo ("coleta vencida"). "Espe
 nunca acende: o motor fecha por `gps_dwell_destino` com as mesmas 24 h da régua da torre —
 isso vale também para o projeto de origem.
 
+**PGR e auditoria de frete (28/09/2026).** O excesso de velocidade passou a ser sorteado
+por dia de estrada (65%), não por viagem: dá 8–11 veículos por dia útil e 2–5 no fim de
+semana (antes, menos de 1 por dia). O PGR só apura no ciclo das 04:00, então o dia de hoje
+aparece quase vazio — mostrar ontem ou antes. Na Auditoria, a tabela agora sai do próprio
+frete: ~72% confere (diferença ≤ R$ 5, `TOLERANCIA_FRETE`), o resto é cobrado a maior ou a
+menor; antes era 100% "cobrado a maior" com Frete Tabela zerado.
+
 O gate é o `seed/_teste_torre.py` (ao vivo, 7 retratos e a jornada do motorista na trilha).
 Ele não confere número exato — confere o que, se falhar, aparece como "sistema errado".
 

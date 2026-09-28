@@ -601,7 +601,7 @@ def nome_curto(razao, max_tokens=3):
 
 
 def nome_pessoa(nome, max_tokens=3):
-    """'DANIEL DOS SANTOS ALMEIDA' → 'Daniel dos Santos'."""
+    """'JOSE DA SILVA PEREIRA' → 'Jose da Silva'."""
     s = (str(nome).strip() if nome else '')
     if not s:
         return None

@@ -80,6 +80,10 @@ CARRETA_COM_RASTREADOR = 1.0       # vitrine: tudo rastreado (decisão de 28/09/
 DESCARGA_H = (2, 8)                # parado no destino antes de ir embora
 FATOR_ESTRADA = 1.25               # km de estrada ÷ km em linha reta (perna vazia)
 HORIZONTE_H = 30                   # o futuro vai até o próximo ciclo das 04:00 com folga
+# Excesso de velocidade (PGR): sorteado por DIA DE ESTRADA de cada veículo, não por viagem.
+# Por viagem dava ~1 episódio a cada 7 viagens — menos de um veículo por dia na tela do PGR.
+P_EXCESSO_DIA = 0.65               # chance de um trecho acima de 95 km/h num dia de estrada
+EPISODIO_MIN = (3, 25)             # duração do trecho: 1–5 leituras (2+ = "sustentado")
 # Incidentes plantados (28/09/2026) — a torre de controle só mostra o que sabe fazer se algo
 # fugir do normal. Nascem no GPS, não no status: a torre os acha pela própria régua, como o
 # CIOT acha os defeitos plantados no documento. Horários em Brasília, no dia da base.
@@ -221,6 +225,12 @@ class Trilha:
         ult = self._ultimo_t.get(placa)
         if ult is not None and quando <= ult:
             quando = ult + timedelta(minutes=1)
+        if vel > 5 and ult is not None and quando - ult > timedelta(minutes=30):
+            # Rodando depois de um silêncio longo (saiu do pátio, do pernoite, da pausa): o
+            # aparelho fala quando o motor liga. Sem este ponto o PGR lia a hora parada como
+            # "sem sinal ENQUANTO rodava" e listava a placa em "cobertura insuficiente".
+            self._ponto(placa, quando - timedelta(minutes=2), lat, lon, 0, odo, ignicao=True)
+            ult = self._ultimo_t[placa]
         self._ultimo_t[placa] = quando
         cid = _cidade_mais_perto(lat, lon)
         p = {
@@ -240,21 +250,35 @@ class Trilha:
     def _parado(self, placa, cidade, t, ate):
         """Parado em `cidade` de `t` até `ate`, reportando de hora em hora."""
         odo = self._odo[placa]
+        lat, lon = cidade[2], cidade[3]
         while t < ate:
-            self._ponto(placa, t, cidade[2] + self.rnd.uniform(-.008, .008),
-                        cidade[3] + self.rnd.uniform(-.008, .008), 0, odo, ignicao=False)
+            lat, lon = cidade[2] + self.rnd.uniform(-.008, .008), cidade[3] + self.rnd.uniform(-.008, .008)
+            self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
             t += timedelta(minutes=INTERVALO_PARADO)
+        # O aparelho fala na hora de sair: sem este ponto a partida vinha até 60 min depois do
+        # último "parado", e o PGR lia a lacuna como "sem sinal ENQUANTO rodava".
+        self._ponto(placa, ate, lat, lon, 0, odo, ignicao=True)
         return max(t, ate)
 
-    def _estrada(self, placa, o, d, km, t, excesso_em=None, v=None, principal=False):
+    def _sortear_excesso(self, t, pode):
+        """(início, fim) de um trecho acima de 95 km/h nas próximas horas, ou None."""
+        if not pode or self.rnd.random() >= P_EXCESSO_DIA:
+            return None
+        ini = t + timedelta(hours=self.rnd.uniform(0.5, 6))
+        return ini, ini + timedelta(minutes=self.rnd.randint(*EPISODIO_MIN))
+
+    def _estrada(self, placa, o, d, km, t, pode_exceder=False, v=None, principal=False):
         """Dirige de `o` a `d` (`km` de estrada) a partir de `t`; devolve a chegada.
 
-        `excesso_em` (fração do trajeto) planta o episódio do PGR — só na placa
-        principal da viagem, para o PGR não contar o mesmo episódio duas vezes.
+        `pode_exceder` liga o sorteio de excesso do PGR — só na placa principal da
+        viagem carregada (o cavalo que a puxa não repete o episódio, senão o PGR o
+        contaria duas vezes) e no cavalo sozinho na perna vazia.
         `v` (viagem carregada) liga a QUEBRA: a placa principal decide quando ela
         acontece e grava em `v`; a outra placa da viagem só obedece."""
         rnd = self.rnd
         quebrou = False
+        excesso = self._sortear_excesso(t, pode_exceder)
+        contado = False
         seq = _caminho(o, d)
         odo = self._odo[placa]
         percorrido, ao_volante = 0.0, 0.0
@@ -274,10 +298,12 @@ class Trilha:
             if q and not quebrou and q[0] <= t < q[1]:
                 # quebra: parada longa, de dia, longe da origem e do destino
                 lat, lon = _ponto_no_caminho(seq, min(1.0, percorrido / km))
+                self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)   # parou
                 while t + timedelta(minutes=INTERVALO_PARADO) < q[1]:
                     t += timedelta(minutes=INTERVALO_PARADO)
                     self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
                 t, quebrou = q[1], True
+                self._ponto(placa, t, lat, lon, 0, odo, ignicao=True)   # religou: volta a andar
                 ao_volante, proxima_pausa = 0.0, rnd.uniform(*PAUSA_A_CADA_H)
                 continue
             if hora >= FIM_JORNADA_H or hora < INICIO_JORNADA_H[0]:
@@ -286,20 +312,28 @@ class Trilha:
                     days=1 if hora >= FIM_JORNADA_H else 0,
                     hours=rnd.uniform(*INICIO_JORNADA_H))
                 lat, lon = _ponto_no_caminho(seq, min(1.0, percorrido / km))
+                # encostou: sem este ponto o 1º "parado" vinha 1 h depois do último "andando",
+                # e o PGR lia a hora como "sem sinal enquanto rodava"
+                self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
                 while t + timedelta(minutes=INTERVALO_PARADO) < manha:
                     t += timedelta(minutes=INTERVALO_PARADO)
                     self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
                 t = manha
+                self._ponto(placa, t, lat, lon, 0, odo, ignicao=True)   # ligou para sair
                 ao_volante, proxima_pausa = 0.0, rnd.uniform(*PAUSA_A_CADA_H)
+                excesso = self._sortear_excesso(t, pode_exceder)       # dia novo, sorteio novo
+                contado = False
             elif ao_volante >= proxima_pausa:
                 lat, lon = _ponto_no_caminho(seq, min(1.0, percorrido / km))
+                self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)   # encostou
                 t += timedelta(minutes=rnd.randint(*PAUSA_MIN))
-                self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
+                self._ponto(placa, t, lat, lon, 0, odo, ignicao=True)    # saiu
                 ao_volante, proxima_pausa = 0.0, rnd.uniform(*PAUSA_A_CADA_H)
             vel = rnd.uniform(*VEL_CRUZEIRO)
-            f = percorrido / km
-            if excesso_em is not None and abs(f - excesso_em) < 0.03:
+            if excesso and excesso[0] <= t < excesso[1]:
                 vel = rnd.uniform(97, 118)          # o episódio
+                if not contado:
+                    self.episodios, contado = self.episodios + 1, True
             passo_min = rnd.randint(*INTERVALO_MOV)
             avanco = vel * passo_min / 60.0
             percorrido += avanco
@@ -328,7 +362,8 @@ class Trilha:
             elif onde[:2] != v['origem'][:2]:
                 # perna vazia: sai logo depois de descarregar, rumo à próxima origem
                 km = haversine(onde, v['origem']) * FATOR_ESTRADA
-                t = self._estrada(placa, onde, v['origem'], km, t)
+                t = self._estrada(placa, onde, v['origem'], km, t,
+                                  pode_exceder=placa not in self._carretas)
                 onde = v['origem']
             principal = placa == v['placa_rastreada']
             if (principal and '_partida_min' not in v and self._cota['partida']
@@ -341,9 +376,7 @@ class Trilha:
             t = self._parado(placa, onde, t, max(partida, t + timedelta(minutes=30)))
 
             t = self._estrada(placa, v['origem'], v['destino'], v['km'], t,
-                              v.get('_excesso_em') if principal else None, v=v, principal=principal)
-            if principal and v.get('_excesso_em') is not None:
-                self.episodios += 1
+                              pode_exceder=principal, v=v, principal=principal)
             # descarga: a parada sustentada que prova a chegada ao worker
             t = self._parado(placa, v['destino'], t,
                              t + timedelta(hours=rnd.uniform(*DESCARGA_H)))
@@ -353,7 +386,8 @@ class Trilha:
         # É a saída do destino que fecha a carga como "Entregue".
         base = min(_FILIAIS, key=lambda c: haversine(onde, c))
         if base[:2] != onde[:2] and t < self.fim:
-            t = self._estrada(placa, onde, base, haversine(onde, base) * FATOR_ESTRADA, t)
+            t = self._estrada(placa, onde, base, haversine(onde, base) * FATOR_ESTRADA, t,
+                              pode_exceder=placa not in self._carretas)
             onde = base
         self._parado(placa, onde, t, self.fim)
 
@@ -377,9 +411,6 @@ class Trilha:
 
         for v in recentes:
             v['placa_rastreada'] = self._principal(v)
-            # Um episódio de excesso a cada ~7 viagens: o PGR tem de ter o que achar,
-            # mas base inteira acima de 95 viraria ruído e não conduta.
-            v['_excesso_em'] = self.rnd.uniform(0.2, 0.8) if self.rnd.random() < 0.14 else None
 
         # Sem carreta muda desde 28/09/2026: na vitrine tudo é rastreado (decisão do
         # Gabriel). `self.mudas` fica vazio, mas o caminho continua — é só sortear
@@ -391,7 +422,7 @@ class Trilha:
             agenda[v['carreta']].append(v)
         # Carretas primeiro: a principal decide os incidentes e o cavalo da mesma viagem,
         # simulado depois, obedece — senão os dois contariam histórias diferentes.
-        carretas = {v['carreta'] for v in recentes}
+        carretas = self._carretas = {v['carreta'] for v in recentes}
         for placa in sorted(agenda, key=lambda p: (p not in carretas, p)):
             eh_carreta = any(v['carreta'] == placa for v in agenda[placa])
             if placa in self.mudas or not self._tem_rastreador(placa, eh_carreta):
