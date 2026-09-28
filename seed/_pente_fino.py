@@ -38,17 +38,20 @@ PROIBIDOS = [
     r'\bverda\b',
     r'nestl', r'heinz', r"l'oreal", r'loreal', r'\bmartins\b',
     r'winthor', r'sankhya', r'totvs',
+    # pessoas reais do cliente de origem (programadores de carga e contato de fornecedor):
+    # chegaram à tela como "embarcador" das coletas até 28/09/2026
+    r'renato', r'pablo', r'rafael', r'camilo',
 ]
 RX = re.compile('|'.join(PROIBIDOS), re.I)
 
 PAGINAS = ['/login', '/inicio', '/', '/tarifas', '/embarques', '/embarques/novo',
-           '/embarques/relatorio', '/embarques/ordens', '/embarques/mapa',
+           '/embarques/relatorio', '/embarques/ordens', '/embarques/torre', '/embarques/mapa',
            '/pgr', '/jornada', '/ciot', '/dre', '/dre/despesas',
            '/dre/conhecimentos', '/faturamento', '/veiculos', '/carbono',
            '/projecao', '/admin', '/sem-acesso']
 ESTATICOS = ['/theme.css', '/nav-perms.js', '/report-filter.js', '/mapa-config.js']
 APIS = [
-    '/api/me', '/api/status', '/api/auditoria', '/api/tarifas',
+    '/api/me', '/api/status', '/api/embarques/torre', '/api/embarques/torre?dia=2026-09-20', '/api/auditoria', '/api/tarifas',
     '/api/dre?meses=2026-08', '/api/dre/detalhamento?meses=2026-08',
     '/api/dre/despesas?start=2026-08-01&end=2026-09-30',
     '/api/dre/conhecimentos?start=2026-09-01&end=2026-09-30',

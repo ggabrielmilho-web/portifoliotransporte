@@ -21,6 +21,9 @@
     // Fica na barra de todas as telas para haver caminho de volta ao menu.
     { id: 'inicio',        page: null,            href: '/inicio',            label: 'Início', ic: '⌂', sempre: true, grupo: null },
     { id: 'auditoria',     page: 'auditoria',     href: '/',                  label: 'Auditoria', ic: '◆' },
+    // Torre de controle (28/09/26): o "agora" da operação num painel só — estoque, fluxo do
+    // dia, frota, exceções. Mesma permissão de Embarques; painel igual para todos.
+    { id: 'torre',         page: 'embarques',     href: '/embarques/torre',   label: 'Torre', ic: '◉' },
     { id: 'embarques',     page: 'embarques',     href: '/embarques',         label: 'Embarques', ic: '▤' },
     { id: 'mapa',          page: 'embarques',     href: '/embarques/mapa',    label: 'Mapa', ic: '◎' },
     // Ordens de coleta (ERP 157). Mesma permissão de Embarques: quem lança carga é quem
@@ -63,7 +66,7 @@
   // Duplicar a lista faria a lateral e a tela de entrada divergirem no dia em
   // que alguém movesse uma aba de grupo.
   var GRUPOS = [
-    { nome: 'Operação',   abas: ['embarques', 'ordens', 'mapa', 'pgr', 'jornada', 'ciot', 'veiculos', 'carbono'] },
+    { nome: 'Operação',   abas: ['torre', 'embarques', 'ordens', 'mapa', 'pgr', 'jornada', 'ciot', 'veiculos', 'carbono'] },
     { nome: 'Comercial',  abas: ['tarifas', 'faturamento'] },
     { nome: 'Financeiro', abas: ['auditoria', 'dre', 'projecao', 'despesas', 'conhecimentos'] },
     { nome: 'Sistema',    abas: ['admin'] }

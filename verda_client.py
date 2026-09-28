@@ -37,12 +37,12 @@ load_dotenv()
 # CONFIGURAÇÃO
 # ════════════════════════════════════════
 
-# As URLs vieram do Rafael (WhatsApp, 31/08/2026). NÃO são as da documentação:
+# As URLs vieram do contato da plataforma (31/08/2026). NÃO são as da documentação:
 # a plataforma roda em OutSystems Cloud, e os nomes `verda-application*.verda.global`
 # das pgs. 5-6 não existem em DNS (o nameserver autoritativo devolve NXDOMAIN).
 # O CAMINHO a partir do host é o documentado, e foi confirmado batendo no Token.
 #
-# Produção ainda não foi informada — o Rafael disse só que as CREDENCIAIS mudam.
+# Produção ainda não foi informada — o contato disse só que as CREDENCIAIS mudam.
 # Fica None de propósito: melhor falhar com mensagem clara do que chutar um host
 # e mandar viagem para o lugar errado. Dá para injetar por env sem editar código.
 AMBIENTES = {

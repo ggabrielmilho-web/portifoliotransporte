@@ -99,7 +99,7 @@ seed/gerar.py  →  fixtures (documentos)  →  execute_dax (DEMO)  →  telas
 A janela vai a **janeiro** de propósito: a matriz do Faturamento é tomador × mês,
 e meia tabela em branco lê como base incompleta.
 
-As 12 abas respondem: Auditoria, Tarifas, Embarques, Coletas, Mapa, PGR,
+As abas respondem: Torre, Auditoria, Tarifas, Embarques, Coletas, Mapa, PGR,
 Jornada, CIOT, DRE, Despesas, Conhecimentos, Faturamento, Veículos e Verda.
 Contábil, Reunião e Contratos ficaram fora do recorte.
 
@@ -132,6 +132,42 @@ Três regras que sustentam isto:
 
 A janela principal também passou a seguir a história (volume do mês = tendência ×
 sazonalidade × choque). Plana, a projeção via uma reta.
+
+## Torre de controle (28/09/2026)
+
+`/embarques/torre` — o "agora" da operação num painel só: cargas por etapa (estoque + fluxo do
+dia), frota em quatro baldes, exceções com a regra que disparou, mapa, linha do tempo de 36 h e
+produtividade; com `?dia=` vira o **retrato** de um dia anterior, à meia-noite. Portada da branch
+`torre-controle` do Tabela Auditoria (`torre.py` + `embarques-torre.html`), com três diferenças
+de DADO, não de régua: pátio = as cinco filiais (`TORRE_PATIOS`), relógios de documentos e
+motor com régua diária (a vitrine atualiza 1×/dia) e visual da vitrine.
+
+A torre é a primeira tela que conta as cargas pela **hora** em que as coisas aconteceram, e
+portá-la expôs o que a base diária escondia. O que foi preciso na base, e por quê:
+
+| sem isso | a torre mostrava | onde |
+|---|---|---|
+| carga nascia às 04:00 (o robô cria o ano de uma vez) | "1.114 entraram hoje"; retrato de qualquer dia anterior vazio | `seed/cronologia.py`: `criado_em` = hora do manifesto + uma rodada do robô |
+| sem chave do ORS, sem rota planejada | km roteirizado 0, "atrasando" desligado, sem linha azul no mapa da carga | `seed/cronologia.py`: rota pelo grafo de estradas da trilha |
+| pernoite a qualquer hora | "parada na estrada" em alerta alto às 10 h | `seed/trilha.py`: dirige de dia, pernoita 20:30–~05:30, pausas < 1 h |
+| 20% das carretas sem rastreador | "sem informação: 8 de 34" | vitrine: tudo rastreado |
+| nomes reais nas coletas | "embarcador: pablo, renato" | nomes fictícios + pente-fino |
+
+**Incidentes plantados** (todo dia, pelo ciclo das 04:00), para a torre ter o que mostrar —
+nascem no GPS e na ordem de coleta, não no status, e a torre os acha pela própria régua:
+quebra de uma carreta carregada na estrada das 07:00 às 17:30 ("precisa olhar" + "parada na
+estrada"), um manifesto de ontem à tarde que só sai às 20:30 ("documento sem saída") e uma
+coleta comandada hoje que vence às 09:30 sem veículo ("coleta vencida"). "Esperando no cliente"
+nunca acende: o motor fecha por `gps_dwell_destino` com as mesmas 24 h da régua da torre —
+isso vale também para o projeto de origem.
+
+O gate é o `seed/_teste_torre.py` (ao vivo, 7 retratos e a jornada do motorista na trilha).
+Ele não confere número exato — confere o que, se falhar, aparece como "sistema errado".
+
+Visto em 28/09: 0 erro de console, 26 livres distribuídas pelos pátios, "confere ✓", nenhuma
+exceção falsa. Com a frota de 34 carretas e ~130 viagens/mês, boa parte fica parada no pátio —
+a linha do tempo marca "sem carga ≥ 36 h" nelas. É coerente com o volume da base (que calibra
+a DRE); subir o volume é mexer no faturamento inteiro.
 
 ## Atualização diária (produção)
 
@@ -232,6 +268,7 @@ montar menu nenhum.
 ## Antes de mostrar a alguém
 
 - [ ] rodar o robô pela janela toda ao regerar a base (as cargas não vêm da fixture)
+- [ ] `python -X utf8 seed/_teste_torre.py` termina em "TORRE OK"
 - [ ] conferir que `DEMO=true` está no ambiente de deploy
 - [ ] logo: hoje é a inicial "N" num quadrado com gradiente. Trocar por arte, se houver
 

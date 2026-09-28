@@ -1556,6 +1556,41 @@ def embarques_ordens_page():
     return send_from_directory('.', 'embarques-ordens.html')
 
 
+# ── Torre de controle (portada em 28/09/26) ─────────────────────────────────────────────
+# O "agora" da operação num painel só: a consulta única vive em `torre.py` e a página só
+# desenha. Mesma permissão de Embarques; igual para todos; só leitura.
+@app.route('/embarques/torre')
+@page_required('embarques')
+def embarques_torre_page():
+    return send_from_directory('.', 'embarques-torre.html')
+
+
+@app.route('/api/embarques/torre')
+@login_required
+def api_embarques_torre():
+    """`?dia=AAAA-MM-DD` anterior a hoje devolve o RETRATO daquele dia (estado pelas datas,
+    à meia-noite); sem `dia`, AO VIVO. `TORRE_AGORA` (env, ISO em UTC) fixa o "agora" — só
+    para ver a torre numa base congelada; em produção fica ausente."""
+    import torre
+    from datetime import date as _date, datetime
+    dia = None
+    try:
+        if request.args.get('dia'):
+            dia = _date.fromisoformat(request.args.get('dia'))
+    except ValueError:
+        return jsonify({'ok': False, 'error': 'dia inválido'}), 400
+    agora = None
+    if os.getenv('TORRE_AGORA'):
+        agora = datetime.fromisoformat(os.getenv('TORRE_AGORA'))
+    conn = get_db(); cur = conn.cursor()
+    try:
+        return jsonify({'ok': True, **torre.montar(cur, dia=dia, agora=agora)})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+    finally:
+        cur.close(); conn.close()
+
+
 @app.route('/api/embarques/ordens')
 @login_required
 def api_embarques_ordens():
@@ -6337,9 +6372,9 @@ def api_embarques_cargas_list():
     if args.get('criado_por_id'):
         where.append("c.criado_por_id = %s"); params.append(args['criado_por_id'])
     # Embarcador pelo NOME que a coluna mostra (21/09/26): a coluna exibe o embarcador da ordem
-    # de coleta (renato/pablo/rafael) e cai no criado_por_nome quando não há coleta ("Robô
+    # de coleta (os programadores de carga) e cai no criado_por_nome quando não há coleta ("Robô
     # (manifesto)", "Administrador"). O filtro antigo era por criado_por_id — usuário do sistema —
-    # e por isso a lista oferecia "gabriel" e não oferecia "renato", que era o que se via na tela.
+    # e por isso a lista oferecia o usuário do sistema e não o programador, que era o que se via na tela.
     if args.get('embarcador'):
         where.append(f"COALESCE({'c.embarcador' if _tem_col_embarcador() else 'NULL'}, c.criado_por_nome) = %s")
         params.append(args['embarcador'])
@@ -6872,9 +6907,9 @@ def api_embarques_cargas_csv():
     if args.get('criado_por_id'):
         where.append("c.criado_por_id = %s"); params.append(args['criado_por_id'])
     # Embarcador pelo NOME que a coluna mostra (21/09/26): a coluna exibe o embarcador da ordem
-    # de coleta (renato/pablo/rafael) e cai no criado_por_nome quando não há coleta ("Robô
+    # de coleta (os programadores de carga) e cai no criado_por_nome quando não há coleta ("Robô
     # (manifesto)", "Administrador"). O filtro antigo era por criado_por_id — usuário do sistema —
-    # e por isso a lista oferecia "gabriel" e não oferecia "renato", que era o que se via na tela.
+    # e por isso a lista oferecia o usuário do sistema e não o programador, que era o que se via na tela.
     if args.get('embarcador'):
         where.append(f"COALESCE({'c.embarcador' if _tem_col_embarcador() else 'NULL'}, c.criado_por_nome) = %s")
         params.append(args['embarcador'])

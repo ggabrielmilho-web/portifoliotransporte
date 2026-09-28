@@ -78,7 +78,7 @@
 // Aqui só ficam a apresentação: em que grupo cada aba cai e o texto do card.
 
 const GRUPOS = [
-  { nome: 'Operação',  abas: ['embarques', 'ordens', 'mapa', 'pgr', 'jornada', 'ciot', 'veiculos', 'carbono'] },
+  { nome: 'Operação',  abas: ['torre', 'embarques', 'ordens', 'mapa', 'pgr', 'jornada', 'ciot', 'veiculos', 'carbono'] },
   { nome: 'Comercial', abas: ['tarifas', 'faturamento', 'contratos'] },
   { nome: 'Financeiro', abas: ['auditoria', 'dre', 'projecao', 'despesas', 'conhecimentos', 'contabil'] },
   { nome: 'Sistema',   abas: ['reuniao', 'admin'] },   // /uso fica fora: tela escondida
@@ -86,6 +86,7 @@ const GRUPOS = [
 
 const INFO = {
   auditoria:     { desc: 'Receita por viagem com KPIs, filtros e exportação. Abre no mês corrente.', tag: 'Relatório completo' },
+  torre:         { desc: 'O agora da operação num painel só: cargas por etapa, frota livre e trabalhando, exceções e linha do tempo.', tag: 'Ao vivo' },
   embarques:     { desc: 'Lançamento de cargas, relatório filtrável e histórico de alterações.' },
   ordens:        { desc: 'Ordens de coleta do ERP: o que foi comandado, o que já virou carga e o que venceu sem documento.' },
   mapa:          { desc: 'Posição dos veículos em tempo real e trajeto de cada carga.' },

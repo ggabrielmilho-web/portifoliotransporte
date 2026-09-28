@@ -1045,7 +1045,7 @@ class Gerador:
                 'dest_endereco': f'AV DAS INDUSTRIAS {rnd.randint(100,4000)}',
                 'dest_cidade': v['destino'][0], 'dest_uf': v['destino'][1],
                 'dest_cep': f'{rnd.randint(1000000, 9999999):08d}',
-                'solicitante': rnd.choice(['renato', 'pablo', 'rafael']),
+                'solicitante': rnd.choice(['marcia', 'otavio', 'bruna']),
                 'motorista': v['motorista']['nome'],
                 'veiculo': v['cavalo'], 'veiculo_2': v['carreta'],
                 'peso_kg': float(v['peso']), 'val_merc': round(v['frete'] * 12, 2),
@@ -1053,13 +1053,50 @@ class Gerador:
                 'mercadoria': 'CARGA GERAL', 'tipo_frete': 'CIF',
                 'cadastrada_em': iso(abertura), 'cadastrada_por': 'integracao',
                 'comandada_em': iso(abertura + timedelta(hours=1)),
-                'comandada_por': rnd.choice(['renato', 'pablo']),
+                'comandada_por': rnd.choice(['marcia', 'otavio']),
                 'coletada_em': iso(v['saida']) if sit == 'COLETADA' else '',
                 'ctrc_gerado': v['ctes'][0] if (sit == 'COLETADA' and v['ctes']) else '',
                 'qtd_ocorrencias': 0.0,
                 'data_importacao': iso(v['saida'] + timedelta(hours=6)),
             })
             self.t['coletas_0157'].append(r)
+        self._coleta_vencida_hoje()
+
+    def _coleta_vencida_hoje(self):
+        """Uma ordem comandada HOJE que venceu sem veículo nem documento (28/09/2026).
+
+        É a exceção de coleta da torre de controle: sem ela o bloco "Precisa de alguém" só
+        tinha a régua e nenhum caso. Sorteio próprio, para não mexer no resto da base."""
+        rnd = random.Random(f'coleta-vencida-{self.ref}')
+        hoje = datetime.combine(self.ref, datetime.min.time())
+        tom = rnd.choice(self.u['tomadores'])
+        sigla = 'CAM'
+        o_nome = UNIDADES[sigla][0]
+        dest = rnd.choice([c for c in CIDADES if c[0] != o_nome])
+        n_col = self.num.proximo(sigla, 'O')[0]
+        r = esqueleto('coletas_0157')
+        r.update({
+            'unidade': sigla, 'numero': f'{n_col:06d}', 'tipo': 'NORMAL', 'situacao': 'COMANDADA',
+            'situacao_em': iso(hoje + timedelta(hours=6, minutes=40)),
+            'data_limite_inicial': iso(hoje + timedelta(hours=8)),
+            'limite_em': iso(hoje + timedelta(hours=9, minutes=30)),
+            'reme_cnpj': tom['cnpj'], 'reme_nome': tom['nome'],
+            'reme_endereco': f'ROD BR {rnd.randint(100, 499)} KM {rnd.randint(2, 180)}',
+            'reme_bairro': 'DISTRITO INDUSTRIAL', 'reme_cep': f'{rnd.randint(1000000, 9999999):08d}',
+            'reme_cidade': o_nome,
+            'dest_cnpj': dv_cnpj(''.join(str(rnd.randint(0, 9)) for _ in range(12))),
+            'dest_nome': f'{dest[0]} DISTRIBUICAO LTDA',
+            'dest_endereco': f'AV DAS INDUSTRIAS {rnd.randint(100, 4000)}',
+            'dest_cidade': dest[0], 'dest_uf': dest[1], 'dest_cep': f'{rnd.randint(1000000, 9999999):08d}',
+            'solicitante': 'marcia', 'motorista': '', 'veiculo': '', 'veiculo_2': '',
+            'peso_kg': float(rnd.randint(18000, 30000)), 'val_merc': float(rnd.randint(90, 400) * 1000),
+            'qtde_vol': float(rnd.randint(12, 34)), 'mercadoria': 'CARGA GERAL', 'tipo_frete': 'CIF',
+            'cadastrada_em': iso(hoje + timedelta(hours=6, minutes=10)), 'cadastrada_por': 'integracao',
+            'comandada_em': iso(hoje + timedelta(hours=6, minutes=40)), 'comandada_por': 'otavio',
+            'coletada_em': '', 'ctrc_gerado': '', 'qtd_ocorrencias': 0.0,
+            'data_importacao': iso(hoje + timedelta(hours=6, minutes=50)),
+        })
+        self.t['coletas_0157'].append(r)
 
     def _plantar_continuacoes(self):
         """Liga pares de viagens em que a MESMA mercadoria seguiu em duas cargas.

@@ -8,7 +8,7 @@ e a carga não tinha:
     coleta_origem     unidade-numero da ordem de coleta (chave do 157)
     coleta_via        como se achou: 'cte' (ctrc_gerado → primeiro_manifesto, exata) ou 'placa'
                       (cavalo + janela de data, reserva — 10 discordâncias em 142 na §25.6)
-    embarcador        quem cadastrou/comandou a coleta (renato · pablo · rafael). NÃO é o
+    embarcador        quem cadastrou/comandou a coleta (os programadores de carga). NÃO é o
                       `solicitante`, que é o cliente
     origem_cnpj / destino_cnpj       o estabelecimento (14 dígitos) de coleta e de entrega
     origem_endereco / destino_endereco   texto, do cadastro `locais` — sem coordenada, e

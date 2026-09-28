@@ -10,6 +10,8 @@ O ciclo, na ordem — e cada passo depende do anterior:
   2. recarrega a trilha de GPS                  (bootstrap --so-gps)
   3. roda o robô do manifesto pela janela       → cria as cargas
      (a continuação roda dentro do passo 3 — Desengatadas e Vazias)
+  4. motor atemporal                            → pernas vazias
+  4b. cronologia + rota planejada               → a carga nasce na hora do manifesto
   5. apura o PGR                                → excessos do período retido
   6. confere o CIOT                             → as pendências plantadas
   7. tira o retrato da fita                     → aba de Coletas
@@ -145,6 +147,14 @@ def atemporal():
         print(f'   {script:28s} {ult[-1].strip() if ult else "(sem resultado)"}')
 
 
+def cronologia():
+    passo('4b', 'cronologia e rota planejada')
+    # Depois do robô e do motor (que cria as pernas vazias): a carga passa a "nascer"
+    # na hora do manifesto, não às 04:00, e ganha rota planejada sem ORS. Sem isto a
+    # torre de controle dizia "1.114 entraram hoje" e o retrato de ontem saía vazio.
+    _py('seed/cronologia.py')
+
+
 def pgr_apurar():
     passo(5, 'PGR')
     import psycopg2
@@ -231,6 +241,7 @@ def main():
         # janela curta: o robô varre 5 dias para trás, então uma semana cobre
         robo(date.today() - timedelta(days=7), date.today())
     atemporal()
+    cronologia()
     pgr_apurar()
     ciot()
     fita()

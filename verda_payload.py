@@ -20,7 +20,7 @@ O `VehicleTypeKey` vem de `verda_veiculos`, que não confia no cadastro.
 TODO quando a plataforma responder:
   - VehicleUtilization: fixado em 1 (deduzido do exemplo oficial, onde 20,1 t de
     carga aparecem com utilization 1 — logo é dedicação do veículo, não taxa de
-    ocupação). Confirmar com o Rafael.
+    ocupação). Confirmar com a plataforma.
   - As faixas de VehicleTypeKey são carga útil ou PBT (ver verda_veiculos).
 """
 
@@ -56,7 +56,7 @@ MISTURA_BIODIESEL = [
 ]
 # B16 estava previsto para março/2026 e não entrou; quando sair, é uma linha aqui.
 
-# DESLIGADO até o Rafael responder: se o fator do `diesel` deles já embute a
+# DESLIGADO até a plataforma responder: se o fator do `diesel` deles já embute a
 # mistura brasileira, mandar isto conta o biodiesel duas vezes. O campo é
 # opcional (pg. 25), então não enviar é o lado seguro. Ligue quando confirmarem.
 ENVIAR_RENEWABLE_SHARE = False
@@ -65,7 +65,7 @@ ENVIAR_RENEWABLE_SHARE = False
 VEHICLE_UTILIZATION = 1
 
 # ── VehicleTypeKey em homologação ──
-# A conta de teste da plataforma só tem UM tipo cadastrado. O Rafael (WhatsApp, 31/08):
+# A conta de teste da plataforma só tem UM tipo cadastrado. O contato da plataforma (31/08):
 # "Nos testes, no campo VehicleTypeKey, utilize o valor 'veiculo_teste'. Em produção
 # vc irá utilizar os tipos de veículos que vierem a ser cadastrados por vcs."
 #
@@ -147,7 +147,7 @@ def documento(valor):
 
     ATENÇÃO: a plataforma só documenta o formato empresarial para o Brasil
     (99.999.999/9999-00). O formato de pessoa física está sendo enviado como
-    999.999.999-99 por analogia — confirmar com o Rafael.
+    999.999.999-99 por analogia — confirmar com a plataforma.
     """
     d = re.sub(r'\D', '', str(valor or ''))
     if _dv_cnpj(d):

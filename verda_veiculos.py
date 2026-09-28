@@ -25,7 +25,7 @@ base, 40 foram puxadas por 6X4, e não existe 4X2 nenhum entre elas.
 
 PENDÊNCIA ABERTA COM A VERDA: as faixas (3,5 / 7,5 / 17 / 33 t) são carga útil
 ou PBT? A documentação não diz. `BASE_FAIXA` alterna entre as duas leituras —
-é trocar a constante quando o Rafael responder, sem tocar em mais nada.
+é trocar a constante quando a plataforma responder, sem tocar em mais nada.
 """
 
 import re
@@ -76,7 +76,7 @@ TARA_CONJUNTO = {'CARRETA': 17.0, 'TRUCK': 8.0, 'TOCO': 5.0}
 # carreta é carreta até 33 t (trucada ou simples, não muda), e acima disso é
 # conjunto pesado. Na mesma semana: 119 `articulado_35`, 3 `articulado_330`.
 #
-# Continua valendo perguntar ao Rafael qual das duas a plataforma quis dizer. A
+# Continua valendo perguntar à plataforma qual das duas a plataforma quis dizer. A
 # resposta troca esta constante e mais nada — e não altera o CO2e, porque na
 # API `Fuel` a emissão sai de litros x fator e o VehicleTypeKey não entra na
 # conta.

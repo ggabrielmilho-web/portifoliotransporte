@@ -29,10 +29,11 @@ parava no destino e... sumia. Três defeitos visíveis saíam disso:
   seguia a carreta parada enquanto quem andava era o cavalo.
 
 Agora cada veículo com rastreador tem uma vida contínua: espera na origem →
-carrega e sai → estrada (com pernoite) → descarrega (2–8 h) → segue VAZIO para a
-origem da próxima viagem (ou para a filial mais próxima, se não há próxima) →
-espera. Parado, o aparelho reporta de hora em hora, como o de verdade. O rastreador
-é do veículo: todo cavalo tem; 80% das carretas têm (uma delas, muda).
+carrega e sai → estrada (de dia, com pausas curtas, pernoite das 20:30 às ~05:30)
+→ descarrega (2–8 h) → segue VAZIO para a origem da próxima viagem (ou para a
+filial mais próxima, se não há próxima) → espera. Parado, o aparelho reporta de
+hora em hora, como o de verdade. O rastreador é do veículo, e na vitrine todo
+veículo tem (cavalo e carreta).
 
 **Estrada, não reta.** O trajeto passa pelas cidades do meio do caminho (um grafo
 das 40 cidades da base, cada uma ligada às vizinhas), então BH → Porto Alegre desce
@@ -66,12 +67,24 @@ BRT_UTC = timedelta(hours=3)       # Brasília sem horário de verão desde 2019
 INTERVALO_MOV = (2, 5)
 INTERVALO_PARADO = 60
 VEL_CRUZEIRO = (62, 88)
-HORAS_DIA = 9                      # jornada: o caminhão não anda 24 h
+# Jornada de motorista (28/09/2026): dirige de dia, pernoita à noite. A 1ª versão
+# parava 8–11 h depois de 9 h ao volante, a qualquer hora — às 10 h da manhã o
+# caminhão estava "dormindo" na estrada, e a torre de controle (que só aceita
+# parada longa entre 22 h e 6 h) acendia "parada na estrada" em alerta alto.
+FIM_JORNADA_H = 20.5               # 20:30 encosta para dormir (antes das 22 h, dentro do limite de 2 h)
+INICIO_JORNADA_H = (5.0, 5.75)     # e sai entre 05:00 e 05:45 (antes das 6 h)
+PAUSA_A_CADA_H = (3.5, 5.0)        # café/almoço/posto a cada 3,5–5 h ao volante
+PAUSA_MIN = (20, 50)               # curta: bem abaixo das 2 h que viram exceção
 RETENCAO_DIAS = 33                 # a base só guarda ~30 d; gerar mais é lixo
-CARRETA_COM_RASTREADOR = 0.8       # todo cavalo tem; 4 em 5 carretas têm
+CARRETA_COM_RASTREADOR = 1.0       # vitrine: tudo rastreado (decisão de 28/09/2026)
 DESCARGA_H = (2, 8)                # parado no destino antes de ir embora
 FATOR_ESTRADA = 1.25               # km de estrada ÷ km em linha reta (perna vazia)
 HORIZONTE_H = 30                   # o futuro vai até o próximo ciclo das 04:00 com folga
+# Incidentes plantados (28/09/2026) — a torre de controle só mostra o que sabe fazer se algo
+# fugir do normal. Nascem no GPS, não no status: a torre os acha pela própria régua, como o
+# CIOT acha os defeitos plantados no documento. Horários em Brasília, no dia da base.
+QUEBRA_H = (7.0, 17.5)             # carreta carregada parada no meio da viagem: "precisa olhar"
+PARTIDA_ATRASADA_H = 20.5          # manifesto de ontem à tarde que só sai hoje à noite
 VIZINHAS = 2                       # arestas mínimas por cidade no grafo de estradas
 ALCANCE_KM = 450                   # e todas as cidades até esta distância
 
@@ -233,20 +246,56 @@ class Trilha:
             t += timedelta(minutes=INTERVALO_PARADO)
         return max(t, ate)
 
-    def _estrada(self, placa, o, d, km, t, excesso_em=None):
+    def _estrada(self, placa, o, d, km, t, excesso_em=None, v=None, principal=False):
         """Dirige de `o` a `d` (`km` de estrada) a partir de `t`; devolve a chegada.
 
         `excesso_em` (fração do trajeto) planta o episódio do PGR — só na placa
-        principal da viagem, para o PGR não contar o mesmo episódio duas vezes."""
+        principal da viagem, para o PGR não contar o mesmo episódio duas vezes.
+        `v` (viagem carregada) liga a QUEBRA: a placa principal decide quando ela
+        acontece e grava em `v`; a outra placa da viagem só obedece."""
         rnd = self.rnd
+        quebrou = False
         seq = _caminho(o, d)
         odo = self._odo[placa]
-        percorrido, horas_hoje = 0.0, 0.0
+        percorrido, ao_volante = 0.0, 0.0
+        proxima_pausa = rnd.uniform(*PAUSA_A_CADA_H)
         # O km da estrada nunca é menor que o desenho: senão o ponto anda no mapa
         # mais do que o velocímetro diz, e a régua de posição falsa (distância entre
         # pontos × odômetro) passa a desconfiar do próprio gerador.
         km = max(km, 1.05 * sum(haversine(a, b) for a, b in zip(seq, seq[1:])), 1.0)
         while percorrido < km:
+            hora = t.hour + t.minute / 60.0
+            q = v.get('_quebra') if v is not None else None
+            if (q is None and v is not None and principal and self._cota['quebra']
+                    and self._q_ini <= t < self._q_ini + timedelta(hours=1)
+                    and 0.15 < percorrido / km < 0.85):
+                q = v['_quebra'] = (t, self._q_fim)
+                self._cota['quebra'] -= 1
+            if q and not quebrou and q[0] <= t < q[1]:
+                # quebra: parada longa, de dia, longe da origem e do destino
+                lat, lon = _ponto_no_caminho(seq, min(1.0, percorrido / km))
+                while t + timedelta(minutes=INTERVALO_PARADO) < q[1]:
+                    t += timedelta(minutes=INTERVALO_PARADO)
+                    self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
+                t, quebrou = q[1], True
+                ao_volante, proxima_pausa = 0.0, rnd.uniform(*PAUSA_A_CADA_H)
+                continue
+            if hora >= FIM_JORNADA_H or hora < INICIO_JORNADA_H[0]:
+                # pernoite: parado até a manhã, reportando de hora em hora
+                manha = t.replace(hour=0, minute=0, second=0) + timedelta(
+                    days=1 if hora >= FIM_JORNADA_H else 0,
+                    hours=rnd.uniform(*INICIO_JORNADA_H))
+                lat, lon = _ponto_no_caminho(seq, min(1.0, percorrido / km))
+                while t + timedelta(minutes=INTERVALO_PARADO) < manha:
+                    t += timedelta(minutes=INTERVALO_PARADO)
+                    self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
+                t = manha
+                ao_volante, proxima_pausa = 0.0, rnd.uniform(*PAUSA_A_CADA_H)
+            elif ao_volante >= proxima_pausa:
+                lat, lon = _ponto_no_caminho(seq, min(1.0, percorrido / km))
+                t += timedelta(minutes=rnd.randint(*PAUSA_MIN))
+                self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
+                ao_volante, proxima_pausa = 0.0, rnd.uniform(*PAUSA_A_CADA_H)
             vel = rnd.uniform(*VEL_CRUZEIRO)
             f = percorrido / km
             if excesso_em is not None and abs(f - excesso_em) < 0.03:
@@ -255,18 +304,12 @@ class Trilha:
             avanco = vel * passo_min / 60.0
             percorrido += avanco
             odo += avanco
-            horas_hoje += passo_min / 60.0
+            ao_volante += passo_min / 60.0
             lat, lon = _ponto_no_caminho(seq, min(1.0, percorrido / km))
             t += timedelta(minutes=passo_min)
             self._ponto(placa, t, lat + rnd.uniform(-.003, .003),
                         lon + rnd.uniform(-.003, .003), vel, odo)
 
-            if horas_hoje >= HORAS_DIA and percorrido < km:
-                # pernoite: parado, reportando de hora em hora
-                for _ in range(rnd.randint(8, 11)):
-                    t += timedelta(minutes=INTERVALO_PARADO)
-                    self._ponto(placa, t, lat, lon, 0, odo, ignicao=False)
-                horas_hoje = 0.0
         self._odo[placa] = odo
         return t
 
@@ -287,11 +330,18 @@ class Trilha:
                 km = haversine(onde, v['origem']) * FATOR_ESTRADA
                 t = self._estrada(placa, onde, v['origem'], km, t)
                 onde = v['origem']
+            principal = placa == v['placa_rastreada']
+            if (principal and '_partida_min' not in v and self._cota['partida']
+                    and self._ontem_15 <= v['saida'] < self._ontem_15 + timedelta(hours=5)
+                    and self._livre_depois(v)):
+                # documento sem saída: o manifesto saiu ontem à tarde e o caminhão não
+                v['_partida_min'] = self._partida_atrasada
+                self._cota['partida'] -= 1
+            partida = max(partida, v.get('_partida_min', partida))
             t = self._parado(placa, onde, t, max(partida, t + timedelta(minutes=30)))
 
-            principal = placa == v['placa_rastreada']
             t = self._estrada(placa, v['origem'], v['destino'], v['km'], t,
-                              v.get('_excesso_em') if principal else None)
+                              v.get('_excesso_em') if principal else None, v=v, principal=principal)
             if principal and v.get('_excesso_em') is not None:
                 self.episodios += 1
             # descarga: a parada sustentada que prova a chegada ao worker
@@ -307,9 +357,21 @@ class Trilha:
             onde = base
         self._parado(placa, onde, t, self.fim)
 
+    def _livre_depois(self, v):
+        """Nem a carreta nem o cavalo têm outra viagem antes de amanhã — atrasar a partida
+        não empurra a vida deles para cima de outra carga."""
+        amanha = datetime.combine(self.g.ref + timedelta(days=1), datetime.min.time())
+        return all(x is v or x['saida'] < v['saida'] or x['saida'] >= amanha
+                   for p in (v['carreta'], v['cavalo']) for x in self._agenda.get(p, ()))
+
     # ── laço ──
     def rodar(self):
         g = self.g
+        hoje = datetime.combine(g.ref, datetime.min.time())
+        self._q_ini, self._q_fim = hoje + timedelta(hours=QUEBRA_H[0]), hoje + timedelta(hours=QUEBRA_H[1])
+        self._ontem_15 = hoje - timedelta(hours=9)
+        self._partida_atrasada = hoje + timedelta(hours=PARTIDA_ATRASADA_H)
+        self._cota = {'quebra': 1, 'partida': 1}
         recentes = sorted((v for v in g.viagens if (g.ref - v['dia']).days <= RETENCAO_DIAS),
                           key=lambda x: x['saida'])
 
@@ -319,19 +381,18 @@ class Trilha:
             # mas base inteira acima de 95 viraria ruído e não conduta.
             v['_excesso_em'] = self.rnd.uniform(0.2, 0.8) if self.rnd.random() < 0.14 else None
 
-        # Uma carreta muda: o `V1` do aferidor mistura cobertura de sensor com
-        # defeito de documento, e a demo mostra o sistema dizendo "não sei" em
-        # vez de inventar — que é o comportamento correto e vende confiança. Com
-        # o cavalo rastreado, a detecção cai nele (o fallback do worker).
-        carretas = sorted({v['carreta'] for v in recentes if self._rastreador.get(v['carreta'])})
-        if carretas:
-            self.mudas.add(self.rnd.choice(carretas))
+        # Sem carreta muda desde 28/09/2026: na vitrine tudo é rastreado (decisão do
+        # Gabriel). `self.mudas` fica vazio, mas o caminho continua — é só sortear
+        # uma aqui de novo para mostrar o sistema dizendo "não sei".
 
-        agenda = defaultdict(list)
+        agenda = self._agenda = defaultdict(list)
         for v in recentes:
             agenda[v['cavalo']].append(v)
             agenda[v['carreta']].append(v)
-        for placa in sorted(agenda):
+        # Carretas primeiro: a principal decide os incidentes e o cavalo da mesma viagem,
+        # simulado depois, obedece — senão os dois contariam histórias diferentes.
+        carretas = {v['carreta'] for v in recentes}
+        for placa in sorted(agenda, key=lambda p: (p not in carretas, p)):
             eh_carreta = any(v['carreta'] == placa for v in agenda[placa])
             if placa in self.mudas or not self._tem_rastreador(placa, eh_carreta):
                 continue                      # sem aparelho, ou aparelho mudo
@@ -357,4 +418,6 @@ class Trilha:
             'placas': len(self.cadastro),
             'episodios_excesso': self.episodios,
             'carreta_muda': sorted(self.mudas),
+            'incidentes': {'quebra': [v['carreta'] for v in recentes if v.get('_quebra')],
+                           'partida_atrasada': [v['carreta'] for v in recentes if v.get('_partida_min')]},
         }
