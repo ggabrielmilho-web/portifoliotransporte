@@ -134,6 +134,35 @@ Com `DEMO=true`, o `server.py` roda o **ciclo completo** do `seed/atualizar.py` 
 do build (zero carga hoje). O `--rapido` não serve no container: não regera as fixtures.
 O `demo_dax` relê a fixture quando o arquivo muda, e o `gerar.py` grava de forma atômica.
 
+## Deploy
+
+No servidor, o código fica em `/opt/stacks/portfoliotransporte` (**sem** o "i"). O
+repositório e a imagem têm o "i" (`portifoliotransporte`); o serviço não tem
+(`portfoliotransporte_app`). A imagem é construída no próprio servidor:
+
+```bash
+cd /opt/stacks/portfoliotransporte && git pull && docker build -t ghcr.io/ggabrielmilho-web/portifoliotransporte:latest . && docker service update --force --image ghcr.io/ggabrielmilho-web/portifoliotransporte:latest portfoliotransporte_app
+```
+
+Em uma linha só: colado em várias linhas no MobaXterm, o `\` quebra e o bash reclama
+do `&&`. Não mexer em variável de ambiente pelo editor da stack no Portainer depois
+disso — ele volta o serviço para a imagem antiga.
+
+O container novo não tem a marca `seed/fixtures/.atualizado_em`, então ~60 s depois de
+subir ele roda sozinho o ciclo completo do `seed/atualizar.py` (3–4 min). Para
+acompanhar:
+
+```bash
+docker service logs -f portfoliotransporte_app 2>&1 | grep -i vitrine
+```
+
+Só se o ciclo não aparecer no log, rodar à mão (nunca junto com o automático — os dois
+truncam e recriam as mesmas tabelas):
+
+```bash
+docker exec -it $(docker ps -q -f name=portfoliotransporte_app) python -X utf8 seed/atualizar.py
+```
+
 ## Segredos
 
 `SECRET_KEY` e `DB_PASSWORD` **não moram no `docker-compose.yml`**: entram por `${VAR}` no
