@@ -177,20 +177,21 @@ def carregar_gps():
     cur.execute('TRUNCATE embarques_posicoes_historico, embarques_simulacao, '
                 'embarques_posicoes_atuais, embarques_veiculos_rastreio '
                 'RESTART IDENTITY CASCADE')
-    cur.executemany(
-        'INSERT INTO embarques_posicoes_historico '
-        '(placa, id_veiculo_3s, data_posicao, latitude, longitude, velocidade, '
-        ' ignicao, uf, cidade, endereco, odometer) '
-        'VALUES (%(placa)s,%(id_veiculo_3s)s,%(data_posicao)s,%(latitude)s,%(longitude)s,'
-        '%(velocidade)s,%(ignicao)s,%(uf)s,%(cidade)s,%(endereco)s,%(odometer)s) '
-        'ON CONFLICT (placa, data_posicao) DO NOTHING', hist)
-    cur.executemany(
-        'INSERT INTO embarques_simulacao '
-        '(placa, id_veiculo_3s, data_posicao, latitude, longitude, velocidade, '
-        ' ignicao, uf, cidade, bairro, endereco, odometer) '
-        'VALUES (%(placa)s,%(id_veiculo_3s)s,%(data_posicao)s,%(latitude)s,%(longitude)s,'
-        '%(velocidade)s,%(ignicao)s,%(uf)s,%(cidade)s,%(bairro)s,%(endereco)s,%(odometer)s)',
-        [dict(s, odometer=s.get('odometer')) for s in sim])
+    # Em lote: a trilha passou de ~35 mil para ~130 mil pontos quando virou a vida
+    # inteira do veículo (espera, perna vazia, parado de hora em hora), e o
+    # executemany linha a linha levava minutos.
+    from psycopg2.extras import execute_values
+    col_h = ('placa', 'id_veiculo_3s', 'data_posicao', 'latitude', 'longitude',
+             'velocidade', 'ignicao', 'uf', 'cidade', 'endereco', 'odometer')
+    execute_values(cur,
+        f'INSERT INTO embarques_posicoes_historico ({", ".join(col_h)}) VALUES %s '
+        'ON CONFLICT (placa, data_posicao) DO NOTHING',
+        [tuple(p.get(c) for c in col_h) for p in hist], page_size=5000)
+    col_s = ('placa', 'id_veiculo_3s', 'data_posicao', 'latitude', 'longitude',
+             'velocidade', 'ignicao', 'uf', 'cidade', 'bairro', 'endereco', 'odometer')
+    execute_values(cur,
+        f'INSERT INTO embarques_simulacao ({", ".join(col_s)}) VALUES %s',
+        [tuple(p.get(c) for c in col_s) for p in sim], page_size=5000)
     for v in cad:
         cur.execute(
             'INSERT INTO embarques_veiculos_rastreio (placa, id_veiculo_3s) '

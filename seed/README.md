@@ -116,7 +116,7 @@ python -X utf8 _seed_demo/_valida.py          # gate
 | rotas_km | 186 | | semparar_lancamentos | 924 |
 | veiculos_045 | 72 | | custo_pessoal | 78 |
 | motoristas_047 | 26 | | coletas_0157 | 31 |
-| **posições GPS** | **33.325** (até agora) | | embarques_simulacao | ~2.600 (última posição + estrada à frente) |
+| **posições GPS** | **~130 mil** (até agora) | | embarques_simulacao | ~7.900 (última posição + estrada à frente) |
 
 ## O princípio
 

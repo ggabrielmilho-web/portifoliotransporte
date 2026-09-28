@@ -55,6 +55,13 @@ Duas sutilezas que o ciclo resolve e valem saber:
   o simulador recebia o último ponto da trilha (o destino, dias à frente): toda
   viagem em andamento às 04:00 virava "No destino" sem trajeto e com KM 0. Os
   pontos ficam em **UTC**, como o resto do app;
+* **a trilha é a vida do VEÍCULO, não da viagem.** Espera na origem → carrega →
+  estrada pelas cidades do meio do caminho (BH → POA desce por Campinas, Curitiba e
+  Joinville) → descarrega (2–8 h) → segue vazio para a próxima origem ou para a
+  filial mais perto → parado, reportando de hora em hora. É a saída do destino que
+  faz o worker fechar a carga como "Entregue": antes a carreta nunca saía, e 21
+  cargas ficavam "No destino" por dias ("há 7d"), com a carreta sumindo no Rio e
+  reaparecendo em Serra. O rastreador é do veículo (todo cavalo; 80% das carretas);
 * **os três passos de derivação são dry-run por padrão** (em produção mexem em
   carga já lançada) e têm datas de um estudo de agosto/2026 congeladas nos
   defaults. O ciclo passa `--aplicar` e a janela do ano.
@@ -82,7 +89,7 @@ seed/gerar.py  →  fixtures (documentos)  →  execute_dax (DEMO)  →  telas
 |---|---|
 | viagens geradas | 1.201 (**jan–set/2026**) |
 | cargas criadas **pelo robô** | 1.126 |
-| posições de GPS | 37.962 (só a janela de retenção) |
+| posições de GPS | ~130 mil (a janela de retenção, vida inteira de cada veículo) |
 | pendências de CIOT | 9 (as plantadas) |
 | ordens de coleta | 29 |
 | faturamento do ano | R$ 8,7 mi · 1.674 CTe |
