@@ -116,7 +116,7 @@ python -X utf8 _seed_demo/_valida.py          # gate
 | rotas_km | 186 | | semparar_lancamentos | 924 |
 | veiculos_045 | 72 | | custo_pessoal | 78 |
 | motoristas_047 | 26 | | coletas_0157 | 31 |
-| **posições GPS** | **37.631** | | embarques_simulacao | 57 |
+| **posições GPS** | **33.325** (até agora) | | embarques_simulacao | ~2.600 (última posição + estrada à frente) |
 
 ## O princípio
 
@@ -131,7 +131,7 @@ Três decisões que sustentam o resto:
 * **o `MAPA_DRE` é lido do `server.py`**, não copiado — duas verdades viram grupo
   vazio na DRE, e o erro só aparece na hora da demo;
 * **a trilha grava nas duas tabelas** — `embarques_posicoes_historico` (o PGR lê
-  daí, e o backfill é no-op em modo simulado) e `embarques_simulacao` (mapa ao vivo).
+  daí, e o backfill é no-op em modo simulado) e `embarques_simulacao` (mapa ao vivo: a última posição passada e a estrada à frente, que o simulador libera conforme o relógio).
 
 ## Defeitos plantados
 

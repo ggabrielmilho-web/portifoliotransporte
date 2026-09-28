@@ -16,11 +16,27 @@ Duas gravações, de propósito — e é a pegadinha que a leitura do passo 1 ac
 O que o gerador NÃO faz: decidir status de carga. Quem carimba saída, chegada e
 entrega é o worker, pela mesma régua de produção. A trilha só põe o caminhão na
 estrada.
+
+**Passado × futuro (28/09/2026).** A trilha é gerada inteira, e a viagem que sai
+hoje termina daqui a dias. Até esta data tudo ia para o histórico e só o ÚLTIMO
+ponto de cada placa ia para a simulação — o worker das 04:00 via a carreta já no
+destino e carimbava "No destino" 11 h antes de a carga sair, sem trajeto nem km
+(a C-2026-001113 em produção). Agora o histórico recebe só o que já aconteceu, e a
+simulação recebe o resto da estrada: o `simulador_3s` responde o ponto mais recente
+que não esteja no futuro, então o caminhão anda em tempo real e o worker grava o
+histórico como grava o da 3S.
+
+**Fuso.** O app guarda `data_posicao` em UTC naive (o worker grava `NOW()` do
+container e o `server.py` subtrai 3 h para exibir). A viagem é pensada no relógio
+de Brasília — sai entre 05 h e 19 h, como o manifesto — e a conversão acontece só
+na gravação do ponto.
 """
 
 import math
 import random
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+
+BRT_UTC = timedelta(hours=3)       # Brasília sem horário de verão desde 2019
 
 from empresa import CIDADES
 from gerar import haversine
@@ -48,11 +64,14 @@ def _cidade_mais_perto(lat, lon):
 
 
 class Trilha:
-    def __init__(self, gerador, semente=99):
+    def __init__(self, gerador, semente=99, agora_utc=None):
         self.g = gerador
         self.rnd = random.Random(semente)
-        self.historico = []          # embarques_posicoes_historico
-        self.simulacao = []          # embarques_simulacao
+        # Corte entre o que já aconteceu e o que o caminhão ainda vai fazer.
+        self.agora = agora_utc or datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
+        self.historico = []          # embarques_posicoes_historico (só até `agora`)
+        self.simulacao = []          # embarques_simulacao (último ponto passado + o futuro)
+        self._pontos = []            # a trilha inteira, antes do corte
         self.cadastro = {}           # placa -> id_veiculo_3s
         self._odo = {}
         self.mudas = set()
@@ -77,7 +96,7 @@ class Trilha:
         cid = _cidade_mais_perto(lat, lon)
         p = {
             'placa': placa, 'id_veiculo_3s': self._id(placa),
-            'data_posicao': quando.strftime('%Y-%m-%d %H:%M:%S'),
+            'data_posicao': (quando + BRT_UTC).strftime('%Y-%m-%d %H:%M:%S'),
             'latitude': round(lat, 6), 'longitude': round(lon, 6),
             'velocidade': int(vel), 'ignicao': ignicao,
             'uf': cid[1], 'cidade': cid[0],
@@ -85,7 +104,7 @@ class Trilha:
                         if vel > 5 else f'{cid[0]} - PATIO',
             'odometer': int(odo),
         }
-        self.historico.append(p)
+        self._pontos.append(p)
         return p
 
     # ── uma viagem ──
@@ -163,19 +182,23 @@ class Trilha:
         for v in sorted(recentes, key=lambda x: x['saida']):
             self.percorrer(v)
 
-        # A última posição de cada placa alimenta o simulador (mapa ao vivo).
+        # O que já aconteceu vai para o histórico; o simulador recebe a última
+        # posição passada de cada placa (onde ela está AGORA) e o resto da estrada,
+        # que ele vai liberando conforme o relógio passa.
+        corte = self.agora.strftime('%Y-%m-%d %H:%M:%S')
         ultimo = {}
-        for p in self.historico:
-            ultimo[p['placa']] = p
-        for p in ultimo.values():
-            q = dict(p)
-            q.pop('odometer', None)
-            q['bairro'] = ''
-            self.simulacao.append(q)
+        for p in self._pontos:
+            if p['data_posicao'] <= corte:
+                self.historico.append(p)
+                ultimo[p['placa']] = p
+            else:
+                self.simulacao.append(dict(p, bairro=''))
+        self.simulacao.extend(dict(p, bairro='') for p in ultimo.values())
 
         return {
             'viagens_com_trilha': sum(1 for v in recentes if v.get('placa_rastreada')),
             'posicoes': len(self.historico),
+            'posicoes_futuras': len(self.simulacao) - len(ultimo),
             'placas': len(self.cadastro),
             'episodios_excesso': self.episodios,
             'carreta_muda': sorted(self.mudas),

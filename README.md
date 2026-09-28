@@ -48,6 +48,13 @@ Duas sutilezas que o ciclo resolve e valem saber:
   `data_emissao <= DATE(fim)`, e no DAX isso é meia-noite: manifesto emitido às
   14h de hoje ficaria de fora e "Cargas hoje" mostraria zero. Em produção
   acontece o mesmo — o robô só pega o dia na rodada seguinte;
+* **a trilha é cortada em "agora".** O GPS de uma viagem é gerado inteiro, mas o
+  histórico só recebe o que já aconteceu; o resto da estrada fica no
+  `embarques_simulacao`, e o simulador entrega o ponto mais recente que não está no
+  futuro — o caminhão anda em tempo real e o worker grava o trajeto. Até 28/09/2026
+  o simulador recebia o último ponto da trilha (o destino, dias à frente): toda
+  viagem em andamento às 04:00 virava "No destino" sem trajeto e com KM 0. Os
+  pontos ficam em **UTC**, como o resto do app;
 * **os três passos de derivação são dry-run por padrão** (em produção mexem em
   carga já lançada) e têm datas de um estudo de agosto/2026 congeladas nos
   defaults. O ciclo passa `--aplicar` e a janela do ano.

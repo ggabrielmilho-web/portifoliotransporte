@@ -72,6 +72,11 @@ def lista_veiculos():
 def lista_ultima_posicao(id_veiculo=0):
     """Retorna última posição de um veículo (id_veiculo > 0) ou de TODOS (id_veiculo=0).
     Formato espelha resposta da 3S: idPosicao, placa, data, latitude, longitude, etc.
+
+    A tabela guarda a estrada inteira, com pontos no futuro (seed/trilha.py): a
+    "última posição" é a mais recente que já aconteceu, em UTC como o resto do app.
+    A `data` é a do PONTO, e não NOW() — com NOW() o worker regravava o mesmo lugar
+    a cada ciclo com hora nova, e a trilha virava uma fila de pontos repetidos.
     """
     t0 = time.time()
     conn = _get_db()
@@ -85,7 +90,7 @@ def lista_ultima_posicao(id_veiculo=0):
                 'Simulado' AS frota,
                 placa,
                 'Simulador' AS modelo,
-                NOW() AS data,
+                data_posicao AS data,
                 COALESCE(velocidade, 0) AS velocidade,
                 10 AS satelite,
                 CASE WHEN ignicao THEN 'Ligada' ELSE 'Desligada' END AS ignicao,
@@ -104,6 +109,7 @@ def lista_ultima_posicao(id_veiculo=0):
                 COALESCE(odometer, 0) AS odometer,
                 0 AS hourmeter
             FROM embarques_simulacao
+            WHERE data_posicao <= (NOW() AT TIME ZONE 'UTC')
             ORDER BY placa, data_posicao DESC
         """)
     else:
@@ -113,7 +119,7 @@ def lista_ultima_posicao(id_veiculo=0):
                 'Simulado' AS frota,
                 placa,
                 'Simulador' AS modelo,
-                NOW() AS data,
+                data_posicao AS data,
                 COALESCE(velocidade, 0) AS velocidade,
                 10 AS satelite,
                 CASE WHEN ignicao THEN 'Ligada' ELSE 'Desligada' END AS ignicao,
@@ -132,7 +138,7 @@ def lista_ultima_posicao(id_veiculo=0):
                 COALESCE(odometer, 0) AS odometer,
                 0 AS hourmeter
             FROM embarques_simulacao
-            WHERE id_veiculo_3s = %s
+            WHERE id_veiculo_3s = %s AND data_posicao <= (NOW() AT TIME ZONE 'UTC')
             ORDER BY data_posicao DESC
             LIMIT 1
         """, (id_veiculo,))

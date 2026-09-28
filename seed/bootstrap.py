@@ -187,9 +187,10 @@ def carregar_gps():
     cur.executemany(
         'INSERT INTO embarques_simulacao '
         '(placa, id_veiculo_3s, data_posicao, latitude, longitude, velocidade, '
-        ' ignicao, uf, cidade, bairro, endereco) '
+        ' ignicao, uf, cidade, bairro, endereco, odometer) '
         'VALUES (%(placa)s,%(id_veiculo_3s)s,%(data_posicao)s,%(latitude)s,%(longitude)s,'
-        '%(velocidade)s,%(ignicao)s,%(uf)s,%(cidade)s,%(bairro)s,%(endereco)s)', sim)
+        '%(velocidade)s,%(ignicao)s,%(uf)s,%(cidade)s,%(bairro)s,%(endereco)s,%(odometer)s)',
+        [dict(s, odometer=s.get('odometer')) for s in sim])
     for v in cad:
         cur.execute(
             'INSERT INTO embarques_veiculos_rastreio (placa, id_veiculo_3s) '
@@ -197,7 +198,7 @@ def carregar_gps():
             (v['placa'], v['id_veiculo_3s']))
     con.commit()
     cur.execute('SELECT COUNT(*) FROM embarques_posicoes_historico')
-    print(f'   {cur.fetchone()[0]} posições · {len(sim)} placas no simulador '
+    print(f'   {cur.fetchone()[0]} posições · {len(sim)} pontos no simulador (a estrada à frente) '
           f'· {len(cad)} no cadastro de rastreio')
     cur.close()
     con.close()
